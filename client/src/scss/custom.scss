@@ -1,11 +1,15 @@
 // Custom.scss
 // Option B: Include parts of Bootstrap
 
+
 // 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
+
 
 // 2. Include any default variable overrides here
 
+
 @import "../../node_modules/bootstrap/scss/functions";
+
 
 // 2. Include any default variable overrides here
 $primary: #faebd7;
@@ -17,7 +21,9 @@ $danger: #00916E;
 @import "../../node_modules/bootstrap/scss/variables";
 @import "../../node_modules/bootstrap/scss/variables-dark";
 
+
 // 4. Include any default map overrides here
+
 
 // 5. Include remainder of required parts
 @import "../../node_modules/bootstrap/scss/maps";
@@ -25,6 +31,7 @@ $danger: #00916E;
 @import "../../node_modules/bootstrap/scss/root";
 @import "../../node_modules/bootstrap/scss/utilities";
 // 3. Include remainder of required Bootstrap stylesheets
+
 
 @import "../../node_modules/bootstrap/scss/utilities";
 @import "../../node_modules/bootstrap/scss/reboot";
@@ -39,120 +46,145 @@ $danger: #00916E;
 @import "../../node_modules/bootstrap/scss/list-group";
 @import "../../node_modules/bootstrap/scss/navbar";
 @import "../../node_modules/bootstrap/scss/nav";
+@import "../../node_modules/bootstrap/scss/transitions";
+
 
 @import "../../node_modules/bootstrap/scss/utilities/api";
 // 5. Add additional custom code here
 @mixin textGradient1() {
-  /*color: antiquewhite;*/
-  background: -webkit-linear-gradient(#52c234, #061700);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+ /*color: antiquewhite;*/
+ background: -webkit-linear-gradient(#52c234, #061700);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
 }
+
 
 @mixin textGradient2() {
-  /*color: antiquewhite;*/
-  //#5433ff, #20bdff, #a5fecb
-  background: -webkit-linear-gradient(#5433ff, #20bdff, #a5fecb);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+ /*color: antiquewhite;*/
+ //#5433ff, #20bdff, #a5fecb
+ background: -webkit-linear-gradient(#5433ff, #20bdff, #a5fecb);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
 }
 
+
+
+
 @mixin textGradient3() {
-  /*color: antiquewhite;*/
-  //#5433ff, #20bdff, #a5fecb
-  background: -webkit-linear-gradient(#f12711, #f5af19);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+ /*color: antiquewhite;*/
+ //#5433ff, #20bdff, #a5fecb
+ background: -webkit-linear-gradient(#f12711, #f5af19);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
 }
+
+
 
 
 @mixin textGradient4() {
-  /*color: antiquewhite;*/
-  //#5433ff, #20bdff, #a5fecb
-  background: -webkit-linear-gradient(#ad5389, #3c1053);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+ /*color: antiquewhite;*/
+ //#5433ff, #20bdff, #a5fecb
+ background: -webkit-linear-gradient(#ad5389, #3c1053);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
 }
 
+
 @mixin textGradient5() {
-  /*color: antiquewhite;*/
-  //#5433ff, #20bdff, #a5fecb
-  background: -webkit-linear-gradient(#cc2b5e, #753a88);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+ /*color: antiquewhite;*/
+ //#5433ff, #20bdff, #a5fecb
+ background: -webkit-linear-gradient(#cc2b5e, #753a88);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
 }
+.customHover {
+@include textGradient5();
+}
+
+
 
 
 .waves {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  overflow: hidden;
-  line-height: 0;
-  transform: rotate(180deg);
+ position: absolute;
+ bottom: 0;
+ left: 0;
+ width: 100%;
+ overflow: hidden;
+ line-height: 0;
+ transform: rotate(180deg);
 }
 
+
 .waves svg {
-  position: relative;
-  display: block;
-  width: calc(124% + 1.3px);
-  height: 172px;
+ position: relative;
+ display: block;
+ width: calc(124% + 1.3px);
+ height: 172px;
 }
+
+
+
 
 
 
 .spacer {
-  aspect-ratio: 920/250;
-  width: 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
+ aspect-ratio: 920/250;
+ width: 100%;
+ background-repeat: no-repeat;
+ background-position: center;
+ background-size: cover;
 }
+
 
 .layer1 {
-  background-image: url('../assets/waves.svg')
+ background-image: url('../assets/waves.svg')
 }
 .heroback {
-  aspect-ratio: 900/600;
-  width: 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
+ aspect-ratio: 900/600;
+ width: 100%;
+ background-repeat: no-repeat;
+ background-position: center;
+ background-size: cover;
 }
+
 
 .layer2 {
-  background-image: url('../assets/stacked-peaks-haikei.svg')
+ background-image: url('../assets/stacked-peaks-haikei.svg')
 }
 .stackedHaikei{
-  aspect-ratio: 900/600;
-    width: 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
+ aspect-ratio: 900/600;
+   width: 100%;
+ background-repeat: no-repeat;
+ background-position: center;
+ background-size: cover;
 }
 .layer3 {
-  background-image: url('../assets/stacked-steps-haikei.svg')
+ background-image: url('../assets/stacked-steps-haikei.svg')
 }
 
+
 #heroText {
-  @include textGradient2;
+ @include textGradient2;
 }
+
+
 
 
 .sticky-top {
-    position: -webkit-sticky !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 1020 !important;
+   position: -webkit-sticky !important;
+   position: sticky !important;
+   top: 0 !important;
+   z-index: 1020 !important;
 }
 .navbar .navbar-nav .nav-link.active {
-  color: $info;
+ color: $info;
 }
 .navbar .navbar-brand{
-  @include textGradient1();
+ @include textGradient1();
 }
+
 
 //.navbar .navbar-nav .nav-link, .navbar .navbar-brand {
 //  color: antiquewhite;
 //}
+

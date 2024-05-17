@@ -4,15 +4,29 @@
 import './css/output.css'
 import './App.css'
 import Navbar from './components/Navbar.tsx'
+import Nutrition from './components/Nutrition.tsx'
+import Games from './components/Games.tsx'
 import HeroSection from "./components/Hero.tsx";
-function App() {
-  // const [count, setCount] = useState(0)
+import {Route, Routes} from "react-router-dom"
 
-  return (
-    <>
-        <Navbar/><HeroSection/>
-    </>
-  )
+function App() {
+    // const [count, setCount] = useState(0)
+
+    return (
+        <div className="container-fluid">
+            <Routes>
+                <Route path="/" element={<><Navbar name='Home'/> <HeroSection/></>}/>
+                <Route path="/Nutrition" element={<div className='fixed-top'><Navbar name='Nutrition'/> <Nutrition/></div>}/>
+                <Route path="/Games" element={<><Navbar name='Games'/> <Games/></>}/>
+            </Routes>
+        </div>
+
+
+    )
 }
 
+
 export default App
+
+
+
