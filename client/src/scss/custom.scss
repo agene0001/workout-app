@@ -139,7 +139,7 @@ $danger: #00916E;
 .layer1 {
  background-image: url('../assets/waves.svg')
 }
-.heroback {
+.heroback, .stackedHaikei {
  aspect-ratio: 900/600;
  width: 100%;
  background-repeat: no-repeat;
@@ -151,17 +151,35 @@ $danger: #00916E;
 .layer2 {
  background-image: url('../assets/stacked-peaks-haikei.svg')
 }
-.stackedHaikei{
- aspect-ratio: 900/600;
-   width: 100%;
- background-repeat: no-repeat;
- background-position: center;
- background-size: cover;
-}
 .layer3 {
  background-image: url('../assets/stacked-steps-haikei.svg')
 }
 
+.blurryBg{
+  background-image: url('../assets/blurry-gradient-haikei-3.svg')
+}
+.blob2{
+  background-image: url('../assets/blob-scene-haikei-1.svg')
+}
+.lowPoly{
+  background-image: url('../assets/low-poly-grid-haikei.svg')
+}
+.lowPoly1{
+  background-image: url('../assets/low-poly-grid-haikei-1.svg')
+}
+.lowPoly2{
+  background-image: url('../assets/low-poly-grid-haikei-2.svg')
+}
+.lowPoly3{
+  background-image: url('../assets/low-poly-grid-haikei-3.svg')
+}
+
+.waves2{
+  background-image: url('../assets/layered-waves-haikei.svg')
+}
+.waves3{
+  background-image: url('../assets/layered-waves-haikei-1.svg')
+}
 
 #heroText {
  @include textGradient2;
@@ -184,6 +202,81 @@ $danger: #00916E;
 }
 
 
+body{
+   background: black;
+}
+section {
+
+           position: relative;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           min-height: 400px;
+           padding: 100px 20vw;
+
+
+       }
+#hero3{
+  background: #000000;  /* fallback for old browsers */
+background: -webkit-linear-gradient(to top, #434343, #000000);  /* Chrome 10-25, Safari 5.1-6 */
+background: linear-gradient(to top, #434343, #000000);
+   background-repeat: no-repeat;/* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+
+}
+
+
+.infoBlock{
+   box-shadow: 12px 12px 5px rgba(0, 0, 255, .4);
+ transition: box-shadow 1s,transform 1s;
+
+}
+
+.infoBlock:hover{
+ box-shadow: 12px 12px 5px #cc2b5e;
+  transform: scale(1.10);
+}
+
+.heroStart{
+  animation-name: heroZoom;
+  animation-duration: 2s;
+}
+.heroStart1{
+  animation-name: heroZoom;
+  animation-duration: 2s;
+  animation-delay: .25s;
+}
+@keyframes heroZoom {
+  from{
+    transform: scale(.25,.25);
+    opacity: 0;
+  }
+  to{
+    transform: scale(1,1);
+    opacity: 1;
+  }
+}
+
+.infoHero{
+  animation-name: infoSlideRight;
+  animation-duration: 2s;
+}
+@keyframes infoSlideRight {
+  from{
+    margin-left: 100%;
+  }
+  to{
+    margin-left: 0%;
+  }
+}
+//@keyframes infoSlideLeft {
+//  from{
+//    transform: translateX(100%)
+//  }
+//  to{
+//    transform: translateX(0%)
+//  }
+//}
 //.navbar .navbar-nav .nav-link, .navbar .navbar-brand {
 //  color: antiquewhite;
 //}
