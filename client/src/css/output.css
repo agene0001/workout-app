@@ -9570,12 +9570,39 @@ section {
   animation-duration: 2s;
 }
 
+.infoHero2 {
+  visibility: hidden;
+  animation-name: infoSlideRight;
+  animation-duration: 2s;
+  animation-delay: 0.75s;
+  animation-fill-mode: both;
+}
+
+.infoHero1 {
+  animation-name: infoSlideLeft;
+  animation-duration: 2s;
+}
+
 @keyframes infoSlideRight {
   from {
-    margin-left: 100%;
+    visibility: hidden;
+    position: relative;
+    left: -100%;
   }
   to {
-    margin-left: 0%;
+    visibility: visible;
+    position: relative;
+    left: 0%;
+  }
+}
+@keyframes infoSlideLeft {
+  from {
+    position: relative;
+    left: 100%;
+  }
+  to {
+    position: relative;
+    left: 0%;
   }
 }
 

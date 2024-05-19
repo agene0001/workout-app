@@ -30,7 +30,7 @@ function Navbar(props: { name: string }) {
 
     }
     return (
-        <nav className="navbar navbar-expand-lg py-1 vw-100 navbar-dark bg-dark fixed-top">
+        <nav className="navbar navbar-expand-lg py-1 vw-100 navbar-dark bg-dark sticky-top">
             <div className="container-fluid ">
                 <a className="navbar-brand fs-1 fw-semibold p-2" href="/">Gains Tracker</a>
 
@@ -43,12 +43,8 @@ function Navbar(props: { name: string }) {
 
                 <div className="collapse navbar-collapse justify-content-around" id="navbarSupportedContent">
                     <ul className="navbar-nav mr-auto align-items-center">
-                        <NavItem text={<a
-                            className={props.name.toLowerCase() === 'nutrition' ? "nav-link active" : "nav-link text-danger"}
-                            href="/Nutrition">Nutrition</a>}/>
-                        <NavItem text={<a
-                            className={props.name.toLowerCase() === 'games' ? "nav-link active" : "nav-link text-danger"}
-                            href="/Games">Recent Games</a>}/>
+                        <NavItem text={<a className={`nav-link ${props.name.toLowerCase() === 'nutrition' ? " active" : " text-danger"}`} href="/Nutrition">Nutrition</a>}/>
+                       <NavItem text={<a className={`nav-link ${props.name.toLowerCase() === 'games' ? " active" : " text-danger"}`} href="/Games">Recent Games</a>}/>
 
                         <NavDropdown title={<NavDropTitle text='Sports'/>} menuVariant='danger'>
                             <NavDropItem text={<>Martial Arts</>}/>
