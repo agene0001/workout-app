@@ -1,0 +1,1 @@
+UPDATE recipes SET calorie = SUBSTRING_INDEX(nutrition, ':', 1);
