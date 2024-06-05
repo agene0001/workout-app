@@ -9610,16 +9610,84 @@ section {
   animation-duration: 2s;
 }
 
-@keyframes infoSlideRight {
-  from {
-    visibility: hidden;
-    position: relative;
-    left: -100%;
-  }
+:root {
+  --item-duration: 60s;
+  --item-num: 8;
+}
+
+.wrapper {
+  /*width: 90%;*/
+  /*max-width: 1530px;*/
+  margin-inline: auto;
+  position: relative;
+  height: 100%;
+  margin-top: 5rem;
+  overflow-x: hidden;
+  mask-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgb(0, 0, 0) 20%, rgb(0, 0, 0) 80%, rgba(0, 0, 0, 0));
+}
+
+.item {
+  max-width: 300px;
+  border-radius: 6px;
+  position: absolute;
+  animation-name: scrollLeft;
+  animation-duration: var(--item-duration);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes scrollLeft {
   to {
-    visibility: visible;
-    position: relative;
-    left: 0%;
+    left: -300px;
+  }
+}
+.item1 {
+  animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 1) * -1);
+}
+
+.item2 {
+  animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 2) * -1);
+}
+
+.item3 {
+  animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 3) * -1);
+}
+
+.item4 {
+  animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 4) * -1);
+}
+
+.item5 {
+  animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 5) * -1);
+}
+
+.item6 {
+  animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 6) * -1);
+}
+
+.item7 {
+  animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 7) * -1);
+}
+
+.item8 {
+  animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 8) * -1);
+}
+
+#nutrition-header {
+  background: linear-gradient(145deg, #AD5389, #cc2b5e, #52c234, #061700 99.5%);
+  animation: gradientAnimation 40s ease-in-out infinite;
+  background-size: 500% 500%;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 50% 0%;
+  }
+  40% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 50% 0%;
   }
 }
 @keyframes infoSlideLeft {

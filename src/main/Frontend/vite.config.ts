@@ -9,6 +9,8 @@ export default defineConfig({
       '/api/v1/recipes':{target:"http://localhost:8080"},
       '/recommendations': {target:"http://127.0.0.1:5000",
         changeOrigin: true},
+      '/build_recipes': {target:"http://127.0.0.1:5000",
+        changeOrigin: true},
 
     }
   }

@@ -90,6 +90,18 @@ $danger: #00916E;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+@mixin backgroundGradient() {
+  /*color: antiquewhite;*/
+  //#5433ff, #20bdff, #a5fecb
+  background: hsla(99, 75%, 75%, 1);
+
+background: linear-gradient(90deg, hsla(99, 75%, 75%, 1) 0%, hsla(15, 93%, 71%, 1) 100%);
+
+background: -moz-linear-gradient(90deg, hsla(99, 75%, 75%, 1) 0%, hsla(15, 93%, 71%, 1) 100%);
+
+background: -webkit-linear-gradient(90deg, hsla(99, 75%, 75%, 1) 0%, hsla(15, 93%, 71%, 1) 100%);
+
+}
 
 .customHover {
   @include textGradient5();
@@ -306,20 +318,77 @@ section {
   animation-name: infoSlideLeft;
   animation-duration: 2s;
 }
-
-@keyframes infoSlideRight {
-  from {
-    visibility: hidden;
+:root{
+    --item-duration: 60s;
+    --item-num: 8;
+}
+.wrapper{
+    //border: 1px solid black;
+    /*width: 90%;*/
+    /*max-width: 1530px;*/
+    margin-inline: auto;
     position: relative;
-    left: -100%;
-  }
-  to {
-    visibility: visible;
-    position: relative;
-    left: 0%;
-  }
+    height: 100%;
+    margin-top: 5rem;
+    overflow-x: hidden;
+    mask-image: linear-gradient(to right,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 1) 20%,
+    rgba(0, 0, 0, 1) 80%,
+    rgba(0, 0, 0, 0) )
+;
 }
 
+.item{
+    //width: 200px;
+    //height: 100px;
+
+    max-width: 300px;
+    //background-color: red;
+    border-radius: 6px;
+    position: absolute;
+    //left: max(calc(400px*10), 100%);
+    animation-name: scrollLeft;
+    animation-duration: var(--item-duration);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+@keyframes scrollLeft{
+    to{
+        left: -300px;
+    }
+}
+
+.item1{animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 1) * -1);}
+.item2{animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 2) * -1);}
+.item3{animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 3) * -1);}
+.item4{animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 4) * -1);}
+.item5{animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 5) * -1);}
+.item6{animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 6) * -1);}
+.item7{animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 7) * -1);}
+.item8{animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 8) * -1);}
+
+
+
+#nutrition-header{
+  background: linear-gradient(145deg, #AD5389,#cc2b5e,#52c234,#061700 99.5% );
+  animation: gradientAnimation 40s ease-in-out infinite ;
+
+  background-size: 500% 500%;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 50% 0%;
+  }
+  40%{
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 50% 0%;
+  }
+}
 @keyframes infoSlideLeft {
   from {
     position: relative;
@@ -330,6 +399,7 @@ section {
     left: 0%;
   }
 }
+
 
 
 

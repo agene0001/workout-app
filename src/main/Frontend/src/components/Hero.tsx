@@ -39,7 +39,7 @@ function HeroSection() {
         var duration = 50000
         var ease = 'linear'
         var direction = 'alternate'
-        var opac = .25
+        var opac = .5
         anime({
             targets: '#pt1',
             fill: [`rgba(173,83,137,${opac})`, `rgba(6,23,0,${opac})`, `rgba(204,43,94,${opac})`, `rgba(165,254,203,${opac})`, '#000'],

@@ -24,10 +24,7 @@ public class RecipeController {
 //    List<Recipe> getRecipes(@PathVariable String term) {
 //        return recipeService
 //    }
-    @GetMapping(path="/build/{k}")
-    List<Recipe> getRecipesBuild(@PathVariable int k) {
-        return recipeService.buildRecipes(k);
-    }
+
     @PostMapping(path="{string}")
     Term[] autocompleteRecipe(@PathVariable String string) {
 //        System.out.println(string);

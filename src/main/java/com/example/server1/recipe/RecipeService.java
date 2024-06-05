@@ -38,9 +38,7 @@ public class RecipeService {
         }
 
     }
-public List<Recipe> buildRecipes(int k) {
-        return this.recipeRepository.findByCategory("Dessert");
-}
+
 //    public static Term[] recipesSetup(Recipe[] recipes, int k) {
 //        Term[] terms = new Term[k];
 //        int i = 0;
