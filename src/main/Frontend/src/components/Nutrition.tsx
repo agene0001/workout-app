@@ -3,7 +3,8 @@ import InfoBlock from './/InfoBlock'
 import React, {useState, useEffect, useRef} from 'react'
 import axios from 'axios'
 import Granim from 'granim'
-import anime, { engine } from 'animejs'
+import anime, {engine} from 'animejs'
+
 function toTitleCase(str) {
     return str.replace(/\w\S*/g, function (txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -15,7 +16,7 @@ function Nutrition() {
     const [searchedRecipes, setSearchedRecipes] = useState([])
     const [recipes, setRecipes] = useState([])
     const [recommendedRecipes, setRecommendedRecipes] = useState([])
-    const [buildRecipes,setBuildRecipes] = useState([])
+    const [buildRecipes, setBuildRecipes] = useState([])
     const recipeRef = useRef();
     const caloriesRef = useRef("");
     useEffect(() => {
@@ -32,72 +33,18 @@ function Nutrition() {
         }).catch(err => {
             console.log(err)
         })
-        // var granimInstance = new Granim({
-        //     element: '#canvas-basic',
-        //     direction: 'top-bottom',
-        //     // isPausedWhenNotInView: true,
-        //     states: {
-        //         "default-state": {
-        //             gradients: [
-        //                 ['#753a88', '#cc2b5e'],
-        //                 ['#ad5389', '#3c1053'],
-        //                 ['#52c234', '#061700']
-        //             ]
-        //         }
-        //     }
-        // });
+
         var duration = 10000
         var ease = 'easeInOutQuint'
         var direction = 'alternate'
-// @ts-ignore
-//         anime.suspendWhenDocumentHidden = false;
-//         anime({
-//             targets: '#pt1',
-//             fill: ['#753A88',  '#52C234'],
-//             easing: ease,
-//             duration: duration,
-//             direction: direction,
-//
-//             // delay: 1000,
-//             loop: true
-//         });   anime({
-//             targets: '#pt2',
-//             fill: ['#8C367D', '#44A22A'],
-//             easing: ease,
-//             duration: duration,
-//             direction: direction,
-//             // delay: 1000,
-//             loop: true
-//         });   anime({
-//             targets: '#pt3',
-//             fill: ['#9F3374', '#2F721B'],
-//             easing: ease,
-//             duration: duration,
-//             direction: direction,
-//             // delay: 1000,
-//             loop: true
-//         });   anime({
-//             targets: '#pt4',
-//             fill: ['#B52F69','#163B0B'],
-//             easing: ease,
-//             duration: duration,
-//             direction: direction,
-//             // delay: 1000,
-//             loop: true
-//         });   anime({
-//             targets: '#pt5',
-//             fill: ['#cc2b5e','#061700' ],
-//             easing: ease,
-//             duration: duration,
-//             direction: direction,
-//             // delay: 1000,
-//             loop: true
-//         });
+        console.log(buildRecipes)
+        console.log(recommendedRecipes.length)
     }, [])
     const recipeComponents = recipes.map((item: any[]) => {
         let data = item.filter(val => val != null);
         return (<div className='row'> {data.map((elementLis, idx) => (
-            <InfoBlock key={idx} heading={elementLis.name} bg='bg-info' icon={elementLis.imgSrc} text={[
+            <InfoBlock key={idx} heading={elementLis.name} bg='bg-info' nutrition={elementLis.nutrition}
+                       icon={elementLis.imgSrc} text={[
                 <div>{elementLis.duration}</div>,
                 <div>Rating: {elementLis.rating}</div>
             ]}/>))} </div>);
@@ -135,56 +82,57 @@ function Nutrition() {
     return (
         <>
             {/*<div  className='heroback'></div>*/}
-            <div className='heroback py-5 container-fluid' id='nutrition-header'>
-                <div style={{height: '30px'}}>
-                </div>
-                <h1 className='text-primary py-5 my-5 text-center'>Search for
-                    Personalized Recipes shipped right to you door</h1>
-
-                <div className='row justify-content-center '>
-                    <div className='col-auto'>
-                        <h4 className='text-primary'>Recommend recipes</h4>
+            <div className='heroback py-5 container-fluid align-content-center'
+                 id='nutrition-header'>
+                    <div style={{height: '60px'}}>
                     </div>
-                    <div className="col-auto">
-                        <input className="form-control border-danger border-4 mr-sm-2" id='navSearch' type="search"
-                               placeholder="Search" value={querySearch}
-                               onChange={(e) => {
-                                   setQuerySearch(e.target.value);
-                                   // getQuery(e.target.value)
-                               }
-                               }
-                               aria-label="Search"/>
-                        <ul className="list-group" style={{height: 200, overflow: 'scroll'}}>
-                            {searchedRecipes.map((val, ind) => (<li onMouseOut={(ele) => {
-                                ele.target.classList.remove('active')
-                            }} onMouseEnter={(ele) => {
-                                ele.target.classList.add('active')
-                            }} onClick={(ele) => {
-                                setQuerySearch(ele.target.innerText)
-                            }} className='list-group-item' key={ind}>{toTitleCase(val.query)}</li>))}
-                        </ul>
-                    </div>
+                    <h1 className='text-primary py-5 my-5 text-center'>Search for
+                        Personalized Recipes shipped right to you door</h1>
 
-                    <div className="col-auto justify-content-center">
-                        <button className="btn btn-lg btn-outline-primary my-2 my-sm-0" type="submit"
-                                id='recipeSearch' onClick={() => {
-                            axios.get(`/recommendations?query=${encodeURIComponent(querySearch)}`).then((res) => {
-                                console.log(res.data)
-                                setRecommendedRecipes(res.data)
-                                // console.log(typeof(res.data))
-                            })
-                            // setQuerySearch(ele.target.innerHTML)
-                        }}>Search
-                        </button>
-                        <button className="btn btn-lg btn-outline-primary my-2 my-sm-0" type="submit"
-                                id='clear' onClick={() => {
+                    <div className='row justify-content-center '>
+
+                        <h2 className='text-primary py-5 text-center'>Recommend recipes</h2>
+
+
+                        <div className="col-auto inline-flex">
+                            <button className="btn btn-lg btn-outline-primary my-2 my-sm-0" type="submit"
+                                    id='recipeSearch' onClick={() => {
+                                axios.get(`/recommendations?query=${encodeURIComponent(querySearch)}`).then((res) => {
+                                    console.log(res.data)
+                                    setRecommendedRecipes(res.data)
+                                    // console.log(typeof(res.data))
+                                })
+                                // setQuerySearch(ele.target.innerHTML)
+                            }}>Search
+                            </button>
+                            <button className="btn btn-lg btn-outline-primary my-2 my-sm-0" type="submit"
+                                    id='clear' onClick={() => {
                                 setRecommendedRecipes([])
                                 // console.log(typeof(res.data))
                             }
-                            // setQuerySearch(ele.target.innerHTML)
-                        }>Clear
-                        </button>
+                                // setQuerySearch(ele.target.innerHTML)
+                            }>Clear
+                            </button>
+                        </div>
+                        <div className='col-7'>
+                            <input className="form-control border-danger border-4 mr-sm-2" id='navSearch' type="search"
+                                   placeholder="Search" value={querySearch}
+                                   onChange={(e) => {
+                                       setQuerySearch(e.target.value);
+                                       // getQuery(e.target.value)
+                                   }
+                                   }
+                                   aria-label="Search"/>
 
+                            <ul className="list-group" style={{height: '25vh', overflow: 'scroll'}}>
+                                {searchedRecipes.map((val, ind) => (<li onMouseOut={(ele) => {
+                                    ele.target.classList.remove('active')
+                                }} onMouseEnter={(ele) => {
+                                    ele.target.classList.add('active')
+                                }} onClick={(ele) => {
+                                    setQuerySearch(ele.target.innerText)
+                                }} className='list-group-item' key={ind}>{toTitleCase(val.query)}</li>))}
+                            </ul>
                     </div>
                 </div>
 
@@ -195,11 +143,16 @@ function Nutrition() {
                 {/*                                                                                             text={[val.duration, val.rating]}></InfoBlock>*/}
                 {/*    </div>)}*/}
                 {/*</div> */}
+                {recommendedRecipes.length!==0?
                 <div className='wrapper'>
-                    {Object.values(recommendedRecipes).map((val, index,arr) => <div className={`item`} style={{animationDelay: `calc(60s / ${arr.length} * (${arr.length} - ${index}) * -1)`, left:`max(calc(300px*${arr.length}), 100%)`}}><InfoBlock key={index} heading={val['name']}
-                                                                                                                                                                                                                                 bg='bg-danger' text={[val.duration, val.rating]}></InfoBlock>
+                    {Object.values(recommendedRecipes).map((val, index, arr) => <div className={`item`} style={{
+                        animationDelay: `calc(60s / ${arr.length} * (${arr.length} - ${index}) * -1)`,
+                        left: `max(calc(300px*${arr.length}), 100%)`
+                    }}><InfoBlock key={index} heading={val['name']}
+                                  bg='bg-danger' text={[val.duration, val.rating]}></InfoBlock>
                     </div>)}
-                </div>
+                </div>:<></>
+                }
                 {/*<div className='wrapper'>*/}
                 {/*    <div className="item item1"></div>*/}
                 {/*    <div className="item item2"></div>*/}
@@ -212,7 +165,7 @@ function Nutrition() {
                 {/*</div>*/}
             </div>
             <div className='container2'>
-                <svg id="visual" viewBox="0 0 920 250"  xmlns="http://www.w3.org/2000/svg"
+                <svg id="visual" viewBox="0 0 920 250" xmlns="http://www.w3.org/2000/svg"
                      version="1.1">
                     <rect x="0" y="0" width="920" height="250" fill="#000000"></rect>
                     <path
@@ -261,7 +214,7 @@ function Nutrition() {
                         {/*           aria-disabled="true">Disabled</a>*/}
                         {/*    </li>*/}
                         {/*</ul>*/}
-                        <div  className='bg-danger rounded-3' >
+                        <div className='bg-danger rounded-3'>
 
                             <ul className="nav nav-pills bg-secondary rounded-3">
                                 <li className="nav-item">
@@ -287,35 +240,37 @@ function Nutrition() {
                                 </li>
                             </ul>
 
-                            <legend className=''>Build Your own Diet</legend>
-                            <label for='calories' className="p-3">Calories</label>
-                            <input ref={caloriesRef} name='calories' type="number" className='rounded-2' placeholder='3000'/>
-                            <button className='btn btn-lg btn-outline-success m-4 my-sm-0' onClick={()=>{
+                            <legend className='text-success py-3 text-center'>Build Your own Diet</legend>
+                            <label for='calories' className="p-3 inline-flex">Calories</label>
+                            <input ref={caloriesRef} name='calories' type="number" className='rounded-2'
+                                   placeholder='3000'/>
+                            <div className='py-3'>
+                                <button className='btn btn-lg btn-outline-success m-4 my-sm-0' onClick={() => {
 
-                                axios.get(`/build_recipes?calories=${caloriesRef.current.value}`).then((res)=>{
-                                    console.log(res.data);
-                                    setBuildRecipes(res.data)
-                                })
-                            }} >Generate Meal Plan</button>
+                                    axios.get(`/build_recipes?calories=${caloriesRef.current.value}`).then((res) => {
+                                        console.log(res.data);
+                                        setBuildRecipes(res.data)
+                                    })
+                                }}>Generate Meal Plan
+                                </button>
+                            </div>
                             {/* breakfast lunch dinner snacks desserts */}
                         </div>
                         <div className='container-fluid'>
-                            {buildRecipes.map((val,index,arr)=> {
+                            {buildRecipes.map((val, index, arr) => {
                                 if (index % 2 != 0) {
                                     return <div className='row justify-content-center'>
                                         <InfoBlock key={index}
                                                    heading={val[0].name}
-                                                   animation='col-4'
                                                    icon={val[0].img_src}
-                                                   bg='bg-danger'
+                                                   bg='bg-danger col-4'
                                                    text={[
                                                        val[0]['types'], val[0].calories + ' calories',
                                                        val[0].ratings]}/>
                                         <InfoBlock key={index - 1}
                                                    heading={arr[index - 1][0].name}
-                                                   icon={arr[index-1][0].img_src}
-                                                   animation='col-4'
-                                                   bg='bg-danger'
+                                                   icon={arr[index - 1][0].img_src}
+                                                   bg='bg-danger col-4'
                                                    text={[
                                                        arr[index - 1][0]['types'], arr[index - 1][0].calories + ' calories',
                                                        arr[index - 1][0].ratings]}/>
@@ -330,17 +285,21 @@ function Nutrition() {
             </div>
             <div className='spacer waves2'></div>
             <div className='lowPoly3 heroback '>
-                <button className='btn btn-lg btn-secondary m-4 my-sm-0' onClick={()=>{  axios.get('/api/v1/recipes/10').then(res => {
-            console.log(res.data)
-            let data = res.data.filter(item => item.imgSrc !== null)
-            let arr = []
-            for (let i = 0; i < data.length; i += 3) {
-                let newArr = []
-                for (let j = 0; j < 3; j++) newArr.push(data[i + j])
-                arr.push(newArr)
-            }
-            setRecipes(arr)})}}>
-                    Generate Random Recipes</button>
+                <button className='btn btn-lg btn-secondary m-4 my-sm-0' onClick={() => {
+                    axios.get('/api/v1/recipes/10').then(res => {
+                        console.log(res.data)
+                        let data = res.data.filter(item => item.imgSrc !== null)
+                        let arr = []
+                        for (let i = 0; i < data.length; i += 3) {
+                            let newArr = []
+                            for (let j = 0; j < 3; j++) newArr.push(data[i + j])
+                            arr.push(newArr)
+                        }
+                        setRecipes(arr)
+                    })
+                }}>
+                    Generate Random Recipes
+                </button>
 
                 <div className='row' ref={recipeRef} style={{display: 'inline-flex'}}>
                     {recipeComponents}

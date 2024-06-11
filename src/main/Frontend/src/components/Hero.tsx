@@ -109,7 +109,7 @@ function HeroSection() {
     // It
     return (
         <>
-            <div className='container1 container-fluid justify-content-center align-items-center' style={{textAlign: 'center'}} ref={myRef1}>
+            <div className='container1 container-fluid justify-content-center' style={{textAlign: 'center'}} ref={myRef1}>
 
                 <svg id="visual" className='svgBg' viewBox="0 0 900 600"
                      xmlns="http://www.w3.org/2000/svg"
@@ -139,7 +139,7 @@ function HeroSection() {
 
                 </svg>
                 <div
-                    className={`p-3 `}
+                    className={`p-3 justify-content-center align-content-center`}
                     id='hero'>
                         <div className={` ${heroStart ? 'heroStart' : ''}`}>
                             <h1 style={heroHeadingStyle}  id='heroText'>Unleashing Your Potential Through Fitness and
@@ -206,7 +206,10 @@ function HeroSection() {
                            voluptas
                            voluptatum.`]} icon={null}/>
 
-                    <InfoBlock animation={`${blocks ? 'infoHero2' : ''}`} bg='bg-danger' heading={infoTitle2} text={[`This is an info block. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa fugit
+                    <InfoBlock animation={`${blocks ? 'infoHero2' : ''}`}
+                               bg='bg-danger'
+                               heading={infoTitle2}
+                               text={[`This is an info block. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa fugit
                            in iste
                            libero magni molestiae neque quod. Accusantium aspernatur cupiditate delectus deleniti
                            deserunt dicta

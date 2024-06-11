@@ -207,7 +207,7 @@ background: -webkit-linear-gradient(90deg, hsla(99, 75%, 75%, 1) 0%, hsla(15, 93
   aspect-ratio: 900/600;
   background-size: cover;
 
-  background-position: center;
+  background-position:center;
 }
 .container2 {
   position: relative;
@@ -215,7 +215,7 @@ background: -webkit-linear-gradient(90deg, hsla(99, 75%, 75%, 1) 0%, hsla(15, 93
   align-content: center;
   aspect-ratio: 920/200;
 
-  background-size: cover;
+  //background-size: cover;
 
   background-position: center;
 }
@@ -300,19 +300,19 @@ section {
   }
 }
 
-.infoHero {
+.infoHero,.infoHero2 {
   animation-name: infoSlideRight;
   animation-duration: 2s;
 }
 
-.infoHero2 {
-
-  visibility: hidden;
-  animation-name: infoSlideRight;
-  animation-duration: 2s;
-  animation-delay: .75s;
-  animation-fill-mode: both;
-}
+//.infoHero2 {
+//
+//  visibility: hidden;
+//  animation-name: infoSlideRight;
+//  animation-duration: 2s;
+//  animation-delay: .75s;
+//  animation-fill-mode: both;
+//}
 
 .infoHero1 {
   animation-name: infoSlideLeft;
@@ -328,7 +328,7 @@ section {
     /*max-width: 1530px;*/
     margin-inline: auto;
     position: relative;
-    height: 100%;
+    height: 400px;
     margin-top: 5rem;
     overflow-x: hidden;
     mask-image: linear-gradient(to right,
@@ -393,6 +393,16 @@ section {
   from {
     position: relative;
     left: 100%;
+  }
+  to {
+    position: relative;
+    left: 0%;
+  }
+}
+@keyframes infoSlideRight {
+  from {
+    position: relative;
+    left: -100%;
   }
   to {
     position: relative;

@@ -9513,7 +9513,6 @@ textarea.form-control-lg {
   position: relative;
   align-content: center;
   aspect-ratio: 920/200;
-  background-size: cover;
   background-position: center;
 }
 
@@ -9592,17 +9591,9 @@ section {
     opacity: 1;
   }
 }
-.infoHero {
+.infoHero, .infoHero2 {
   animation-name: infoSlideRight;
   animation-duration: 2s;
-}
-
-.infoHero2 {
-  visibility: hidden;
-  animation-name: infoSlideRight;
-  animation-duration: 2s;
-  animation-delay: 0.75s;
-  animation-fill-mode: both;
 }
 
 .infoHero1 {
@@ -9620,7 +9611,7 @@ section {
   /*max-width: 1530px;*/
   margin-inline: auto;
   position: relative;
-  height: 100%;
+  height: 400px;
   margin-top: 5rem;
   overflow-x: hidden;
   mask-image: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgb(0, 0, 0) 20%, rgb(0, 0, 0) 80%, rgba(0, 0, 0, 0));
@@ -9694,6 +9685,16 @@ section {
   from {
     position: relative;
     left: 100%;
+  }
+  to {
+    position: relative;
+    left: 0%;
+  }
+}
+@keyframes infoSlideRight {
+  from {
+    position: relative;
+    left: -100%;
   }
   to {
     position: relative;
