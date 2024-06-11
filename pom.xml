@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>server1</artifactId>
+    <artifactId>workout-app-spring</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>server1</name>
     <description>server1</description>

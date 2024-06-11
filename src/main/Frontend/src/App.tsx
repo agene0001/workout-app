@@ -4,6 +4,7 @@
 import './css/output.css'
 import Navbar from './components/Navbar.tsx'
 import Nutrition from './components/Nutrition.tsx'
+import Chatbot from "./components/chatbot.tsx"
 import Games from './components/Games.tsx'
 import HeroSection from "./components/Hero.tsx";
 import {Route, Routes} from "react-router-dom"
@@ -13,7 +14,7 @@ function App() {
 
     return (
             <Routes>
-                <Route path="/" element={<><div className='container fixed-top'><Navbar name='Home'/> </div><HeroSection/></>}/>
+                <Route path="/" element={<><div className='container fixed-top'><Chatbot/><Navbar name='Home'/> </div><HeroSection/></>}/>
                 <Route path="/Nutrition" element={<><div className='container fixed-top'><Navbar name='Nutrition'/></div> <Nutrition/></>}/>
                 <Route path="/Games" element={<><div className='container fixed-top'><Navbar name='Games'/></div> <Games/></>
                 }/>

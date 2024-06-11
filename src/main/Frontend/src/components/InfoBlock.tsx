@@ -6,6 +6,7 @@ function InfoBlock(props: {
     heading: string,
     text: string,
     icon: string | null,
+    backgroundAnimate: string,
     animation: string,
     bg: string,
     nutrition: string,
@@ -50,7 +51,11 @@ function InfoBlock(props: {
 
     return (
         <>
-            <div ref={ref} onClick={() => {
+            <div ref={ref} onClick={(ele) => {
+                if (props.backgroundAnimate !== undefined) {
+                    ele.target.style.width = "100vw";
+                    ele.target.style.height = "100vh";
+                }
             }} className={`${props.animation} ${props.bg} col p-3 m-4 rounded-3 infoBlock`}>
                 {props.icon !== null ? <img className='img-fluid' src={props.icon} alt=""/> : ''}
                 <h1 ref={heading} className='textAnimate'>{props.heading}</h1>
