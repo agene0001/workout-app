@@ -68,7 +68,7 @@ jobs:
 #
       - name: Deploy to GKE
         run: |
-          kubectl apply -f k8s-manifests/
+          kubectl apply -f k8s-manifests
 
       - name: Get Service URL
         run: |
