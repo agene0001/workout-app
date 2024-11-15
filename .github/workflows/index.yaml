@@ -22,18 +22,26 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Authenticate to Google Cloud
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v3'
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+          project_id: ${{ env.PROJECT_ID }}
+
       # Setup Google Cloud CLI
       - name: Setup Google Cloud CLI
-        uses: google-github-actions/setup-gcloud@v2
+        uses: 'google-github-actions/setup-gcloud@v1'
         with:
           project_id: ${{ env.PROJECT_ID }}
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
+          install_components: 'gke-gcloud-auth-plugin'
 
-      # Configure Docker to use gcloud as a credential helper
+      # Configure Docker authentication
       - name: Configure Docker Auth
         run: |
-          gcloud auth configure-docker gcr.io --quiet
+          gcloud auth configure-docker ${{ env.DOCKER_REGISTRY }} --quiet
 
       # Build and push images
       - name: Build and Push Docker images
