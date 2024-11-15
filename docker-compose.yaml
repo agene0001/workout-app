@@ -1,0 +1,85 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  spring-backend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/spring-backend:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-builder
+    container_name: spring-backend
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/automation
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD:-LexLuthern246!!??}
+      - SERVER_PORT=8081
+    depends_on:
+      - mysql-db
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  react-frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/react-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-final
+    container_name: react-frontend
+    depends_on:
+      - spring-backend
+      - python-api
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "8080:8080"
+    command: ["npm", "run", "preview"]
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  python-api:
+    image: ghcr.io/${GITHUB_REPOSITORY}/python-api:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api-builder
+    container_name: python-api
+    volumes:
+      - ./main/python/similarity_matrix.pkl:/app/similarity_matrix.pkl
+    ports:
+      - "8082:8082"
+    command: ["python", "./recommenderRoute.py"]
+    restart: no
+    environment:
+      DOCKER: true
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-LexLuthern246!!??}
+      MYSQL_DATABASE: automation
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+networks:
+  app-network:
+    driver: bridge
