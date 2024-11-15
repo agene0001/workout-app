@@ -2,9 +2,9 @@ name: Docker Compose CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 env:
   PROJECT_ID: workout-app-441723
