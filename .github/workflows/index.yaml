@@ -65,7 +65,7 @@ jobs:
           kubectl create secret generic app-secrets \
             --from-literal=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
             --dry-run=client -o yaml | kubectl apply -f -
-
+#
       - name: Deploy to GKE
         run: |
           kubectl apply -f k8s-manifests/
