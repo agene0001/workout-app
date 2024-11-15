@@ -10,8 +10,9 @@ env:
   PROJECT_ID: workout-app-441723
   REGION: us-central1
   REGISTRY: us-central1-docker.pkg.dev
-  REPOSITORY: workout-app  # Your Artifact Registry repository name
-#
+  REPOSITORY: workout-app
+  IMAGE_TAG: ${{ github.sha }}
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -22,9 +23,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: List directory structure
-        run: |
-              ls -R main/
+        run: ls -R main/
 
       # Authenticate to Google Cloud
       - id: 'auth'
@@ -41,12 +42,12 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           install_components: 'gke-gcloud-auth-plugin'
 
-      # Configure Docker authentication for Artifact Registry
+      # Configure Docker authentication
       - name: Configure Docker Auth
         run: |
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      # Create Artifact Registry repository if it doesn't exist
+      # Setup Artifact Registry
       - name: Setup Artifact Registry
         run: |
           gcloud artifacts repositories create ${{ env.REPOSITORY }} \
@@ -56,30 +57,18 @@ jobs:
 
       # Build and push images
       - name: Build and Push Docker images
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build images
+          # Build all services using docker-compose
           docker compose build
-          
-          # Tag images
-          docker tag spring-backend:latest ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/spring-backend:${{ github.sha }}
-          docker tag react-frontend:latest ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ github.sha }}
-          docker tag python-api:latest ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/python-api:${{ github.sha }}
-          
-          # Push images
-          docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/spring-backend:${{ github.sha }}
-          docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ github.sha }}
-          docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/python-api:${{ github.sha }}
-          
 
-    
+          # Push the images
+          docker compose push
 
-    # Deploy to Google Cloud
+      # Deploy
       - name: Deploy to Google Cloud
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Update docker-compose.yml with new image tags
-          sed -i "s|spring-backend:latest|${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/spring-backend:${{ github.sha }}|g" docker-compose.yml
-          sed -i "s|react-frontend:latest|${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ github.sha }}|g" docker-compose.yml
-          sed -i "s|python-api:latest|${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/python-api:${{ github.sha }}|g" docker-compose.yml
-          
-          # Deploy using docker-compose
-          docker compose -f docker-compose.yml up -d
+          docker compose up -d
