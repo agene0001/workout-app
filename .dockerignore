@@ -1,0 +1,12 @@
+# Ignore Python virtual environment
+.venv
+
+# Ignore Node.js dependencies
+node_modules
+
+# Ignore other temporary or unnecessary files
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+main/python/similarity_matrix.pkl

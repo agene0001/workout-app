@@ -1,7 +1,0 @@
-numpy~=1.26.4
-pandas~=2.2.1
-nltk~=3.8.1
-scikit-learn~=1.4.2
-flask>=1.0.2
-flask-cors>=1.10.0
-mysql-connector-python>=8.4.0

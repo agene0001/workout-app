@@ -1,0 +1,63 @@
+name: Docker Compose CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  PROJECT_ID: workout-app-441723
+  GKE_ZONE: us-central1
+  DOCKER_REGISTRY: gcr.io
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Setup Google Cloud CLI
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      # Configure Docker to use gcloud as a credential helper
+      - name: Configure Docker Auth
+        run: |
+          gcloud auth configure-docker gcr.io --quiet
+
+      # Build and push images
+      - name: Build and Push Docker images
+        run: |
+          # Build images
+          docker compose build
+          
+          # Tag images
+          docker tag spring-backend:latest ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/spring-backend:${{ github.sha }}
+          docker tag react-frontend:latest ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/react-frontend:${{ github.sha }}
+          docker tag python-api:latest ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/python-api:${{ github.sha }}
+          
+          # Push images
+          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/spring-backend:${{ github.sha }}
+          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/react-frontend:${{ github.sha }}
+          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/python-api:${{ github.sha }}
+
+      # Deploy to Google Cloud
+      - name: Deploy to Google Cloud
+        run: |
+          # Update docker-compose.yml with new image tags
+          sed -i "s|spring-backend:latest|${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/spring-backend:${{ github.sha }}|g" docker-compose.yml
+          sed -i "s|react-frontend:latest|${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/react-frontend:${{ github.sha }}|g" docker-compose.yml
+          sed -i "s|python-api:latest|${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/python-api:${{ github.sha }}|g" docker-compose.yml
+          
+          # Deploy using docker-compose
+          docker compose -f docker-compose.yml up -d
