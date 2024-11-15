@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>backend-spring</artifactId>
+    <artifactId>workout-app-spring</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>server1</name>
     <description>server1</description>
@@ -24,10 +24,13 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
         <dependency>
-    <groupId>edu.princeton.cs</groupId>
-    <artifactId>algs4</artifactId>
-    <version>1.0</version>
-</dependency>
+            <groupId>edu.princeton.cs</groupId>
+            <artifactId>algs4</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/algs4.jar</systemPath>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
