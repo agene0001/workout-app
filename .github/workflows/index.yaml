@@ -9,7 +9,7 @@ on:
 env:
   PROJECT_ID: workout-app-441723
   REGION: us-central1
-  REGISTRY: ${{ env.REGION }}-docker.pkg.dev
+  REGISTRY: us-central1-docker.pkg.dev
   REPOSITORY: workout-app  # Your Artifact Registry repository name
 
 jobs:
