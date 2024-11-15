@@ -12,10 +12,10 @@ env:
   REGISTRY: us-central1-docker.pkg.dev
   REPOSITORY: workout-app
   IMAGE_TAG: ${{ github.sha }}
-  SERVICE_NAME: workout-app-service  # Add this
+  CLUSTER_NAME: workout-app-cluster
 
 jobs:
-  build-and-push:
+  deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -25,58 +25,55 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: List directory structure
-        run: ls -R main/
-
-      # Authenticate to Google Cloud
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+      - name: Auth to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-          project_id: ${{ env.PROJECT_ID }}
 
-      # Setup Google Cloud CLI
-      - name: Setup Google Cloud CLI
-        uses: 'google-github-actions/setup-gcloud@v1'
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id: ${{ env.PROJECT_ID }}
           install_components: 'gke-gcloud-auth-plugin'
 
-      # Configure Docker authentication
-      - name: Configure Docker Auth
-        run: |
-          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+      - name: Configure Docker
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-      # Setup Artifact Registry
-      - name: Setup Artifact Registry
+      - name: Install Kompose
         run: |
-          gcloud artifacts repositories create ${{ env.REPOSITORY }} \
-            --repository-format=docker \
-            --location=${{ env.REGION }} \
-            --quiet || true
+          curl -L https://github.com/kubernetes/kompose/releases/download/v1.31.2/kompose-linux-amd64 -o kompose
+          chmod +x kompose
+          sudo mv ./kompose /usr/local/bin/kompose
 
-      # Build and push images
-      - name: Build and Push Docker images
-        env:
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Build & Push Images
         run: |
-          # Build all services using docker-compose
           docker compose build
-
-          # Push the images
           docker compose push
-#
-      # Deploy to Cloud Run
-      - name: Deploy to Cloud Run
+
+      - name: Convert Docker Compose to Kubernetes
         run: |
-          gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ env.IMAGE_TAG }} \
-            --region ${{ env.REGION }} \
-            --platform managed \
-            --allow-unauthenticated  # Only if your app should be publicly accessible
-#
-      # Get the service URL
+          kompose convert -f docker-compose.yaml -o k8s-manifests
+
+      - name: Setup GKE Cluster
+        run: |
+          gcloud container clusters create-auto ${{ env.CLUSTER_NAME }} \
+            --region ${{ env.REGION }} || true
+          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
+            --region ${{ env.REGION }}
+
+      - name: Create Secret
+        run: |
+          kubectl create secret generic app-secrets \
+            --from-literal=MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -f k8s-manifests/
+
       - name: Get Service URL
         run: |
-          echo "Your service is available at: $(gcloud run services describe ${{ env.SERVICE_NAME }} --region ${{ env.REGION }} --format='value(status.url)')"
+          echo "Waiting for LoadBalancer..."
+          while [ -z $(kubectl get service react-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null) ]; do
+            sleep 5
+          done
+          echo "Frontend available at: http://$(kubectl get service react-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):8080"
