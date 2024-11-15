@@ -38,7 +38,7 @@ services:
       MYSQL_ROOT_PASSWORD: "LexLuthern246!!??"
       MYSQL_DATABASE: "automation"
     ports:
-      - "3307:3306"
+      - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
