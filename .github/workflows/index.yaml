@@ -71,7 +71,7 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/app:${{ env.IMAGE_TAG }} \
+            --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ env.IMAGE_TAG }} \
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated  # Only if your app should be publicly accessible
