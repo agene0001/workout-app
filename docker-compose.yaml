@@ -1,5 +1,5 @@
 version: '3.8'
-
+#
 services:
   spring-backend:
     image: ${REGION:-us-central1}-docker.pkg.dev/${PROJECT_ID:-workout-app-441723}/${REPOSITORY:-workout-app}/spring-backend:${IMAGE_TAG:-latest}
