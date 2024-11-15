@@ -75,7 +75,7 @@ jobs:
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated  # Only if your app should be publicly accessible
-
+#
       # Get the service URL
       - name: Get Service URL
         run: |
