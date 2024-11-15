@@ -12,6 +12,7 @@ env:
   REGISTRY: us-central1-docker.pkg.dev
   REPOSITORY: workout-app
   IMAGE_TAG: ${{ github.sha }}
+  SERVICE_NAME: workout-app-service  # Add this
 
 jobs:
   build-and-push:
@@ -66,9 +67,16 @@ jobs:
           # Push the images
           docker compose push
 
-      # Deploy
-      - name: Deploy to Google Cloud
-        env:
-          IMAGE_TAG: ${{ github.sha }}
+      # Deploy to Cloud Run
+      - name: Deploy to Cloud Run
         run: |
-          docker compose up -d
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/app:${{ env.IMAGE_TAG }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated  # Only if your app should be publicly accessible
+
+      # Get the service URL
+      - name: Get Service URL
+        run: |
+          echo "Your service is available at: $(gcloud run services describe ${{ env.SERVICE_NAME }} --region ${{ env.REGION }} --format='value(status.url)')"
