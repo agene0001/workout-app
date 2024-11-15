@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   spring-backend:
-    image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/spring-backend:${IMAGE_TAG:-latest}
+    image: ${REGION:-us-central1}-docker.pkg.dev/${PROJECT_ID:-workout-app-441723}/${REPOSITORY:-workout-app}/spring-backend:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,7 +22,7 @@ services:
       - app-network
 
   react-frontend:
-    image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/react-frontend:${IMAGE_TAG:-latest}
+    image: ${REGION:-us-central1}-docker.pkg.dev/${PROJECT_ID:-workout-app-441723}/${REPOSITORY:-workout-app}/react-frontend:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -41,7 +41,7 @@ services:
       - app-network
 
   python-api:
-    image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/python-api:${IMAGE_TAG:-latest}
+    image: ${REGION:-us-central1}-docker.pkg.dev/${PROJECT_ID:-workout-app-441723}/${REPOSITORY:-workout-app}/python-api:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile

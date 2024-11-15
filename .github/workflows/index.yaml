@@ -10,7 +10,7 @@ env:
   PROJECT_ID: workout-app-441723
   REGION: us-central1
   REGISTRY: ${{ env.REGION }}-docker.pkg.dev
-  REPOSITORY: my-repo  # Your Artifact Registry repository name
+  REPOSITORY: workout-app  # Your Artifact Registry repository name
 
 jobs:
   build-and-push:
