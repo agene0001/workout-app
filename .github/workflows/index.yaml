@@ -2,16 +2,16 @@ name: Docker Compose CI/CD
 
 on:
   push:
-    branches: ["master"]
+    branches: [ "master" ]
   pull_request:
-    branches: ["master"]
+    branches: [ "master" ]
 
 env:
   PROJECT_ID: workout-app-441723
   REGION: us-central1
   REGISTRY: us-central1-docker.pkg.dev
   REPOSITORY: workout-app  # Your Artifact Registry repository name
-
+#
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: List directory structure
         run: |
-          ls -R main/
+              ls -R main/
 
       # Authenticate to Google Cloud
       - id: 'auth'
@@ -57,22 +57,23 @@ jobs:
       # Build and push images
       - name: Build and Push Docker images
         run: |
-          # Build images with specified targets
-          docker compose -f docker-compose.yml build --target backend-builder spring-backend
-          docker compose -f docker-compose.yml build --target frontend-final react-frontend
-          docker compose -f docker-compose.yml build --target api-builder python-api
-
+          # Build images
+          docker compose build
+          
           # Tag images
           docker tag spring-backend:latest ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/spring-backend:${{ github.sha }}
           docker tag react-frontend:latest ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ github.sha }}
           docker tag python-api:latest ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/python-api:${{ github.sha }}
-
+          
           # Push images
           docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/spring-backend:${{ github.sha }}
           docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ github.sha }}
           docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/python-api:${{ github.sha }}
+          
 
-      # Deploy to Google Cloud
+    
+
+    # Deploy to Google Cloud
       - name: Deploy to Google Cloud
         run: |
           # Update docker-compose.yml with new image tags
