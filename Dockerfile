@@ -6,7 +6,7 @@ WORKDIR /app/backend-spring
 COPY main/backend-spring ./
 
 # Install dependencies and build the Spring Boot project
-RUN mvn clean install -DskipTests
+RUN mvn clean package -DskipTests
 
 
 # Set environment variables for Spring Boot
@@ -16,7 +16,7 @@ ENV SPRING_DATASOURCE_PASSWORD=LexLuthern246!!??
 ENV SERVER_PORT=8081
 
 # Start the Spring Boot application
-ENTRYPOINT ["java", "-jar", "/app/backend-spring/target/backend-spring-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "/app/backend-spring/target/workout-app-spring-0.0.1-SNAPSHOT.jar"]
 # Stage 2: Build the React frontend
 #FROM node:16 AS frontend-builder
 #WORKDIR /app/frontend
