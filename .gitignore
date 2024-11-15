@@ -7,7 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-src/main/Frontend/node_modules
+main/backend-spring/src/main/Frontend/node_modules
 dist
 dist-ssr
 *.local
@@ -22,4 +22,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-/src/main/Frontend/.env
+/main/backend-spring/src/main/Frontend/.env
