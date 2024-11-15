@@ -4,7 +4,7 @@ services:
   spring-backend:
     image: spring-backend:latest
     ports:
-      - "8081"
+      - "8081:8081"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql-db:3306/automation"
       SPRING_DATASOURCE_USERNAME: "root"
@@ -16,7 +16,7 @@ services:
   react-frontend:
     image: react-frontend:latest
     ports:
-      - "8080"
+      - "8080:8080"
     environment:
       NODE_ENV: "production"
     networks:
@@ -25,7 +25,7 @@ services:
   python-api:
     image: python-api:latest
     ports:
-      - "8082"
+      - "8082:8082"
     command: ["python", "./recommenderRoute.py"]
     environment:
       DOCKER: "true"
@@ -38,7 +38,7 @@ services:
       MYSQL_ROOT_PASSWORD: "LexLuthern246!!??"
       MYSQL_DATABASE: "automation"
     ports:
-      - "3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:

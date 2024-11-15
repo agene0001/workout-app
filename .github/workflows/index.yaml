@@ -73,7 +73,7 @@ jobs:
       - name: Get Service URL
         run: |
           echo "Waiting for LoadBalancer..."
-          while [ -z $(kubectl get service react-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null) ]; do
+          while [ -z "$(kubectl get service react-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}')" ]; do
             sleep 5
           done
           echo "Frontend available at: http://$(kubectl get service react-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}'):8080"
