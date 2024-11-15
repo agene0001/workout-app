@@ -22,6 +22,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: List directory structure
+        run: |
+              ls -R main/
 
       # Authenticate to Google Cloud
       - id: 'auth'

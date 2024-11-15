@@ -3,8 +3,7 @@ FROM maven:3.8.6-openjdk-18 AS backend-builder
 WORKDIR /app/backend-spring
 
 # Copy pom.xml and source code for Spring Boot
-COPY ./main/backend-spring ./
-  # Adjust path based on actual structure
+COPY main/backend-spring ./
 
 # Install dependencies and build the Spring Boot project
 RUN mvn clean install -DskipTests
