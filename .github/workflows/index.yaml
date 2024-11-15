@@ -66,7 +66,7 @@ jobs:
 
           # Push the images
           docker compose push
-
+#
       # Deploy to Cloud Run
       - name: Deploy to Cloud Run
         run: |
