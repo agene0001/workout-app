@@ -8,8 +8,9 @@ on:
 
 env:
   PROJECT_ID: workout-app-441723
-  GKE_ZONE: us-central1
-  DOCKER_REGISTRY: gcr.io
+  REGION: us-central1
+  REGISTRY: ${{ env.REGION }}-docker.pkg.dev
+  REPOSITORY: my-repo  # Your Artifact Registry repository name
 
 jobs:
   build-and-push:
@@ -20,7 +21,7 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4  # Updated to v4 to address Node.js deprecation warning
+      - uses: actions/checkout@v4
 
       # Authenticate to Google Cloud
       - id: 'auth'
@@ -37,10 +38,18 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           install_components: 'gke-gcloud-auth-plugin'
 
-      # Configure Docker authentication
+      # Configure Docker authentication for Artifact Registry
       - name: Configure Docker Auth
         run: |
-          gcloud auth configure-docker ${{ env.DOCKER_REGISTRY }} --quiet
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      # Create Artifact Registry repository if it doesn't exist
+      - name: Setup Artifact Registry
+        run: |
+          gcloud artifacts repositories create ${{ env.REPOSITORY }} \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --quiet || true
 
       # Build and push images
       - name: Build and Push Docker images
@@ -49,22 +58,22 @@ jobs:
           docker compose build
           
           # Tag images
-          docker tag spring-backend:latest ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/spring-backend:${{ github.sha }}
-          docker tag react-frontend:latest ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/react-frontend:${{ github.sha }}
-          docker tag python-api:latest ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/python-api:${{ github.sha }}
+          docker tag spring-backend:latest ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/spring-backend:${{ github.sha }}
+          docker tag react-frontend:latest ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ github.sha }}
+          docker tag python-api:latest ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/python-api:${{ github.sha }}
           
           # Push images
-          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/spring-backend:${{ github.sha }}
-          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/react-frontend:${{ github.sha }}
-          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/python-api:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/spring-backend:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/python-api:${{ github.sha }}
 
       # Deploy to Google Cloud
       - name: Deploy to Google Cloud
         run: |
           # Update docker-compose.yml with new image tags
-          sed -i "s|spring-backend:latest|${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/spring-backend:${{ github.sha }}|g" docker-compose.yml
-          sed -i "s|react-frontend:latest|${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/react-frontend:${{ github.sha }}|g" docker-compose.yml
-          sed -i "s|python-api:latest|${{ env.DOCKER_REGISTRY }}/${{ env.PROJECT_ID }}/python-api:${{ github.sha }}|g" docker-compose.yml
+          sed -i "s|spring-backend:latest|${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/spring-backend:${{ github.sha }}|g" docker-compose.yml
+          sed -i "s|react-frontend:latest|${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ github.sha }}|g" docker-compose.yml
+          sed -i "s|python-api:latest|${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/python-api:${{ github.sha }}|g" docker-compose.yml
           
           # Deploy using docker-compose
           docker compose -f docker-compose.yml up -d
