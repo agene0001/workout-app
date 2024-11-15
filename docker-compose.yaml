@@ -1,9 +1,8 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
   spring-backend:
-    image: ghcr.io/${GITHUB_REPOSITORY}/spring-backend:${IMAGE_TAG:-latest}
+    image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/spring-backend:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,7 +22,7 @@ services:
       - app-network
 
   react-frontend:
-    image: ghcr.io/${GITHUB_REPOSITORY}/react-frontend:${IMAGE_TAG:-latest}
+    image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/react-frontend:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -42,7 +41,7 @@ services:
       - app-network
 
   python-api:
-    image: ghcr.io/${GITHUB_REPOSITORY}/python-api:${IMAGE_TAG:-latest}
+    image: ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/python-api:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
