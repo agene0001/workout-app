@@ -66,8 +66,11 @@ jobs:
           docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/spring-backend:${{ github.sha }}
           docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/react-frontend:${{ github.sha }}
           docker push ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/python-api:${{ github.sha }}
+          
 
-      # Deploy to Google Cloud
+    
+
+    # Deploy to Google Cloud
       - name: Deploy to Google Cloud
         run: |
           # Update docker-compose.yml with new image tags
