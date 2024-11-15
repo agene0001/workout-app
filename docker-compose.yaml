@@ -35,7 +35,7 @@ services:
   mysql-db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: "password123"
+      MYSQL_ROOT_PASSWORD: "LexLuthern246!!??"
       MYSQL_DATABASE: "automation"
     ports:
       - "3307:3306"
