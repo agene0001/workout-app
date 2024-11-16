@@ -3,7 +3,18 @@ FROM maven:3.8.6-openjdk-18 AS backend-builder
 WORKDIR /app/backend-spring
 
 # Copy pom.xml and source code for Spring Boot
+
+COPY main/backend-spring/libs /libs
+
+# Copy pom.xml and source code for Spring Boot
 COPY main/backend-spring ./
+
+RUN mvn install:install-file \
+  -Dfile=/libs/algs4.jar \
+  -DgroupId=edu.princeton.cs \
+  -DartifactId=algs4 \
+  -Dversion=1.0 \
+  -Dpackaging=jar
 
 # Install dependencies and build the Spring Boot project
 RUN mvn clean package -DskipTests

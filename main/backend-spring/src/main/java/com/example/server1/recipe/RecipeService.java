@@ -2,8 +2,10 @@ package com.example.server1.recipe;
 
 import com.example.server1.Autocomplete;
 import com.example.server1.Term;
-import com.example.server1.recipe.RecipeRepository;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ public class RecipeService {
     public RecipeService(RecipeRepository recipeRepository) {
         this.recipeRepository = recipeRepository;
         Term[] terms = Autocomplete.setup("static/automation_recipes.csv");
+
         this.recipeAutocomplete = new Autocomplete(terms);
     }
 

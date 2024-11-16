@@ -27,8 +27,6 @@
             <groupId>edu.princeton.cs</groupId>
             <artifactId>algs4</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/libs/algs4.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -53,6 +51,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <includeSystemScope>true</includeSystemScope>
+                </configuration>
             </plugin>
         </plugins>
     </build>

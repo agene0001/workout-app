@@ -2,51 +2,81 @@ version: '3.8'
 
 services:
   spring-backend:
-    image: spring-backend:latest
+    image: ${REGION:-us-central1}-docker.pkg.dev/${PROJECT_ID:-workout-app-441723}/${REPOSITORY:-workout-app}/spring-backend:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-builder
+    container_name: spring-backend
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql-db:3306/automation"
-      SPRING_DATASOURCE_USERNAME: "root"
-      SPRING_DATASOURCE_PASSWORD: "password123"
-      SERVER_PORT: "8081"
+      - DB_HOST=mysql-db
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/automation
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=LexLuthern246!!??
+      - SERVER_PORT=8081
+    depends_on:
+      - mysql-db
+    restart: no
     networks:
       - app-network
-
   react-frontend:
-    image: react-frontend:latest
+    image: ${REGION:-us-central1}-docker.pkg.dev/${PROJECT_ID:-workout-app-441723}/${REPOSITORY:-workout-app}/react-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-final
+    container_name: react-frontend
+    depends_on:
+      - spring-backend
+      - python-api
+    environment:
+      - NODE_ENV=production
     ports:
       - "8080:8080"
-    environment:
-      NODE_ENV: "production"
+    command: ["npm", "run", "preview"]
+    restart: always
     networks:
       - app-network
 
   python-api:
-    image: python-api:latest
+    image: ${REGION:-us-central1}-docker.pkg.dev/${PROJECT_ID:-workout-app-441723}/${REPOSITORY:-workout-app}/python-api:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api-builder
+    container_name: python-api
     ports:
       - "8082:8082"
     command: ["python", "./recommenderRoute.py"]
+    restart: always
     environment:
-      DOCKER: "true"
+      DOCKER: true
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 4g
 
   mysql-db:
     image: mysql:8.0
+    container_name: mysql-db
     environment:
-      MYSQL_ROOT_PASSWORD: "LexLuthern246!!??"
-      MYSQL_DATABASE: "automation"
+      MYSQL_ROOT_PASSWORD: LexLuthern246
+      MYSQL_DATABASE: automation
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
+    restart: always
     networks:
       - app-network
 
 volumes:
-  mysql_data: {}
-
+  mysql_data:
 networks:
   app-network:
     driver: bridge
