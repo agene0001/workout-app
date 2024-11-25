@@ -163,7 +163,7 @@ public class Recipe {
 
     @Column(name = "calories", columnDefinition = "INT", nullable = true)
     private Integer calories;
-    @Column(name = "imgSrc", columnDefinition = "varchar(300)")
+    @Column(name = "imgSrc", columnDefinition = "varchar(255)")
     private String imgSrc;
     @Column(name = "duration")
     private String duration;
@@ -172,7 +172,7 @@ public class Recipe {
 
     @Override
     public String toString() {
-        return "Recipe{" +
+        return "recipe{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", url='" + url + '\'' +

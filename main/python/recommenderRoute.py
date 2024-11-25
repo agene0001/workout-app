@@ -6,6 +6,7 @@ import signal
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from recommender import MemoryEfficientRecommender
+# from sparkRecommender import SparkRecommender
 import mysql.connector
 from dotenv import load_dotenv
 
@@ -44,7 +45,17 @@ def init_app():
         # Initialize recommender
         logger.info("Initializing recommender...")
         is_docker = os.getenv('DOCKER') == 'true'
+        is_docker_compose = os.getenv('DOCKERCOMPOSE') == 'true'
+        logger.info(f"is docker = {is_docker}")
+        logger.info(f"is docker compose = {is_docker_compose}")
         if is_docker:
+            db_config = {
+                'host': "mysql-db",
+                'user': os.getenv('db_user'),
+                'password': os.getenv('K8S_PASSWORD'),
+                'database': os.getenv('db_name')
+            }
+        elif is_docker_compose:
             db_config = {
                 'host': "mysql-db",
                 'user': os.getenv('db_user'),
@@ -59,8 +70,14 @@ def init_app():
                 'database': os.getenv('db_name')
             }
         logger.info(f"Database configuration: {db_config}")
-        recipe_recommender = MemoryEfficientRecommender(db_config, 'recipes')
 
+        recipe_recommender = MemoryEfficientRecommender(db_config, 'recipes')
+        # results = recommender.find_ksimilar("target_item_name", 5)
+
+        # recipe_recommender = SparkRecommender(db_config, 'recipes')
+
+        recipe_recommender.preprocess()
+        recipe_recommender.setup()
         # Prepare the data and generate the similarity matrix
         # if recipe_recommender.tfidf_matrix is None:
         #     recipe_recommender.setup('name', 'ingredients')

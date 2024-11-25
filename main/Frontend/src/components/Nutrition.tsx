@@ -143,12 +143,12 @@ function Nutrition() {
                             className="btn btn-lg w-50 btn-outline-primary my-2 my-sm-0 mx-1" type="submit"
                             id='recipeSearch'
                             onClick={() => {
-                                axios.get(`/recommendations?query=${encodeURIComponent(querySearch)}`).then(async (res) => {
+                                axios.get(`api/v1/recipes/recommendations?query=${encodeURIComponent(querySearch)}`).then(async (res) => {
                                     console.log(res.data);
-                                    let data: RecipeItem[] = []
+                                    const data: RecipeItem[] = []
                                     for (const name of res.data) {
-
-                                        await axios.get(`/api/v1/recipes/recipe/${encodeURIComponent(name.name)}`).then((res) => {
+                                        console.log(name)
+                                        await axios.get(`/api/v1/recipes/recipe/${encodeURIComponent(name)}`).then((res) => {
                                             console.log(res.data)
                                             if (res.data) data.push(res.data);  // Use JSON.stringify() if it's a plain object
                                             // console.log(res)
