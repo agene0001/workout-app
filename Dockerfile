@@ -1,5 +1,7 @@
 # Stage 1: Build the Spring Boot application
-FROM --platform=linux/arm64 maven:3.8-openjdk-17 AS backend-builder
+FROM mysql:8.0 AS mysql-with-backup
+COPY backup.sql /docker-entrypoint-initdb.d/
+FROM --platform=linux/amd64 maven:3.8-openjdk-17 AS backend-builder
 
 # Install Maven
 WORKDIR /app/backend-spring
@@ -114,7 +116,7 @@ CMD java \
 
 
 # Stage 5: Serving the React app using npm start
-FROM --platform=linux/arm64 node:16 AS frontend-final
+FROM --platform=linux/amd64 node:16 AS frontend-final
 WORKDIR /app/frontend
 
 # Copy the necessary files for frontend
