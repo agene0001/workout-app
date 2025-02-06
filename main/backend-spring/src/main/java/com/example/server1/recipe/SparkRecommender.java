@@ -104,20 +104,18 @@ public class SparkRecommender implements Serializable {
         Dataset<Row> queryFeatures = tfidfModel.transform(processedQuery);
 
         // Register user-defined function for vector operations
-        sparkSession.udf().register("enhanced_similarity",
-                (org.apache.spark.ml.linalg.Vector v1, org.apache.spark.ml.linalg.Vector v2) -> {
-                    double cosineSim = computeCosineSimilarity(v1, v2);
-                    double jaccardSim = computeJaccardSimilarity(v1, v2);
-                    // Weighted combination of similarities
-                    return 0.7 * cosineSim + 0.3 * jaccardSim;
-                }, org.apache.spark.sql.types.DataTypes.DoubleType);
+        sparkSession.udf().register("enhanced_similarity", (Vector v1, Vector v2) -> {
+            double cosineSim = computeCosineSimilarity(v1, v2);
+            double jaccardSim = computeJaccardSimilarity(v1, v2);
+            return 0.7 * cosineSim + 0.3 * jaccardSim;
+        }, DataTypes.DoubleType);
 
         // Register the DataFrames as temp views
         featuredData.createOrReplaceTempView("recipes");
         queryFeatures.createOrReplaceTempView("query");
 
         // Use the registered UDF in the SQL query
-        Dataset<Row> recipesDF = sparkSession.table("recipes");
+        Dataset<Row> recipesDF = sparkSession.table("Recipes");
         Dataset<Row> queryDF = sparkSession.table("query");
 
 // Register the UDF if you haven't already

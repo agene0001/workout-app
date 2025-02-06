@@ -1,18 +1,20 @@
 services:
   spring-backend:
-    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
+#    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
+    image: spring-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
       target: backend-builder
     container_name: spring-backend
+    platform: linux/arm64
     ports:
       - "8081:8081"
     environment:
       - DB_HOST=mysql-db
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/automation
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=LexLuthern246
+      - SPRING_DATASOURCE_PASSWORD=LexLuthern246!!??
       - SERVER_PORT=8081
     depends_on:
       - mysql-db
@@ -23,12 +25,14 @@ services:
       - app-network
 
   react-frontend:
-    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
+#    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
+    image: react-frontend:latest
     build:
       context: .
       dockerfile: Dockerfile
       target: frontend-final
     container_name: react-frontend
+    platform: linux/arm64
     depends_on:
       - spring-backend
     environment:
@@ -44,8 +48,9 @@ services:
     image: mysql:8.0
     container_name: mysql-db
     environment:
-      MYSQL_ROOT_PASSWORD: LexLuthern246
+      MYSQL_ROOT_PASSWORD: LexLuthern246!!??
       MYSQL_DATABASE: automation
+
     ports:
       - "3307:3306"
     volumes:
