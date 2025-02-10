@@ -192,7 +192,7 @@ function Nutrition() {
 
             <div className='row justify-content-center'>
                 <div className='col-6'>
-                    <ul className="list-group" style={{}}>
+                    <ul className="list-group">
                         {searchedRecipes.map((val, ind) => (<li
                             onMouseOut={(ele) => {
                                 const target = ele.target as HTMLElement; // Cast target to HTMLElement
