@@ -15,13 +15,13 @@ import javax.security.auth.Subject;
 public class SparkConfig {
     private static final Logger logger = LoggerFactory.getLogger(SparkConfig.class);
 
-    @Value("${spark.app.name}")
-    private String appName;
-
+//    @Value("${spark.app.name}")
+//    private String appName;
+//
     @Value("${spark.master}")
     private String masterUri;
-
-    @Value("${spark.default.parallelism:2}")
+//
+    @Value("${spark.default.parallelism}")
     private int defaultParallelism;
 
     private SparkSession sparkSession;
@@ -29,7 +29,6 @@ public class SparkConfig {
     @Bean
     public SparkConf sparkConf() {
         return new SparkConf()
-                .setAppName(appName)
                 .setMaster(masterUri)
                 // Basic configuration
                 .set("spark.default.parallelism", String.valueOf(defaultParallelism))

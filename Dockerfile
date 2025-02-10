@@ -35,39 +35,8 @@ ENV SERVER_PORT=8081
 # Stage 2: Use CMD for starting the Spring Boot application
 # Stage 2: Use CMD for starting the Spring Boot application
 CMD java \
-    -Dio.netty.tryReflectionSetAccessible=true \
-    -Dlog4j.logLevel=ERROR \
-    -Djava.security.manager \
-    -Djava.security.manager=allow \
-    -Djava.util.logging.config.file=/app/backend-spring/logging.properties \
-    --add-exports=java.base/sun.nio.ch=ALL-UNNAMED \
-    --add-exports=java.base/sun.security.action=ALL-UNNAMED \
-    --add-exports=java.base/sun.util.calendar=ALL-UNNAMED \
-    --add-exports=java.management/sun.management=ALL-UNNAMED \
-    --add-opens=java.base/java.nio=ALL-UNNAMED \
-    --add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
-    --add-opens=java.base/java.util=ALL-UNNAMED \
-    --add-opens=java.base/java.util.concurrent=ALL-UNNAMED \
-    --add-opens=java.base/java.lang=ALL-UNNAMED \
-    --add-opens=java.base/java.lang.invoke=ALL-UNNAMED \
-    --add-opens=java.base/java.io=ALL-UNNAMED \
-    --add-opens=java.base/java.security=ALL-UNNAMED \
-    --add-opens=java.base/java.lang.module=ALL-UNNAMED \
-    --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED \
-    --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED \
-    --add-opens=java.base/jdk.internal.reflect=ALL-UNNAMED \
-    --add-opens=java.base/jdk.internal.math=ALL-UNNAMED \
-    --add-opens=java.base/jdk.internal.module=ALL-UNNAMED \
-    --add-opens=java.base/jdk.internal.util.jar=ALL-UNNAMED \
-    --add-opens=java.base/java.lang.constant=ALL-UNNAMED \
-    --add-opens=java.base/java.lang.invoke=ALL-UNNAMED \
-    --add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED \
-    --add-exports=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED \
-    --add-opens=java.base/java.nio=ALL-UNNAMED \
-    --add-opens=java.base/java.nio.charset=ALL-UNNAMED \
-    --add-opens=java.base/java.nio.channels=ALL-UNNAMED \
-    --add-opens=java.base/java.nio.file=ALL-UNNAMED \
-    -jar /app/backend-spring/target/workout-app-spring-0.0.1-SNAPSHOT.jar
+--add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
+    -jar /app/backend-spring/target/backend-spring-0.0.1-SNAPSHOT.jar
 
 
 #FROM node:16 AS frontend-builder
