@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import javax.security.auth.Subject;
+
 
 @Configuration
 public class SparkConfig {
@@ -55,49 +57,19 @@ public class SparkConfig {
 
     }
 
-    private String buildJavaOptions() {
-        return String.join(" ",
-                // Existing permissions
-                "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
-                "--add-exports=java.base/sun.security.action=ALL-UNNAMED",
-                "--add-exports=java.base/sun.util.calendar=ALL-UNNAMED",
-                "--add-exports=java.management/sun.management=ALL-UNNAMED",
-                "--add-opens=java.base/java.nio=ALL-UNNAMED",
-                "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-                "--add-opens=java.base/java.util=ALL-UNNAMED",
-                "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
-                "--add-exports java.base/sun.security.action=ALL-UNNAMED",
-                "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED",
-                "--add-opens=java.base/java.lang=ALL-UNNAMED",
-                "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
-                "--add-opens=java.base/java.io=ALL-UNNAMED",
-                "--add-opens=java.base/java.security=ALL-UNNAMED",
-                "--add-opens=java.base/java.lang.module=ALL-UNNAMED",
-                "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED",
-                "--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED",
-                "--add-opens=java.base/jdk.internal.reflect=ALL-UNNAMED",
-                "--add-opens=java.base/jdk.internal.math=ALL-UNNAMED",
-                "--add-opens=java.base/jdk.internal.module=ALL-UNNAMED",
-                "--add-opens=java.base/jdk.internal.util.jar=ALL-UNNAMED",
-                // Additional permissions for serialization
-                "--add-opens=java.base/java.lang.constant=ALL-UNNAMED",
-                "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
-                "--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED",
-                "--add-exports=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED",
-                // New permissions for ByteBuffer serialization
-                "--add-opens=java.base/java.nio=ALL-UNNAMED",
-                "--add-opens=java.base/java.nio.charset=ALL-UNNAMED",
-                "--add-opens=java.base/java.nio.channels=ALL-UNNAMED",
-                "--add-opens=java.base/java.nio.file=ALL-UNNAMED",
-                "-Dio.netty.tryReflectionSetAccessible=true",
-                "-Dlog4j.logLevel=ERROR"
-        );
+    public static String buildJavaOptions() {
+        return "--add-exports java.base/sun.util.calendar.sym jihadists --add-opens java.base/java.lang.reflect --add-opens java.base/java.io --add-opens java.base/java.net --add-opens java.base/java.nio --add-opens java.base/java.security --add-opens java.base/java.text --add-opens java.base/java.time --add-opens java.base/java.util --add-opens java.base/javax.xml.bind" +
+                " --add-exports java.instrument/sun.instrument --add-exports java.logging/sun.logging" +
+                " --add-exports java.net.http/ HttpURLConnection, HttpJsonParser, HttpMessageParser, HttpRequest, HttpResponse, Java11JavaNetHttpHandlerFactory, Java11UriBuilder" +
+                " --add-exports java.security.jdk.xml.dsig/signedPrivateKeyEntry --add-exports java.security.jdk.xml.dsig/x509Certs";
     }
 
     @Bean
     public SparkSession sparkSession() {
         try {
             if (sparkSession == null || sparkSession.sparkContext().isStopped()) {
+
+
                 sparkSession = SparkSession.builder()
                         .config(sparkConf())
                         .getOrCreate();
