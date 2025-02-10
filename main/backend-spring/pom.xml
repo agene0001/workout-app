@@ -10,14 +10,14 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>workout-app-spring</artifactId>
+    <artifactId>backend-spring</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>server1</name>
     <description>server1</description>
 
     <properties>
         <java.version>17</java.version>
-        <spark.version>3.4.1</spark.version>
+        <spark.version>3.5.4</spark.version>
         <scala.binary.version>2.12</scala.binary.version>
         <jakarta-servlet.version>4.0.3</jakarta-servlet.version>
         <jersey.version>2.36</jersey.version>
@@ -59,9 +59,9 @@
 
         <!-- Database Dependencies -->
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>9.2.0</version>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.31</version>
         </dependency>
 
         <!-- Testing Dependencies -->
@@ -76,6 +76,8 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.binary.version}</artifactId>
             <version>${spark.version}</version>
+            <scope>compile</scope>  <!-- Usually defaults to compile, but be explicit -->
+
             <exclusions>
                 <exclusion>
                     <groupId>org.eclipse.jetty</groupId>
@@ -97,12 +99,12 @@
             <artifactId>spark-sql_${scala.binary.version}</artifactId>
             <version>${spark.version}</version>
             <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-            </exclusions>
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>org.slf4j</groupId>-->
+<!--                    <artifactId>slf4j-log4j12</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
         </dependency>
 
         <!-- Spark MLlib Dependency -->
@@ -110,6 +112,8 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-mllib_${scala.binary.version}</artifactId>
             <version>${spark.version}</version>
+            <scope>compile</scope>  <!-- Usually defaults to compile, but be explicit -->
+
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -132,23 +136,22 @@
                     </excludes>
                     <includeSystemScope>true</includeSystemScope>
                     <jvmArguments>
-                        -Xms512m -Xmx1024m
-                        --add-exports java.base/sun.nio.ch=ALL-UNNAMED
-                        --add-opens java.base/java.nio=ALL-UNNAMED
-                        --add-opens java.base/java.util.concurrent=ALL-UNNAMED
-                        --add-opens java.base/java.lang=ALL-UNNAMED
-                        --add-opens java.base/sun.security.action=ALL-UNNAMED
-                        --add-opens java.base/java.util=ALL-UNNAMED
-                        --add-opens java.base/java.lang.invoke=ALL-UNNAMED
-                        --add-opens java.base/java.security=ALL-UNNAMED
-                        --add-exports java.base/sun.security.action=ALL-UNNAMED
-                        --add-exports java.security.jgss/sun.security.krb5=ALL-UNNAMED
-                        --add-opens java.base/java.io=ALL-UNNAMED
-                        --add-exports java.base/sun.nio.ch=ALL-UNNAMED
-                        --add-exports java.management/sun.management=ALL-UNNAMED
-                        --add-exports jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED
-                        --add-exports java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED
-                        --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                        <arg>--add-opens=java.base/java.lang=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/java.io=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/java.net=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/java.nio=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/java.util=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/java.util.concurrent=ALL-UNNAMED</arg>
+                        <arg>--add-exports=java.base/java.util.concurrent.atomic=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED</arg>
+                        <arg>--add-exports=java.base/sun.nio.ch=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED</arg>
+
+                        <arg>--add-opens=java.base/sun.nio.cs=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/sun.security.action=ALL-UNNAMED</arg>
+                        <arg>--add-opens=java.base/sun.util.calendar=ALL-UNNAMED</arg>
                     </jvmArguments>
                 </configuration>
             </plugin>
