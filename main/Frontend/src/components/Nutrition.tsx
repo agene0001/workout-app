@@ -96,8 +96,6 @@ function Nutrition() {
     }, [querySearch]);
 
     return (<>
-
-
         <div className='heroback py-5 container-fluid align-content-center' id='nutrition-header'>
             <div style={{height: '60px'}}></div>
             <h1 className='text-primary py-5 my-5'>Search for Personalized Recipes shipped right to your door</h1>
@@ -194,7 +192,7 @@ function Nutrition() {
 
             <div className='row justify-content-center'>
                 <div className='col-6'>
-                    <ul className="list-group" style={{height: '25vh', overflow: 'scroll'}}>
+                    <ul className="list-group" style={{}}>
                         {searchedRecipes.map((val, ind) => (<li
                             onMouseOut={(ele) => {
                                 const target = ele.target as HTMLElement; // Cast target to HTMLElement
