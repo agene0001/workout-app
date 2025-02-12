@@ -1,6 +1,11 @@
 # Stage 1: Build the Spring Boot application
 FROM mysql:8.0 AS mysql-with-backup
-COPY backup.sql /docker-entrypoint-initdb.d/
+
+COPY  ./backup.sql /docker-entrypoint-initdb.d/
+
+# Expose the MySQL port
+EXPOSE 3306
+
 FROM --platform=linux/amd64 maven:3.8-openjdk-17 AS backend-builder
 
 # Install Maven
