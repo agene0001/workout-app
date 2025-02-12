@@ -22,7 +22,7 @@ spec:
             - containerPort: 8081
           env:
             - name: DB_HOST
-              value: mysql-db
+              value: mysql-db.default.svc.cluster.local
             - name: SPRING_DATASOURCE_URL
               value: jdbc:mysql://mysql-db:3306/automation
             - name: SPRING_DATASOURCE_USERNAME
@@ -31,13 +31,7 @@ spec:
               value: LexLuthern246!!??
             - name: SERVER_PORT
               value: "8081"
-          volumeMounts:
-            - name: spring-backend-data
-              mountPath: /main/backend-spring/src/main/resources/static
-      volumes:
-        - name: spring-backend-data  # This must match the volumeMounts above
-          persistentVolumeClaim:
-            claimName: spring-backend-data  # This must match the PVC you defined
+
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -79,13 +73,7 @@ spec:
             - name: NODE_ENV
               value: production
           command: ["npm", "run", "preview"]
-          volumeMounts:
-            - name: react-frontend-data
-              mountPath: /usr/src/app
-      volumes:
-        - name: react-frontend-data  # This must match the volumeMounts above
-          persistentVolumeClaim:
-            claimName: react-frontend-data  # This must match the PVC you defined
+
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -95,7 +83,7 @@ metadata:
 spec:
   selector:
     app: react-frontend
-  type: NodePort
+  type: LoadBalancer
   ports:
     - protocol: TCP
       port: 80
@@ -116,9 +104,27 @@ spec:
       labels:
         app: mysql-db
     spec:
+      initContainers:
+        - name: init-mysql
+          image: peppap1g/mysql-db:latest
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - bash
+            - "-c"
+            - >
+              ls -lah ./
+              ls -lah /docker-entrypoint-initdb.d;
+              if [ ! -f /var/lib/mysql/initialized ]; then
+                echo "Initializing database..."
+                mysql -u root -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/backup.sql
+                touch /var/lib/mysql/initialized
+              fi
+
       containers:
         - name: mysql-db
-          image: mysql:8.0
+          #          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
+          image: peppap1g/mysql-db:latest
           ports:
             - containerPort: 3306
           env:
@@ -126,14 +132,22 @@ spec:
               value: LexLuthern246!!??
             - name: MYSQL_DATABASE
               value: automation
-          volumeMounts:
-            - name: mysql-db-data
-              mountPath: /var/lib/mysql
       volumes:
-        - name: mysql-db-data  # This must match the volumeMounts above
+        - name: backup-volume
           persistentVolumeClaim:
-            claimName: mysql-db-data  # This must match the PVC you defined
+            claimName: backup-file-pvc
       restartPolicy: Always
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-file-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: v1
 kind: Service

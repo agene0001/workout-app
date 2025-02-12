@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       target: backend-builder
     container_name: spring-backend
-    platform: linux/arm64
+    platform: linux/amd64
     ports:
       - "8081:8081"
     environment:
@@ -32,20 +32,24 @@ services:
       dockerfile: Dockerfile
       target: frontend-final
     container_name: react-frontend
-    platform: linux/arm64
+    platform: linux/amd64
     depends_on:
       - spring-backend
     environment:
       - NODE_ENV=production
     ports:
-      - "9080:8080"
+      - "8080:8080"
     command: ["npm", "run", "preview"]
     restart: always
     networks:
       - app-network
 
   mysql-db:
-    image: mysql:8.0
+    image: mysql-db:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mysql-with-backup
     container_name: mysql-db
     environment:
       MYSQL_ROOT_PASSWORD: LexLuthern246!!??
@@ -53,9 +57,9 @@ services:
 
     ports:
       - "3307:3306"
-    volumes:
-      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
-      - mysql_data:/var/lib/mysql
+#    volumes:
+#      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
+#      - mysql_data:/var/lib/mysql
     restart: always
     networks:
       - app-network
