@@ -49,28 +49,11 @@ jobs:
       - name: Clean up old images
         run: |
           gcloud container images list-tags gcr.io/$PROJECT_ID/$IMAGE_FRONTEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete gcr.io/$PROJECT_ID/$IMAGE_FRONTEND@{} --quiet
-      # Build the Docker image
-      - name: Build Frontend Image
-        run: |-
-          docker build \
-            --tag "gcr.io/$PROJECT_ID/$IMAGE_FRONTEND:$GITHUB_SHA" \
-            --build-arg GITHUB_SHA="$GITHUB_SHA" \
-            --build-arg GITHUB_REF="$GITHUB_REF" \
-            -f ./frontend/Dockerfile ./frontend
 
-      - name: Build Backend Image
-        run: |-
-          docker build \
-            --tag "gcr.io/$PROJECT_ID/$IMAGE_BACKEND:$GITHUB_SHA" \
-            --build-arg GITHUB_SHA="$GITHUB_SHA" \
-            --build-arg GITHUB_REF="$GITHUB_REF" \
-            -f ./backend/Dockerfile ./backend
-
-      # Push the Docker image to Google Container Registry
-      - name: Push Images to GCR
-        run: |-
-          docker push "gcr.io/$PROJECT_ID/$IMAGE_FRONTEND:$GITHUB_SHA"
-          docker push "gcr.io/$PROJECT_ID/$IMAGE_BACKEND:$GITHUB_SHA"
+      - name: Build and push images
+        run: |
+          chmod +x ./build-and-push.sh
+          ./build-and-push.sh
 
       # Update the image tags in deployment files
       - name: Update Deployment Files
