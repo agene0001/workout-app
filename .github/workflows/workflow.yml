@@ -25,7 +25,7 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}  # No quotes
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'  # No quotes
           export_environment_variables: true  # Export credentials to environment variables
 
       - name: Set up Cloud SDK
@@ -36,10 +36,8 @@ jobs:
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GKE_ZONE }}
-      - name: Get GKE credentials
-        run: |
-          gcloud container clusters get-credentials "${{ env.GKE_CLUSTER }}" --zone "${{ env.GKE_ZONE }}" --project "${{ env.PROJECT_ID }}"
-    # Configure Docker to use the gcloud command-line tool as a credential helper
+          project_id: ${{ env.PROJECT_ID }}  # Added project_id
+   # Configure Docker to use the gcloud command-line tool as a credential helper
       - name: Configure Docker
         run: |-
           gcloud --quiet auth configure-docker
