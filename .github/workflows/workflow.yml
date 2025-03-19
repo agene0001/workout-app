@@ -41,7 +41,9 @@ jobs:
       - name: Configure Docker
         run: |-
           gcloud --quiet auth configure-docker
-
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
       # Get the GKE credentials so we can deploy to the cluster
       - name: Get GKE credentials
         run: |-
