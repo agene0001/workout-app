@@ -25,7 +25,7 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GKE_SA_KEY }}  # No quotes
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}  # No quotes
           export_environment_variables: true  # Export credentials to environment variables
 
       - name: Set up Cloud SDK
