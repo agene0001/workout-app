@@ -21,19 +21,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 #
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Auth with GCP Service Account
+      - name: Google Auth
         id: auth
-        run: |
-          echo '${{ secrets.GKE_SA_KEY }}' > gcloud-service-key.json
-          gcloud auth activate-service-account --key-file=gcloud-service-key.json
-          gcloud config set project ${{ env.PROJECT_ID }}
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}  # No quotes
+          export_environment_variables: true  # Export credentials to environment variables
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
 
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
       - name: Get GKE credentials
         run: |
           gcloud container clusters get-credentials "${{ env.GKE_CLUSTER }}" --zone "${{ env.GKE_ZONE }}" --project "${{ env.PROJECT_ID }}"
