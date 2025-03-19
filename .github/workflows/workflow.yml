@@ -45,9 +45,6 @@ jobs:
         run: |
           gcloud components install gke-gcloud-auth-plugin
       # Get the GKE credentials so we can deploy to the cluster
-      - name: Get GKE credentials
-        run: |-
-          gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE" --project "$PROJECT_ID"
       - name: Clean up old images
         run: |
           gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
@@ -56,6 +53,7 @@ jobs:
       - name: Build and Push Docker Images
         run: |-
           # Enable BuildKit for multi-platform builds
+          gcloud auth configure-docker --quiet
           export DOCKER_BUILDKIT=1
 
           # Create a new builder if it doesn't exist
