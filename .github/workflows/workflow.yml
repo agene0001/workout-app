@@ -38,9 +38,7 @@ jobs:
           location: ${{ env.GKE_ZONE }}
           project_id: ${{ env.PROJECT_ID }}  # Added project_id
    # Configure Docker to use the gcloud command-line tool as a credential helper
-      - name: Configure Docker
-        run: |-
-          gcloud --quiet auth configure-docker
+
       - name: Install gke-gcloud-auth-plugin
         run: |
           gcloud components install gke-gcloud-auth-plugin
@@ -51,7 +49,7 @@ jobs:
           gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND@{} --quiet --force-delete-tags
       - name: Configure Docker to use Google Cloud authentication
         run: |
-          gcloud auth configure-docker --quiet
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
       - name: Build and Push Docker Images
         run: |-
           # Enable BuildKit for multi-platform builds
