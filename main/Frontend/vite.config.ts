@@ -1,20 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import mkcert from 'vite-plugin-mkcert';
 
 // Define ports and services based on environment
 const SPRING_PORT = 8081;
 const SPRING_SERVICE = process.env.NODE_ENV === 'production' ? 'spring-backend' : 'localhost';
-
+const hostIP = "0.0.0.0"
+const port = 8080
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(),mkcert()],
 
   // Development server configuration
   server: {
-    host: "0.0.0.0",
-    port: 8080,
+    host: hostIP,
+    port: port,
     proxy: {
       '/api/v1/recipes': {
-        target: `http://${SPRING_SERVICE}:${SPRING_PORT}`,
+        target: `https://${SPRING_SERVICE}:${SPRING_PORT}`,
         headers: {
           'Cache-Control': 'no-store',
         },
@@ -28,11 +30,11 @@ export default defineConfig({
 
   // Production preview configuration - this is what's used in Kubernetes
   preview: {
-    host: "0.0.0.0",
-    port: 8080,
+    host: hostIP,
+    port: port,
     proxy: {
       '/api/v1/recipes': {
-        target: `http://${SPRING_SERVICE}:${SPRING_PORT}`,
+        target: `https://${SPRING_SERVICE}:${SPRING_PORT}`,
         headers: {
           'Cache-Control': 'no-store',
         },

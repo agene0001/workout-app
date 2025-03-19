@@ -11,6 +11,7 @@ env:
   GKE_ZONE: us-central1-a
   IMAGE_FRONTEND: react-frontend
   IMAGE_BACKEND: spring-backend
+  REGION: us-central1
   REPOSITORY: workout-app
 jobs:
   setup-build-publish-deploy:
@@ -45,8 +46,8 @@ jobs:
       # Get the GKE credentials so we can deploy to the cluster
       - name: Clean up old images
         run: |
-          gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
-          gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND@{} --quiet --force-delete-tags
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND@{} --quiet --force-delete-tags
       - name: Configure Docker to use Google Cloud authentication
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
@@ -63,7 +64,7 @@ jobs:
           echo "Building and pushing Spring Backend..."
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            --tag "us-central1-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/spring-backend:latest" \
+            --tag "${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/spring-backend:latest" \
             --target backend-builder \
             --push \
             .
@@ -72,7 +73,7 @@ jobs:
           echo "Building and pushing React Frontend..."
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            --tag "us-central1-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/react-frontend:latest" \
+            --tag "${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/react-frontend:latest" \
             --target frontend-final \
             --push \
             .
