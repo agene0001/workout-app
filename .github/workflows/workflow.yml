@@ -55,12 +55,6 @@ jobs:
           chmod +x ./build-and-push.sh
           ./build-and-push.sh
 
-      # Update the image tags in deployment files
-      - name: Update Deployment Files
-        run: |-
-          # Update deployment yaml with new image tags
-          sed -i "s|image: gcr.io/$PROJECT_ID/$IMAGE_FRONTEND:.*|image: gcr.io/$PROJECT_ID/$IMAGE_FRONTEND:$GITHUB_SHA|g" k8s-manifest.yaml
-          sed -i "s|image: gcr.io/$PROJECT_ID/$IMAGE_BACKEND:.*|image: gcr.io/$PROJECT_ID/$IMAGE_BACKEND:$GITHUB_SHA|g" k8s-manifest.yaml
 
       # Deploy the application to the GKE cluster
       - name: Deploy to GKE
