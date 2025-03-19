@@ -50,8 +50,8 @@ jobs:
           gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE" --project "$PROJECT_ID"
       - name: Clean up old images
         run: |
-          gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/workout-app/$IMAGE_FRONTEND@{} --quiet
-          gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/workout-app/$IMAGE_BACKEND@{} --quiet
+          gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/workout-app/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
+          gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/workout-app/$IMAGE_BACKEND@{} --quiet --force-delete-tags
 
       - name: Build and Push Docker Images
         run: |-
