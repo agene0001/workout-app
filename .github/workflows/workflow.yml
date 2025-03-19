@@ -52,7 +52,7 @@ jobs:
         run: |
           gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
           gcloud container images list-tags us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' --filter='timestamp.datetime < -P7D' | xargs -I {} gcloud container images delete us-central1-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND@{} --quiet --force-delete-tags
-
+#
       - name: Build and Push Docker Images
         run: |-
           # Enable BuildKit for multi-platform builds
