@@ -21,21 +21,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 #
-      # Setup gcloud CLI
-      - name: Google Auth
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Auth with GCP Service Account
         id: auth
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GKE_SA_KEY }}
+        run: |
+          echo '${{ secrets.GKE_SA_KEY }}' > gcloud-service-key.json
+          gcloud auth activate-service-account --key-file=gcloud-service-key.json
+          gcloud config set project ${{ env.PROJECT_ID }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
 
       - name: Get GKE credentials
-        uses: google-github-actions/get-gke-credentials@v1
-        with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_ZONE }}
+        run: |
+          gcloud container clusters get-credentials "${{ env.GKE_CLUSTER }}" --zone "${{ env.GKE_ZONE }}" --project "${{ env.PROJECT_ID }}"
     # Configure Docker to use the gcloud command-line tool as a credential helper
       - name: Configure Docker
         run: |-
