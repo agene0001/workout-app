@@ -21,7 +21,7 @@ export default defineConfig({
           'Cache-Control': 'no-store',
         },
         changeOrigin: true,
-        secure: false
+        secure: true
 
       }
 
@@ -39,7 +39,7 @@ export default defineConfig({
           'Cache-Control': 'no-store',
         },
         changeOrigin: true,
-        secure: false,
+        secure: true,
         rewrite: (path) => path
       },
 
