@@ -16,8 +16,8 @@ spec:
         - name: my-registry-secret
       containers:
         - name: spring-backend
-          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
-#          image: peppap1g/spring-backend:latest
+#          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
+          image: peppap1g/spring-backend:latest
           ports:
             - containerPort: 8081
           env:
@@ -27,7 +27,7 @@ spec:
               value: jdbc:mysql://mysql-db:3306/automation
             - name: SPRING_DATASOURCE_USERNAME
               value: root
-            - name: SPRING_DATASOURCE
+            - name: SPRING_DATASOURCE_PASSWORD
               value: LexLuthern246!!??
             - name: SERVER_PORT
               value: "8081"
@@ -64,8 +64,8 @@ spec:
         - name: my-registry-secret
       containers:
         - name: react-frontend
-          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
-#          image: peppap1g/react-frontend:latest
+#          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
+          image: peppap1g/react-frontend:latest
 
           ports:
             - containerPort: 8080
