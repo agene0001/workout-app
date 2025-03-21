@@ -6,6 +6,7 @@ const SPRING_PORT = 8081;
 const SPRING_SERVICE = process.env.NODE_ENV === 'production' ? 'spring-backend' : 'localhost';
 const hostIP = "0.0.0.0"
 const port = 8080
+const protocol = "http"
 export default defineConfig({
   plugins: [react()],
 
@@ -15,7 +16,7 @@ export default defineConfig({
     port: port,
     proxy: {
       '/api/v1/recipes': {
-        target: `https://${SPRING_SERVICE}:${SPRING_PORT}`,
+        target: `${protocol}://${SPRING_SERVICE}:${SPRING_PORT}`,
         headers: {
           'Cache-Control': 'no-store',
         },
@@ -33,7 +34,7 @@ export default defineConfig({
     port: port,
     proxy: {
       '/api/v1/recipes': {
-        target: `https://${SPRING_SERVICE}:${SPRING_PORT}`,
+        target: `${protocol}://${SPRING_SERVICE}:${SPRING_PORT}`,
         headers: {
           'Cache-Control': 'no-store',
         },
