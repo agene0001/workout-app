@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import mkcert from 'vite-plugin-mkcert';
 
 // Define ports and services based on environment
 const SPRING_PORT = 8081;
@@ -8,7 +7,7 @@ const SPRING_SERVICE = process.env.NODE_ENV === 'production' ? 'spring-backend' 
 const hostIP = "0.0.0.0"
 const port = 8080
 export default defineConfig({
-  plugins: [react(),mkcert()],
+  plugins: [react()],
 
   // Development server configuration
   server: {
@@ -21,7 +20,7 @@ export default defineConfig({
           'Cache-Control': 'no-store',
         },
         changeOrigin: true,
-        secure: true
+        secure: false
 
       }
 
@@ -39,7 +38,7 @@ export default defineConfig({
           'Cache-Control': 'no-store',
         },
         changeOrigin: true,
-        secure: true,
+        secure: false,
         rewrite: (path) => path
       },
 
