@@ -21,8 +21,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
     "request": "^2.88.2",
-    "serve-static": "^1.16.2",
-    "vite-plugin-mkcert": "^1.17.8"
+    "serve-static": "^1.16.2"
   },
   "devDependencies": {
     "@types/animejs": "^3.1.12",
