@@ -10,3 +10,7 @@ __pycache__/
 *.pyc
 .DS_Store
 main/python/similarity_matrix.pkl
+**/node_modules
+**/dist
+**/build
+**/.git

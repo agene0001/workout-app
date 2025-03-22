@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+import { resolve } from 'path';
 // Define ports and services based on environment
 const SPRING_PORT = 8081;
 const SPRING_SERVICE = process.env.NODE_ENV === 'production' ? 'spring-backend' : 'localhost';
@@ -9,6 +10,7 @@ const port = 8080
 const protocol = "http"
 export default defineConfig({
   plugins: [react()],
+
 
   // Development server configuration
   server: {
