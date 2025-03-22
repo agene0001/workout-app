@@ -156,20 +156,17 @@ metadata:
     networking.gke.io/managed-certificates: workout-app-cert
 spec:
   rules:
-    - host: gainztrackers.com  # Replace with your actual domain
+    - host: gainztrackers.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: react-frontend
+                name: workout-app-service
                 port:
                   number: 80
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: spring-backend
-                port:
-                  number: 8081
+  tls:
+    - hosts:
+        - gainztrackers.com
+      secretName: workout-app-cert  # You can also create a secret manually if needed
