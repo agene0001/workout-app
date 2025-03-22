@@ -16,8 +16,8 @@ spec:
         - name: my-registry-secret
       containers:
         - name: spring-backend
-#          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
-          image: peppap1g/spring-backend:latest
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
+#          image: peppap1g/spring-backend:latest
           ports:
             - containerPort: 8081
           env:
@@ -64,8 +64,8 @@ spec:
         - name: my-registry-secret
       containers:
         - name: react-frontend
-#          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
-          image: peppap1g/react-frontend:latest
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
+#          image: peppap1g/react-frontend:latest
 
           ports:
             - containerPort: 8080
@@ -146,3 +146,30 @@ spec:
     - protocol: TCP
       port: 3306
       targetPort: 3306
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: workout-app-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: workout-app-static-ip
+    networking.gke.io/managed-certificates: workout-app-cert
+spec:
+  rules:
+    - host: gainztrackers.com  # Replace with your actual domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: react-frontend
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: spring-backend
+                port:
+                  number: 8081
