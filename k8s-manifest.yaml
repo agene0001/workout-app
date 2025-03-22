@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,7 +18,7 @@ spec:
       containers:
         - name: spring-backend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
-#          image: peppap1g/spring-backend:latest
+          #          image: peppap1g/spring-backend:latest
           ports:
             - containerPort: 8081
           env:
@@ -65,7 +66,7 @@ spec:
       containers:
         - name: react-frontend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
-#          image: peppap1g/react-frontend:latest
+          #          image: peppap1g/react-frontend:latest
 
           ports:
             - containerPort: 8080
@@ -89,7 +90,6 @@ spec:
       port: 80
       targetPort: 8080
 
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -110,7 +110,7 @@ spec:
       containers:
         - name: mysql-db
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/mysql-db:latest
-#          image: peppap1g/mysql-db:latest
+          #          image: peppap1g/mysql-db:latest
           ports:
             - containerPort: 3306
           env:
@@ -163,10 +163,18 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: workout-app-service
+                name: react-frontend
                 port:
                   number: 80
-  tls:
-    - hosts:
-        - gainztrackers.com
-      secretName: workout-app-cert  # You can also create a secret manually if needed
+    - host: www.gainztrackers.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: react-frontend
+                port:
+                  number: 80
+
+

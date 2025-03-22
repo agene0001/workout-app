@@ -15,6 +15,7 @@ interface RecipeItem {
     imgSrc: string;
     duration: string;
     rating: number;
+    url: string;
 }
 
 function Nutrition() {
@@ -58,7 +59,7 @@ function Nutrition() {
 
     const recipeComponents = recipes.map((row, rowIndex) => (
         <div className='row' style={{ display: 'flex' }} key={`row-${rowIndex}`}>
-            {row.map((recipe, idx) => (
+            {row.map((recipe) => (
                 <div className="col-4" style={{ display: 'flex', justifyContent: 'center' }} key={recipe.name}>
                     <InfoBlock
                         key={recipe.name}
@@ -67,10 +68,10 @@ function Nutrition() {
                         nutrition={recipe.nutrition}
                         icon={recipe.imgSrc}
                         text={[
-                            <div key={`duration-${idx}`}>{recipe.duration}</div>,
-                            <div key={`rating-${idx}`}>Rating: {recipe.rating}</div>
+                            recipe.duration?<div>Duration: {recipe.duration}</div>:"",
+                            recipe.rating?<div>Rating: {recipe.rating}</div>:"",
                         ]}
-                     fadeInAnimation={""} ingredients={""}/>
+                     expandable={true} ingredients={""}/>
                 </div>
             ))}
         </div>
@@ -106,13 +107,13 @@ function Nutrition() {
                             <InfoBlock
                                 heading={recipe.name}
                                 text={[
-                                    `Nutrition: ${recipe.nutrition}`,
-                                    `Duration: ${recipe.duration}`,
-                                    `Rating: ${recipe.rating}`
+                                    recipe.duration?<div>Duration: {recipe.duration}</div>:"",
+                                    recipe.rating?<div>Rating: {recipe.rating}</div>:"",
                                 ]}
                                 icon={recipe.imgSrc}
                                 fadeInAnimation="fadeIn" // Or pass the fadeInAnimation prop as needed
                                 bg="bg-light" // Optionally change the background color
+                                expandable={true}
                             />
                         </div>
                     ))}
@@ -132,7 +133,7 @@ function Nutrition() {
                     bg='bg-primary col-4'
                     heading={searchedRecipe.name}
                     text={[]}
-                    fadeInAnimation={null}
+                    expandable={true}
                 />) : null}
 
                 <div className='row justify-content-center'>

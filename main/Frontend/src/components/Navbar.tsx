@@ -39,7 +39,7 @@ function Navbar( props:{ name: string }) {
         <header>
         <nav className="navbar navbar-expand-lg py-1 navbar-dark rounded-4 py-2 bg-dark sticky-top">
             <div className="container-fluid ">
-                <a className="navbar-brand fs-1 fw-semibold p-2" href="/">Gains Tracker</a>
+                <a className="navbar-brand fs-1 fw-semibold p-2" href="/">Gains Trackers</a>
 
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
