@@ -18,7 +18,7 @@ spec:
       containers:
         - name: spring-backend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
-          #          image: peppap1g/spring-backend:latest
+          # image: peppap1g/spring-backend:latest
           ports:
             - containerPort: 8081
           env:
@@ -66,7 +66,7 @@ spec:
       containers:
         - name: react-frontend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
-          #          image: peppap1g/react-frontend:latest
+          # image: peppap1g/react-frontend:latest
 
           ports:
             - containerPort: 8080
@@ -110,7 +110,7 @@ spec:
       containers:
         - name: mysql-db
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/mysql-db:latest
-          #          image: peppap1g/mysql-db:latest
+          # image: peppap1g/mysql-db:latest
           ports:
             - containerPort: 3306
           env:
