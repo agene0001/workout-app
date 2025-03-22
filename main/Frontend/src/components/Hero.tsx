@@ -133,13 +133,13 @@ function HeroSection() {
             <div className="container-fluid text-center vh-100 align-content-center py-3" id="hero3">
                 <div ref={myRef3} className='row py-3'>
                     <div className="col-12 col-md-4">
-                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero' : ''}`} heading={infoTitle1} text={[`This is an info block. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa fugit in iste libero magni molestiae neque quod. Accusantium aspernatur cupiditate delectus deleniti deserunt dicta facere fugit iure nihil officiis, quis quo rem saepe sed sit tempore temporibus unde voluptas voluptatum.`]} />
+                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero' : ''}`} heading={infoTitle1} expandable={false} text={[`This is an info block. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa fugit in iste libero magni molestiae neque quod. Accusantium aspernatur cupiditate delectus deleniti deserunt dicta facere fugit iure nihil officiis, quis quo rem saepe sed sit tempore temporibus unde voluptas voluptatum.`]} />
                     </div>
                     <div className="col-12 col-md-4">
-                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero1' : ''}`} heading={infoTitle2} text={[`This is an info block. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa fugit in iste libero magni molestiae neque quod. Accusantium aspernatur cupiditate delectus deleniti deserunt dicta facere fugit iure nihil officiis, quis quo rem saepe sed sit tempore temporibus unde voluptas voluptatum.`]} />
+                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero1' : ''}`} heading={infoTitle2} expandable={false} text={[`This is an info block. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa fugit in iste libero magni molestiae neque quod. Accusantium aspernatur cupiditate delectus deleniti deserunt dicta facere fugit iure nihil officiis, quis quo rem saepe sed sit tempore temporibus unde voluptas voluptatum.`]} />
                     </div>
                     <div className="col-12 col-md-4">
-                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero ' : ''}`} heading={infoTitle3} text={[`This is an info block. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa fugit in iste libero magni molestiae neque quod. Accusantium aspernatur cupiditate delectus deleniti deserunt dicta facere fugit iure nihil officiis, quis quo rem saepe sed sit tempore temporibus unde voluptas voluptatum.`]} />
+                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero ' : ''}`} heading={infoTitle3} expandable={false} text={[`This is an info block. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa fugit in iste libero magni molestiae neque quod. Accusantium aspernatur cupiditate delectus deleniti deserunt dicta facere fugit iure nihil officiis, quis quo rem saepe sed sit tempore temporibus unde voluptas voluptatum.`]} />
                     </div>
                 </div>
             </div>
