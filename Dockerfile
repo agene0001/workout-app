@@ -90,7 +90,7 @@ CMD java \
 
 
 # Stage 5: Serving the React app using npm start
-FROM --platform=linux/amd64 node:16 AS frontend-final
+FROM --platform=linux/amd64 node:22 AS frontend-final
 WORKDIR /app/frontend
 
 # Copy the necessary files for frontend
