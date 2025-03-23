@@ -57,35 +57,22 @@ jobs:
       - name: Configure Docker to use Google Cloud authentication
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
-      - name: Build and Push Docker Images
-        run: |-
-          # Enable BuildKit for multi-platform builds
-          export DOCKER_BUILDKIT=1
+      - name: Build images with Docker Compose
+        run: |
+          # Build images using Docker Compose
+          docker-compose build spring-backend react-frontend 
 
-          # Create a new builder if it doesn't exist
-          docker buildx create --name multiplatform-builder --use || true
-          docker buildx use multiplatform-builder
-
-          # Build and push Spring Backend
-          echo "Building and pushing Spring Backend..."
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            --tag "${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/spring-backend:latest" \
-            --target backend-builder \
-            --push \
-            .
-
-          # Build and push React Frontend
-          echo "Building and pushing React Frontend..."
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            --tag "${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/react-frontend:latest" \
-            --target frontend-final \
-            --push \
-            .
-
-          echo "Build and push completed!"
-
+      - name: Tag and push images
+        run: |
+          # Tag backend image
+          docker tag spring-backend:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/spring-backend:latest
+          # Tag frontend image
+          docker tag react-frontend:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/react-frontend:latest
+          # Tag MySQL image
+   
+          # Push all images
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/spring-backend:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/react-frontend:latest
 
       # Deploy the application to the GKE cluster
       - name: Deploy to GKE
