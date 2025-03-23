@@ -32,6 +32,8 @@ export default defineConfig({
 
   // Production preview configuration - this is what's used in Kubernetes
   preview: {
+
+    allowedHosts: ['gainztrackers.com'],
     host: hostIP,
     port: port,
     proxy: {
