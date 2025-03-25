@@ -154,6 +154,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.global-static-ip-name: workout-app-static-ip
     networking.gke.io/managed-certificates: workout-app-cert
+
 spec:
   rules:
     - host: gainztrackers.com
@@ -176,5 +177,13 @@ spec:
                 name: react-frontend
                 port:
                   number: 80
-
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: workout-app-cert
+spec:
+  domains:
+    - gainztrackers.com
+    - www.gainztrackers.com
 
