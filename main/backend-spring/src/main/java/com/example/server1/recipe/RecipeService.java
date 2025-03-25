@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,7 +37,12 @@ public class RecipeService {
     public RecipeService(RecipeRepository recipeRepository, SparkRecommender sparkRecommender) {
         this.recipeRepository = recipeRepository;
         this.sparkRecommender = sparkRecommender;
-        Term[] terms = Autocomplete.setup("static/automation_recipes.csv");
+        List<Recipe> recipes = recipeRepository.findAll();
+        Term[] terms = recipes.stream()
+                .map(recipe -> new Term(recipe.getName().toLowerCase(), recipe.getRating()))
+                .toArray(Term[]::new);
+            System.out.print(Arrays.toString(terms));
+
         this.recipeAutocomplete = new Autocomplete(terms);
     }
 
