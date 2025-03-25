@@ -1,30 +1,34 @@
 'use client'
 
-import React, { useRef, useState, useEffect } from "react";
+import  {useRef, useState, useEffect, ReactNode, FC} from "react";
 import { createPortal } from "react-dom";
 
 interface InfoBlockProps {
-    heading: string,
-    text: React.ReactNode[],
+    heading: ReactNode,
+    title: string,
+
+    text: ReactNode[],
     icon?: string,
     fadeInAnimation?: string,
     bg?: string,
     nutrition?: string,
     ingredients?: string,
     expandable: boolean,
-    additionInfo?: string,
+    url?: string
 }
 
-const InfoBlock: React.FC<InfoBlockProps> = ({
+const InfoBlock: FC<InfoBlockProps> = ({
                                                  heading,
+    title,
                                                  text,
                                                  icon = null,
                                                  fadeInAnimation = '',
                                                  bg = 'bg-danger',
-                                                 expandable
+                                                 expandable,
+    url = null
                                              }) => {
     const ref = useRef(null);
-    const title = useRef(null);
+    const title1 = useRef(null);
     const content = useRef(null);
     const [expanded, setExpanded] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -79,8 +83,9 @@ const InfoBlock: React.FC<InfoBlockProps> = ({
                     </div>
 
                     {icon !== null ? <img className='img-fluid mb-3' src={icon} alt="" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} /> : ''}
-                    <h1 ref={title} className='textAnimate' style={{ fontSize: '2.5rem' }}>{heading}</h1>
+                    <h1 ref={title1} className='textAnimate'>{title}</h1>
                     {text.map((item, index) => <p key={index} ref={content} className='paraAnimate' style={{ fontSize: '1.2rem' }}>{item}</p>)}
+                    {url?<a href={url} target="_blank">Food Network Site</a>:""}
                 </div>
             </div>
         );
@@ -117,7 +122,7 @@ const InfoBlock: React.FC<InfoBlockProps> = ({
             >
                 {/* Existing content */}
                 {icon !== null ? <img className='img-fluid' src={icon} alt="" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'contain' }} /> : ''}
-                <h1 ref={title} className='textAnimate'>{heading}</h1>
+                {heading}
                 {text.map((item, index) => <div key={index} ref={content} className='paraAnimate'>{item}</div>)}
             </div>
 

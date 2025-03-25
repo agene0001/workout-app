@@ -63,7 +63,8 @@ function Nutrition() {
                 <div className="col-4" style={{ display: 'flex', justifyContent: 'center' }} key={recipe.name}>
                     <InfoBlock
                         key={recipe.name}
-                        heading={recipe.name}
+                        title={recipe.name}
+                        heading={<h1>{recipe.name}</h1>}
                         bg='bg-info'
                         nutrition={recipe.nutrition}
                         icon={recipe.imgSrc}
@@ -71,6 +72,7 @@ function Nutrition() {
                             recipe.duration?<div>Duration: {recipe.duration}</div>:"",
                             recipe.rating?<div>Rating: {recipe.rating}</div>:"",
                         ]}
+                       url={recipe.url}
                      expandable={true} ingredients={""}/>
                 </div>
             ))}
@@ -105,14 +107,16 @@ function Nutrition() {
                     {recommendedRecipes.map((recipe, index) => (
                         <div key={index} className={`item item${index + 1}`}>
                             <InfoBlock
-                                heading={recipe.name}
+                                title={recipe.name}
+                                heading={<h2>{recipe.name}</h2>}
                                 text={[
                                     recipe.duration?<div>Duration: {recipe.duration}</div>:"",
                                     recipe.rating?<div>Rating: {recipe.rating}</div>:"",
                                 ]}
                                 icon={recipe.imgSrc}
                                 fadeInAnimation="fadeIn" // Or pass the fadeInAnimation prop as needed
-                                bg="bg-light" // Optionally change the background color
+                                bg="bg-info" // Optionally change the background color
+                                url={recipe.url}
                                 expandable={true}
                             />
                         </div>
@@ -131,7 +135,8 @@ function Nutrition() {
                 <h2 className='text-primary py-5 text-center'>Recommend recipes</h2>
                 {searchedRecipe !== null ? (<InfoBlock
                     bg='bg-primary col-4'
-                    heading={searchedRecipe.name}
+                    title={searchedRecipe.name}
+                    heading={<h1>{searchedRecipe.name}</h1>}
                     text={[]}
                     expandable={true}
                 />) : null}
