@@ -27,7 +27,6 @@ public class Autocomplete {
         try {
             this.terms = terms;
             Arrays.sort(terms);
-//            System.out.println(Arrays.toString(terms));
         }
         catch (NullPointerException e) {
             throw new IllegalArgumentException("terms cannot be null");
@@ -76,31 +75,31 @@ public class Autocomplete {
         else return 0;
     }
 
-    public static Term[] setup(String filename)  {
-        try {
-            Resource resource = new DefaultResourceLoader().getResource("classpath:static/automation_recipes.csv");
-            URL url = resource.getURL();
-
-            In in = new In(url);
-            System.out.println("Next token in input: " + in.readAll());
-            in = new In(url);
-            int n = in.readInt();
-            Term[] terms = new Term[n];
-            for (int i = 0; i < n; i++) {
-                float weight = in.readFloat();           // read the next weight
-                //            in.readChar();                         // scan past the tab
-                String query = in.readLine().toLowerCase().strip();
-                // read the next query
-                terms[i] = new Term(query, (long) weight);    // construct the term
-            }
-            return terms;
-        }
-        catch (IOException e) {
-            System.out.println(e.getMessage());
-            return null;
-        }
-
-    }
+//    public static Term[] setup(String filename)  {
+//        try {
+//            Resource resource = new DefaultResourceLoader().getResource("classpath:static/automation_recipes.csv");
+//            URL url = resource.getURL();
+//
+//            In in = new In(url);
+//            System.out.println("Next token in input: " + in.readAll());
+//            in = new In(url);
+//            int n = in.readInt();
+//            Term[] terms = new Term[n]
+//            for (int i = 0; i < n; i++) {
+//                float weight = in.readFloat();           // read the next weight
+//                //            in.readChar();                         // scan past the tab
+//                String query = in.readLine().toLowerCase().strip();
+//                // read the next query
+//                terms[i] = new Term(query, (long) weight);    // construct the term
+//            }
+//            return terms;
+//        }
+//        catch (IOException e) {
+//            System.out.println(e.getMessage());
+//            return null;
+//        }
+//
+//    }
 
     // unit testing (required)
     public static void main(String[] args) {

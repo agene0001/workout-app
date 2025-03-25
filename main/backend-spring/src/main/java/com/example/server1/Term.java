@@ -4,18 +4,18 @@ import java.util.Comparator;
 
 public class Term implements Comparable<Term> {
     private String query;
-    private long weight;
+    private double weight;
 
     public String getQuery() {
         return query;
     }
 
-    public long getWeight() {
+    public double getWeight() {
         return weight;
     }
 
     // Initializes a term with the given query string and weight.
-    public Term(String query, long weight) {
+    public Term(String query, double weight) {
         if (query != null || weight >= 0) {
             this.query = query;
             this.weight = weight;
