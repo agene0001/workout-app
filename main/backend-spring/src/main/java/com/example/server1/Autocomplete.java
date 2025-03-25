@@ -82,6 +82,8 @@ public class Autocomplete {
             URL url = resource.getURL();
 
             In in = new In(url);
+            System.out.println("Next token in input: " + in.readAll());
+            in = new In(url);
             int n = in.readInt();
             Term[] terms = new Term[n];
             for (int i = 0; i < n; i++) {
