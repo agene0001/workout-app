@@ -1,6 +1,7 @@
 package com.example.server1;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 
 public class BinarySearchDeluxe {
@@ -32,7 +33,7 @@ public class BinarySearchDeluxe {
                 val = mid - ind;
                 temp = comparator.compare(key, a[val]);
             }
-            return val;
+            return val+1;
         }
 
     }
@@ -54,18 +55,21 @@ public class BinarySearchDeluxe {
                 return binaryHelp(a, key, comparator, mid + 1, high);
             }
             else {
+                if (comparator.compare(key, a[low]) == 0 ) {
+                    return low;
+                }
                 int ind = 1;
 
                 int val = mid;
-                if (mid - ind > 0) {
-                    int temp = comparator.compare(key, a[mid - ind]);
-                    while (temp == 0 && mid - ind >= 0) {
-                        val = mid - ind;
-                        temp = comparator.compare(key, a[val - 1]);
-                        ind++;
-                    }
+                int temp = comparator.compare(key, a[mid]);
+                while (temp == 0 && mid - ind >= low) {
+                    val = mid - ind;
+                    temp = comparator.compare(key, a[val]);
+                    ind++;
                 }
-                return val;
+
+
+                return val+1;
             }
 
         }
@@ -92,15 +96,15 @@ public class BinarySearchDeluxe {
             }
             else {
                 int ind = 1;
-                int temp = comparator.compare(key, a[mid + ind]);
+                int temp = comparator.compare(key, a[mid]);
                 int val = mid;
                 while (temp == 0 && mid + ind < a.length) {
 
-                    ind++;
                     val = mid + ind;
                     temp = comparator.compare(key, a[val]);
+                    ind++;
                 }
-                return val;
+                return val-1;
             }
 
         }
@@ -140,32 +144,73 @@ public class BinarySearchDeluxe {
                 val = mid + ind;
                 temp = comparator.compare(key, a[val]);
             }
-            return val;
+            if(val == mid){
+                return val;
+            }
+            return val-1;
         }
 
     }
 
     // unit testing (required)
     public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("Usage: java BinarySearchDeluxe <n>");
+            return;
+        }
 
-        ArrayList<Term> terms1 = new ArrayList<>();
-        terms1.add(new Term("alex", 1));
-        terms1.add(new Term("jamaca", 1));
-        terms1.add(new Term("goo", 1));
-        terms1.add(new Term("hello", 1));
-        terms1.add(new Term("floow", 1));
-        terms1.add(new Term("edgar", 1));
-        terms1.add(new Term("emily", 1));
-        terms1.add(new Term("amber", 1));
-        terms1.add(new Term("carter", 1));
-        terms1.add(new Term("india", 1));
-        terms1.add(new Term("devin", 1));
-        terms1.add(new Term("bob", 1));
-        terms1.sort(Term::compareTo);
-        System.out.println(terms1);
-        int t = BinarySearchDeluxe.lastIndexOf(terms1.toArray(new Term[0]),
-                                               new Term("e", 1),
-                                               Term.byPrefixOrder(1));
-        System.out.println(t);
+        int n = Integer.parseInt(args[0]);
+        Integer[] testArray = new Integer[5 * n];
+
+        // Creating the sorted testArray
+        for (int i = 0; i < n; i++) {
+            Arrays.fill(testArray, 5 * i, 5 * (i + 1), i + 1);
+        }
+
+        // Pick a random key in the range [0, n+1]\
+        for(int i=0;i<n;i++) {
+            int key = i;
+
+            // Get firstIndexOf and lastIndexOf results using BinarySearchDeluxe methods
+            int computedFirst = firstIndexOf(testArray, key, Integer::compare);
+            int computedLast = lastIndexOf(testArray, key, Integer::compare);
+
+            // Compute expected results using a brute-force approach
+            int expectedFirst = bruteForceFirstIndex(testArray, key);
+            int expectedLast = bruteForceLastIndex(testArray, key);
+
+            // Compare and print errors if results do not match
+            if (computedFirst != expectedFirst) {
+                System.out.println("Error: firstIndexOf failed for key " + key);
+                System.out.println("Expected: " + expectedFirst + ", Got: " + computedFirst);
+            }
+            else {
+                System.out.println("first index Test passed for key: " + key);
+            }
+            if (computedLast != expectedLast) {
+                System.out.println("Error: lastIndexOf failed for key " + key);
+                System.out.println("Expected: " + expectedLast + ", Got: " + computedLast);
+            }
+            else {
+                System.out.println("last index Test passed for key: " + key);
+            }
+        }
     }
+
+    // Brute force first index
+    private static int bruteForceFirstIndex(Integer[] array, int key) {
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == key) return i;
+        }
+        return -1;
+    }
+
+    // Brute force last index
+    private static int bruteForceLastIndex(Integer[] array, int key) {
+        for (int i = array.length - 1; i >= 0; i--) {
+            if (array[i] == key) return i;
+        }
+        return -1;
+    }
+
 }

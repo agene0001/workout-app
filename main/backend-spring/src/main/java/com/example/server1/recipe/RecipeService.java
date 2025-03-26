@@ -10,7 +10,6 @@ import org.apache.spark.sql.Row;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -41,8 +40,7 @@ public class RecipeService {
         Term[] terms = recipes.stream()
                 .map(recipe -> new Term(recipe.getName().toLowerCase(), recipe.getRating()))
                 .toArray(Term[]::new);
-            System.out.print(Arrays.toString(terms));
-
+//            System.out.print(Arrays.toString(terms));
         this.recipeAutocomplete = new Autocomplete(terms);
     }
 
@@ -96,17 +94,17 @@ public class RecipeService {
                 logger.warn("SparkRecommender not initialized. Attempting reinitialization...");
                 if (!reinitializeRecommender()) {
                     logger.error("Reinitialization failed. Cannot provide recommendations.");
-                    return Collections.emptyList();
+                    return null;
                 }
             }
 
-            return sparkRecommender.findKSimilar(query, topK).collectAsList();
+            return sparkRecommender.findKSimilarLSHList(query, topK);
         } catch (IllegalStateException e) {
             logger.error("SparkRecommender not properly initialized: ", e);
-            return Collections.emptyList();
+            return null;
         } catch (Exception e) {
             logger.error("Error getting recommendations: ", e);
-            return Collections.emptyList();
+            return null;
         }
     }
 

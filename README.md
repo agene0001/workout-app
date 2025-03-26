@@ -31,3 +31,6 @@ run parameters
 --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
 dependencies
 spark,node,java 17,
+
+## issues
+recommender needs to be tested more (no base evaluation done)
