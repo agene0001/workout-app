@@ -9,6 +9,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -27,9 +29,14 @@ public class Autocomplete {
         try {
             this.terms = terms;
             Arrays.sort(terms);
+            FileWriter myWriter = new FileWriter("filename.txt");
+            myWriter.write(Arrays.toString(terms));
+            myWriter.close();
         }
         catch (NullPointerException e) {
             throw new IllegalArgumentException("terms cannot be null");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
     }
@@ -37,15 +44,15 @@ public class Autocomplete {
     // Returns all terms that start with the given prefix,
     // in descending order of weight.
     public Term[] allMatches(String prefix) {
+
         if (prefix == null) {
             throw new IllegalArgumentException("prefix cannot be null");
         }
         int len = prefix.length();
         int start = BinarySearchDeluxe.firstIndexOf(terms, new Term(prefix, 1),
-                                                    Term.byPrefixOrder(len));
-        // if start != -1
+                Term.byPrefixOrder(len));
         int end = BinarySearchDeluxe.lastIndexOf(terms, new Term(prefix, 1),
-                                                 Term.byPrefixOrder(len));
+                Term.byPrefixOrder(len));
         if (start != -1 && end != -1) {
             if (start == end) {
                 return new Term[] { terms[start] };
@@ -55,10 +62,9 @@ public class Autocomplete {
             return temp1;
         }
         else {
-            throw new IllegalArgumentException("No matches found");
+            return new Term[]{};
         }
     }
-
     // Returns the number of terms that start with the given prefix.
     public int numberOfMatches(String prefix) {
         if (prefix == null) {

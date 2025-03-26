@@ -54,7 +54,7 @@ public class RecipeController {
             @RequestParam(defaultValue = "10") int k) {
         List<Row> recommendations = recipeService.getRecommendations(query, k);
         return recommendations.stream()
-                .map(row -> row.getAs("name").toString())
+                .map(row -> row.getAs("recipe").toString())
                 .collect(Collectors.toList());
     }
 
