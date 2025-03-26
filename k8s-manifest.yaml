@@ -177,13 +177,3 @@ spec:
                 name: react-frontend
                 port:
                   number: 80
----
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: workout-app-cert
-spec:
-  domains:
-    - gainztrackers.com
-    - www.gainztrackers.com
-
