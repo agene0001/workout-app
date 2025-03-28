@@ -98,7 +98,7 @@ public class RecipeService {
                 }
             }
 
-            return sparkRecommender.findKSimilarLSHList(query, topK);
+            return sparkRecommender.findKSimilar(query, topK).collectAsList();
         } catch (IllegalStateException e) {
             logger.error("SparkRecommender not properly initialized: ", e);
             return null;

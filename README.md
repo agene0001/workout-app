@@ -34,3 +34,4 @@ spark,node,java 17,
 
 ## issues
 recommender needs to be tested more (no base evaluation done)
+instead of using TF-IDF I switched to word embeddings for space reduction and higher accuracy
