@@ -121,12 +121,12 @@ function Nutrition() {
                     </div> : ""
                 }
 
-                <div className='bg-secondary w-25' style={{
+                <div className='bg-info w-25' style={{
                     minWidth: '500px',
                     backgroundColor: '#f8f9fa',
                    justifySelf: "center",
-                    border: '1rem solid rgba(255, 0, 255, 1)',
-                    boxShadow: '8px 8px 3px rgba(255, 255, 0, 1)',
+                    border: '1rem solid rgba(0, 255, 255, .5)',
+                    boxShadow: '8px 8px 3px rgba(0, 255, 125, 1)',
                     padding: '20px',
                     borderRadius: '2px'
                 }}>
