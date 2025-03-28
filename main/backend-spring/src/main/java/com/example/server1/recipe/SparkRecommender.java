@@ -1,16 +1,17 @@
 package com.example.server1.recipe;
 
-import org.apache.spark.ml.feature.HashingTF;
-import org.apache.spark.ml.feature.IDF;
-import org.apache.spark.ml.Pipeline;
-import org.apache.spark.ml.PipelineModel;
+import org.apache.spark.ml.feature.StopWordsRemover;
+import org.apache.spark.ml.feature.Word2Vec;
+import org.apache.spark.ml.feature.Word2VecModel;
 import org.apache.spark.ml.linalg.Vector;
+import org.apache.spark.ml.feature.Normalizer;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.api.java.UDF1;
+import org.apache.spark.sql.api.java.UDF2;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.apache.spark.sql.functions;
 import static org.apache.spark.sql.functions.*;
 import java.io.Serializable;
 
@@ -18,7 +19,7 @@ import java.io.Serializable;
 public class SparkRecommender implements Serializable {
 
     private final SparkSession sparkSession;
-    private transient PipelineModel tfidfModel;
+    private transient Word2VecModel word2VecModel;
     private transient Dataset<Row> featuredData;
 
     @Autowired
@@ -28,16 +29,28 @@ public class SparkRecommender implements Serializable {
 
     // Preprocessing: normalize text and tokenize
     public Dataset<Row> preprocess(Dataset<Row> dataset) {
-        // First create processed text
-        Dataset<Row> withProcessedText = dataset.withColumn("processed_text",
-                functions.trim(
-                        functions.regexp_replace(
-                                functions.lower(functions.concat_ws(" ", functions.col("name"), functions.col("ingredients"))),
-                                "[^a-z0-9\\s]", " ")));
+        // 1. Clean text (consider removing numbers too with "[^a-z\\s]")
+        Dataset<Row> cleanedData = dataset.withColumn("processed_text",
+                lower(regexp_replace(concat_ws(" ", col("name"), col("ingredients")), "[^a-z\\s]", " ")) // Example: Removed numbers
+        );
 
-        // Then tokenize into words column
-        return withProcessedText.withColumn("words",
-                functions.split(functions.col("processed_text"), " "));
+        // 2. Split into words (split on one or more whitespace characters)
+        Dataset<Row> tokenizedData = cleanedData.withColumn("words", split(col("processed_text"), "\\s+"));
+
+        // 3. Remove stop words
+        StopWordsRemover remover = new StopWordsRemover()
+                .setInputCol("words")         // Input is the 'words' column from step 2
+                .setOutputCol("filtered_words"); // Output will be a new column
+
+        // Apply the remover to the tokenized data
+        Dataset<Row> filteredData = remover.transform(tokenizedData);
+
+        // You can customize the stop words (optional but recommended for recipes)
+        // String[] myStopWords = {"a", "an", "the", "cup", "cups", "oz", "ounce", "ounces", "lb", "lbs", "pound", "pounds", "tsp", "tbsp", "teaspoon", "teaspoons", "tablespoon", "tablespoons", "pinch", "dash", "to", "taste", "chopped", "sliced", "minced", "diced", "optional", "garnish", "for", "and", "or", "with", "into", "in", "on", "at", "as", "if", "of", "add", "mix", "stir", "combine", "bake", "cook", "fry", "saute", "heat", "preheat", "degrees", "fahrenheit", "celsius"};
+        // remover.setStopWords(myStopWords);
+        // filteredData = remover.transform(tokenizedData); // Re-apply if customizing
+
+        return filteredData; // Return the dataset including the new 'filtered_words' column
     }
 
     public void setup(String dbUrl, String dbUser, String dbPassword) {
@@ -51,12 +64,20 @@ public class SparkRecommender implements Serializable {
                     .option("driver", "com.mysql.cj.jdbc.Driver")
                     .load();
 
-            // Preprocess the data - now includes tokenization
+            // Preprocess the data
             Dataset<Row> processedData = preprocess(recipesData);
+            System.out.println("Processed Data Sample:");
+            // Train Word2Vec model and transform data
+            this.word2VecModel = buildWord2VecModel(processedData);
+            Dataset<Row> transformedData = word2VecModel.transform(processedData);
 
-            // Build and apply TF-IDF model
-            this.tfidfModel = buildTFIDFModel(processedData);
-            this.featuredData = tfidfModel.transform(processedData);
+            // Normalize the features vectors
+            Normalizer normalizer = new Normalizer()
+                    .setInputCol("features")
+                    .setOutputCol("normFeatures") // Output to a new column
+                    .setP(2.0);
+            this.featuredData = normalizer.transform(transformedData)
+                    .select("name", "ingredients", "normFeatures");
 
         } catch (Exception e) {
             System.err.println("Error connecting to the database: " + e.getMessage());
@@ -64,94 +85,81 @@ public class SparkRecommender implements Serializable {
         }
     }
 
-    private PipelineModel buildTFIDFModel(Dataset<Row> dataset) {
-        // HashingTF configuration
-        HashingTF hashingTF = new HashingTF()
-                .setInputCol("words")  // Now using the words column created in preprocess
-                .setOutputCol("raw_features")
-                .setNumFeatures(1000);
-
-        // IDF configuration
-        IDF idf = new IDF()
-                .setInputCol("raw_features")
+    private Word2VecModel buildWord2VecModel(Dataset<Row> dataset) {
+        Word2Vec word2Vec = new Word2Vec()
+                .setInputCol("words")
                 .setOutputCol("features")
-                .setMinDocFreq(2);
+                .setVectorSize(100)  // Reduce dimensionality for efficiency
+                .setMinCount(2);  // Ignore words with frequency < 2
 
-        // Create and fit the pipeline
-        Pipeline pipeline = new Pipeline()
-                .setStages(new org.apache.spark.ml.PipelineStage[] { hashingTF, idf });
-
-        return pipeline.fit(dataset);
+        return word2Vec.fit(dataset);
     }
 
     public Dataset<Row> findKSimilar(String query, int k) {
-        if (tfidfModel == null || featuredData == null) {
-            throw new IllegalStateException("TF-IDF model not initialized. Call setup() first.");
+        if (sparkSession == null) {
+            throw new IllegalStateException("SparkSession is not initialized");
         }
 
-        // Create a single-row dataset for the query
+        if (word2VecModel == null) {
+            throw new IllegalStateException("Word2Vec model is null. Ensure setup() was called successfully.");
+        }
+
+        if (featuredData == null) {
+            throw new IllegalStateException("Featured data is null. Ensure setup() was called successfully.");
+        }
         Dataset<Row> queryDataset = sparkSession.createDataFrame(
-                java.util.Collections.singletonList(
-                        RowFactory.create(query, query)
-                ),
+                java.util.Collections.singletonList(RowFactory.create(query, query)),
                 new StructType()
                         .add("name", "string")
                         .add("ingredients", "string")
         );
 
-        // Preprocess the query using the same pipeline
+        // Transform query with Word2Vec
         Dataset<Row> processedQuery = preprocess(queryDataset);
-        Dataset<Row> queryFeatures = tfidfModel.transform(processedQuery);
+        Dataset<Row> queryFeaturesRaw = word2VecModel.transform(processedQuery);
+        Normalizer queryNormalizer = new Normalizer()
+                .setInputCol("features")
+                .setOutputCol("normFeatures")
+                .setP(2.0);
 
-        // Register user-defined function for vector operations
-        sparkSession.udf().register("enhanced_similarity", (Vector v1, Vector v2) -> {
-            double cosineSim = computeCosineSimilarity(v1, v2);
-            double jaccardSim = computeJaccardSimilarity(v1, v2);
-            return 0.7 * cosineSim + 0.3 * jaccardSim;
-        }, DataTypes.DoubleType);
+        Dataset<Row> queryFeatures = queryNormalizer.transform(queryFeaturesRaw);
+        // Extract query vector
+        Row featuresRow = queryFeatures.select("normFeatures").first();
+        Vector queryVector = featuresRow.getAs(0);
 
-        // Register the DataFrames as temp views
-        featuredData.createOrReplaceTempView("recipes");
-        queryFeatures.createOrReplaceTempView("query");
+        // Make the vector final to help indicate it's captured by the lambda
+        final Vector capturedQueryVector = queryVector;
 
-        // Use the registered UDF in the SQL query
-        Dataset<Row> recipesDF = sparkSession.table("recipes");
-        Dataset<Row> queryDF = sparkSession.table("query");
+        // --- Define and Register the UDF (now UDF1) ---
+        sparkSession.udf().register(
+                "dot_product_udf", // Same UDF name is fine
+                // UDF1 takes the Vector from the column (`colVector`)
+                (UDF1<Vector, Double>) (colVector) -> colVector.dot(capturedQueryVector), // Use the captured vector here
+                DataTypes.DoubleType // Specify the return type
+        );
+        // -------------------------------------------
 
-
-
-// Use DataFrame API instead of SQL
-        return recipesDF
-                .crossJoin(queryDF)
-                .filter(functions.col("recipes.name").notEqual(functions.col("query.name")))
-                .withColumn("similarity",
-                        functions.callUDF("enhanced_similarity",
-                                functions.col("recipes.features"),
-                                functions.col("query.features")))
-                .select("recipes.name", "recipes.ingredients", "similarity")
-                .orderBy(functions.col("similarity").desc())
+        // --- Calculate similarity using the UDF ---
+        Dataset<Row> results = featuredData.withColumn(
+                        "similarity",
+                        // Call the UDF with only the 'features' column
+                        callUDF("dot_product_udf", col("normFeatures"))
+                )
+                .select("name", "ingredients", "similarity")
+                .orderBy(col("similarity").desc())
                 .limit(k);
+        // ----------------------------------------
 
-    }
-    private double computeCosineSimilarity(org.apache.spark.ml.linalg.Vector v1,
-                                           org.apache.spark.ml.linalg.Vector v2) {
-        double dotProduct = org.apache.spark.ml.linalg.BLAS.dot(v1, v2);
-        double norm1 = Math.sqrt(org.apache.spark.ml.linalg.BLAS.dot(v1, v1));
-        double norm2 = Math.sqrt(org.apache.spark.ml.linalg.BLAS.dot(v2, v2));
-        if (norm1 == 0 || norm2 == 0) return 0.0;
-        return dotProduct / (norm1 * norm2);
+        return results;
     }
 
-    private double computeJaccardSimilarity(org.apache.spark.ml.linalg.Vector v1,
-                                            org.apache.spark.ml.linalg.Vector v2) {
-        double intersection = 0.0;
-        double union = 0.0;
 
-        for (int i = 0; i < v1.size(); i++) {
-            intersection += Math.min(v1.apply(i), v2.apply(i));
-            union += Math.max(v1.apply(i), v2.apply(i));
+    // Helper function to convert vector to a Spark SQL-compatible array
+    private String arrayToString(double[] array) {
+        StringBuilder sb = new StringBuilder();
+        for (double num : array) {
+            sb.append(num).append(",");
         }
-
-        return union == 0 ? 0.0 : intersection / union;
+        return sb.substring(0, sb.length() - 1); // Remove last comma
     }
 }
