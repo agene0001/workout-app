@@ -60,7 +60,7 @@ jobs:
       - name: Build images with Docker Compose
         run: |
           # Build images using Docker Compose
-          docker compose build spring-backend react-frontend 
+          docker compose build --no-cache spring-backend react-frontend 
 
       - name: Tag and push images
         run: |
