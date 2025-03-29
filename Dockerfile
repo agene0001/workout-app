@@ -39,12 +39,27 @@ ENV SERVER_PORT=8081
 
 # Stage 2: Use CMD for starting the Spring Boot application
 # Stage 2: Use CMD for starting the Spring Boot application
-CMD java \
---add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
-     --add-opens=java.base/java.nio=ALL-UNNAMED \
 
-    -jar /app/backend-spring/target/backend-spring-0.0.1-SNAPSHOT.jar
-
+# CMD with ALL required --add-opens arguments
+CMD ["java", \
+     "--add-opens=java.base/java.lang=ALL-UNNAMED", \
+     "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", \
+     "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", \
+     "--add-opens=java.base/java.io=ALL-UNNAMED", \
+     "--add-opens=java.base/java.net=ALL-UNNAMED", \
+     "--add-opens=java.base/java.nio=ALL-UNNAMED", \
+     "--add-opens=java.base/java.util=ALL-UNNAMED", \
+     "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED", \
+     # Exports might not strictly be needed but were in your POM, safer to include
+     "--add-exports=java.base/java.util.concurrent.atomic=ALL-UNNAMED", \
+     "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED", \
+     "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED", \
+     "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", \
+     "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED", \
+     "--add-opens=java.base/sun.security.action=ALL-UNNAMED", \
+     "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED", \
+     "-jar", \
+     "backend-spring-0.0.1-SNAPSHOT.jar"]
 
 #FROM node:16 AS frontend-builder
 #WORKDIR /app/frontend
