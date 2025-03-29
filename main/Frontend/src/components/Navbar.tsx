@@ -61,9 +61,9 @@ function Navbar( props:{ name: string }) {
                             <NavDropItem text='Others'/>
                         </NavDropdown>
 
-                        <li className="nav-item fs-5 p-2 m-3">
-                            <a className="nav-link disabled text-danger" href="#">Disabled</a>
-                        </li>
+                        {/*<li className="nav-item fs-5 p-2 m-3">*/}
+                        {/*    <a className="nav-link disabled text-danger" href="#">Disabled</a>*/}
+                        {/*</li>*/}
                     </ul>
                     <form className="form-inline my-2 my-lg-0">
                         <div className="input-group">

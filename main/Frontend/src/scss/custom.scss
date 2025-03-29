@@ -377,7 +377,7 @@ section {
   //background-color: red;
   border-radius: 6px;
   position: absolute;
-  left: max(calc(200px*10), 100%);
+  left: max(calc(200px*11), 100%);
   animation-name: scrollLeft;
   animation-duration: var(--item-duration);
   animation-timing-function: linear;
@@ -388,6 +388,18 @@ section {
   to{
     left: -200px;
   }
+}
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  justify-content: center;
+}
+
+.grid-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .item1{animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 1) * -1);}

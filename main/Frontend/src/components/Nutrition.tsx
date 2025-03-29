@@ -21,7 +21,7 @@ interface RecipeItem {
 function Nutrition() {
     const [querySearch, setQuerySearch] = useState('');
     const [searchedRecipes, setSearchedRecipes] = useState<{ query: string }[]>([]);
-    const [recipes, setRecipes] = useState<RecipeItem[][]>([]);
+    const [recipes, setRecipes] = useState<RecipeItem[]>([]);
     const [searchedRecipe, setSearchedRecipe] = useState<RecipeItem | null>(null);
     const [recommendedRecipes, setRecommendedRecipes] = useState<RecipeItem[]>([]);
 
@@ -29,50 +29,65 @@ function Nutrition() {
         axios.get('/api/v1/recipes/10')
             .then(res => {
                 console.log('Response data:', res.data);
-                if (Array.isArray(res.data)) {
-                    console.log(res.data);
 
-                    const data = res.data.filter((item: RecipeItem) => item.imgSrc !== null);
-                    const arr = [];
-                    for (let i = 0; i < data.length; i += 3) {
-                        const newArr = [];
-                        for (let j = 0; j < 3; j++) {
-                            if (data[i + j]) newArr.push(data[i + j]);
-                        }
-                        arr.push(newArr);
-                    }
-                    setRecipes(arr);
-                } else {
-                    console.error('Expected an array but got:', res.data);
-                }
+                    // const data = res.data.filter((item: RecipeItem) => item.imgSrc !== null);
+                    // const arr = [];
+                    // for (let i = 0; i < data.length; i += 3) {
+                    //     const newArr = [];
+                    //     for (let j = 0; j < 3; j++) {
+                    //         if (data[i + j]) newArr.push(data[i + j]);
+                    //     }
+                    //     arr.push(newArr);
+                    // }
+                    setRecipes(res.data);
+
             })
             .catch(err => {
                 console.log(err);
             });
     }, []);
 
-    const recipeComponents = recipes.map((row, rowIndex) => (
-        <div className='row' style={{ display: 'flex' }} key={`row-${rowIndex}`}>
-            {row.map((recipe) => (
-                <div className="col-4" style={{ display: 'flex', justifyContent: 'center' }} key={recipe.name}>
-                    <InfoBlock
-                        key={recipe.name}
-                        title={recipe.name}
-                        heading={<h1 className="text-start">{recipe.name}</h1>}
-                        bg='bg-info'
-                        nutrition={recipe.nutrition}
-                        icon={recipe.imgSrc}
-                        text={[
-                            recipe.duration ? <div>Duration: {recipe.duration}</div> : "",
-                            recipe.rating ? <div>Rating: {recipe.rating}</div> : "",
-                        ]}
-                        url={recipe.url}
-                        expandable={true} ingredients={""}
-                    />
-                </div>
-            ))}
+    // const recipeComponents = recipes.map((row, rowIndex) => (
+    //     <div className='row' style={{ display: 'flex' }} key={`row-${rowIndex}`}>
+    //         {row.map((recipe) => (
+    //             <div className="col-4" style={{ display: 'flex', justifyContent: 'center' }} key={recipe.name}>
+    //                 <InfoBlock
+    //                     key={recipe.name}
+    //                     title={recipe.name}
+    //                     heading={<h1 className="text-start">{recipe.name}</h1>}
+    //                     bg='bg-info'
+    //                     nutrition={recipe.nutrition}
+    //                     icon={recipe.imgSrc}
+    //                     text={[
+    //                         recipe.duration ? <div>Duration: {recipe.duration}</div> : "",
+    //                         recipe.rating ? <div>Rating: {recipe.rating}</div> : "",
+    //                     ]}
+    //                     url={recipe.url}
+    //                     expandable={true} ingredients={""}
+    //                 />
+    //             </div>
+    //         ))}
+    //     </div>
+    // ));
+    const recipeComponents = <div className="wrapper">{recipes.map((recipe, index) => (
+                    <div key={index} className={`item item${index + 1}`}>
+                        <InfoBlock
+                            title={recipe.name}
+                            heading={<h2 className="text-start">{recipe.name}</h2>}
+                            text={[
+                                recipe.duration ? <div>Duration: {recipe.duration}</div> : "",
+                                recipe.rating ? <div>Rating: {recipe.rating}</div> : "",
+                            ]}
+                            icon={recipe.imgSrc}
+                            fadeInAnimation="fadeIn"
+                            bg="bg-info"
+                            url={recipe.url}
+                            expandable={true}
+                        />
+                    </div>
+                ))}
         </div>
-    ));
+
 
     async function getQuery(query: string) {
         if (query === '') {
@@ -99,27 +114,9 @@ function Nutrition() {
                 <div style={{ height: '60px' }}></div>
                 <h1 className='text-primary py-5 my-5 text-center'>Search for Personalized Recipes shipped right to your door</h1>
 
-                {recommendedRecipes.length !== 0 ?
-                    <div className="wrapper">
-                        {recommendedRecipes.map((recipe, index) => (
-                            <div key={index} className={`item item${index + 1}`}>
-                                <InfoBlock
-                                    title={recipe.name}
-                                    heading={<h2 className="text-start">{recipe.name}</h2>}
-                                    text={[
-                                        recipe.duration ? <div>Duration: {recipe.duration}</div> : "",
-                                        recipe.rating ? <div>Rating: {recipe.rating}</div> : "",
-                                    ]}
-                                    icon={recipe.imgSrc}
-                                    fadeInAnimation="fadeIn"
-                                    bg="bg-info"
-                                    url={recipe.url}
-                                    expandable={true}
-                                />
-                            </div>
-                        ))}
-                    </div> : ""
-                }
+                <h3 className="text-primary text-center">Search for recipes from our personalized catalogue</h3>
+
+                {recipeComponents}
 
                 <div className='bg-info w-25' style={{
                     minWidth: '500px',
@@ -180,6 +177,7 @@ function Nutrition() {
                             </button>
                         </div>
                     </div>
+
                     <div className='row justify-content-center'>
                         <div className='col-6 mb-3'>
                             <input
@@ -219,7 +217,28 @@ function Nutrition() {
                         </ul>
                     </div>
                 </div>
-                {recipeComponents}
+                {recommendedRecipes.length !== 0 && (
+                    <div className="grid-container">
+                        {recommendedRecipes.map((recipe, index) => (
+                            <div key={index} className="grid-item">
+                                <InfoBlock
+                                    title={recipe.name}
+                                    heading={<h2 className="text-start">{recipe.name}</h2>}
+                                    text={[
+                                        recipe.duration ? <div>Duration: {recipe.duration}</div> : "",
+                                        recipe.rating ? <div>Rating: {recipe.rating}</div> : "",
+                                    ]}
+                                    icon={recipe.imgSrc}
+                                    fadeInAnimation="fadeIn"
+                                    bg="bg-info"
+                                    url={recipe.url}
+                                    expandable={true}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )}
+
             </div>
         </>
     );
