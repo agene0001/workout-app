@@ -59,7 +59,7 @@ CMD ["java", \
      "--add-opens=java.base/sun.security.action=ALL-UNNAMED", \
      "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED", \
      "-jar", \
-     "backend-spring-0.0.1-SNAPSHOT.jar"]
+     "target/backend-spring-0.0.1-SNAPSHOT.jar"]
 
 #FROM node:16 AS frontend-builder
 #WORKDIR /app/frontend
