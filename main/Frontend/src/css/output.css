@@ -9651,7 +9651,7 @@ section {
   height: 100px;
   border-radius: 6px;
   position: absolute;
-  left: max(2000px, 100%);
+  left: max(2200px, 100%);
   animation-name: scrollLeft;
   animation-duration: var(--item-duration);
   animation-timing-function: linear;
@@ -9663,6 +9663,19 @@ section {
     left: -200px;
   }
 }
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  justify-content: center;
+}
+
+.grid-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .item1 {
   animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 1) * -1);
 }
