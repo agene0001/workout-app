@@ -41,6 +41,8 @@ ENV SERVER_PORT=8081
 # Stage 2: Use CMD for starting the Spring Boot application
 CMD java \
 --add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
+     --add-opens=java.base/java.nio=ALL-UNNAMED \
+
     -jar /app/backend-spring/target/backend-spring-0.0.1-SNAPSHOT.jar
 
 
