@@ -43,14 +43,18 @@ public class SparkRecommender implements Serializable {
                 .setOutputCol("filtered_words"); // Output will be a new column
 
         // Apply the remover to the tokenized data
-        Dataset<Row> filteredData = remover.transform(tokenizedData);
+//        Dataset<Row> filteredData = remover.transform(tokenizedData);
 
         // You can customize the stop words (optional but recommended for recipes)
-        // String[] myStopWords = {"a", "an", "the", "cup", "cups", "oz", "ounce", "ounces", "lb", "lbs", "pound", "pounds", "tsp", "tbsp", "teaspoon", "teaspoons", "tablespoon", "tablespoons", "pinch", "dash", "to", "taste", "chopped", "sliced", "minced", "diced", "optional", "garnish", "for", "and", "or", "with", "into", "in", "on", "at", "as", "if", "of", "add", "mix", "stir", "combine", "bake", "cook", "fry", "saute", "heat", "preheat", "degrees", "fahrenheit", "celsius"};
-        // remover.setStopWords(myStopWords);
-        // filteredData = remover.transform(tokenizedData); // Re-apply if customizing
+        String[] myStopWords = StopWordsRemover.loadDefaultStopWords("english"); // Start with default
 
-        return filteredData; // Return the dataset including the new 'filtered_words' column
+        String[] recipeStopWords = {"a", "an", "the", "cup", "cups", "oz", "ounce", "ounces", "lb", "lbs", "pound", "pounds", "tsp", "tbsp", "teaspoon", "teaspoons", "tablespoon", "tablespoons", "pinch", "dash", "to", "taste", "chopped", "sliced", "minced", "diced", "optional", "garnish", "for", "and", "or", "with", "into", "in", "on", "at", "as", "if", "of", "add", "mix", "stir", "combine", "bake", "cook", "fry", "saute", "heat", "preheat", "degrees", "fahrenheit", "celsius", "minute", "minutes", "hour", "hours", "about", "approximately", "well", "until", "large", "medium", "small", "finely", "roughly", "fresh", "dried", "ground", "can", "cans", "package", "packages", "room", "temperature", "over", "under", "make", "serve", "set", "aside", "cover", "reduce", "bring", "boil", "simmer", "drain", "rinse", "remove", "cut", "place", "beat", "whisk", "blend", "pour", "spread", "top", "layer", "prepare", "use", "needed", "according", "instructions", "water", "oil", "salt", "pepper"}; // Add many more!
+        java.util.Set<String> stopWordsSet = new java.util.HashSet<>(java.util.Arrays.asList(myStopWords));
+        stopWordsSet.addAll(java.util.Arrays.asList(recipeStopWords));
+        remover.setStopWords(stopWordsSet.toArray(new String[0]));
+        // Re-apply if customizing
+
+        return remover.transform(tokenizedData); // Return the dataset including the new 'filtered_words' column
     }
 
     public void setup(String dbUrl, String dbUser, String dbPassword) {
@@ -87,11 +91,11 @@ public class SparkRecommender implements Serializable {
 
     private Word2VecModel buildWord2VecModel(Dataset<Row> dataset) {
         Word2Vec word2Vec = new Word2Vec()
-                .setInputCol("words")
+                .setInputCol("filtered_words")
                 .setOutputCol("features")
                 .setVectorSize(100)  // Reduce dimensionality for efficiency
-                .setMinCount(2);  // Ignore words with frequency < 2
-
+                .setMinCount(2)  // Ignore words with frequency < 2
+                .setNumPartitions(16); // Example: Set based on your cluster cores
         return word2Vec.fit(dataset);
     }
 
