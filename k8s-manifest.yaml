@@ -67,6 +67,7 @@ spec:
         - name: react-frontend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
           # image: peppap1g/react-frontend:latest
+          imagePullPolicy: Always  # <-- ADD THIS
 
           ports:
             - containerPort: 8080
@@ -111,6 +112,8 @@ spec:
         - name: mysql-db
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/mysql-db:latest
           # image: peppap1g/mysql-db:latest
+          imagePullPolicy: Always  # <-- ADD THIS
+
           ports:
             - containerPort: 3306
           env:
