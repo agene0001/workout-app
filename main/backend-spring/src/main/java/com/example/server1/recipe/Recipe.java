@@ -44,6 +44,7 @@ public class Recipe {
                   String name,
                   String url,
                   String ingredients,
+                  String instructions,
                   String nutrition,
                   String level,
                   int numOfRatings,
@@ -55,6 +56,7 @@ public class Recipe {
         this.name = name;
         this.url = url;
         this.ingredients = ingredients;
+        this.instructions = instructions;
         this.nutrition = nutrition;
         this.level = level;
         this.numOfRatings = numOfRatings;
@@ -146,6 +148,17 @@ public class Recipe {
 
     @Column(name = "ingredients", columnDefinition = "TEXT")
     private String ingredients;
+
+    public String getInstructions() {
+        return instructions;
+    }
+
+    public void setInstructions(String instructions) {
+        this.instructions = instructions;
+    }
+
+    @Column(name = "instructions", columnDefinition = "TEXT")
+    private String instructions;
     @Column(name = "nutrition", columnDefinition = "TEXT")
     private String nutrition;
     @Column(name = "level")
@@ -177,6 +190,7 @@ public class Recipe {
                 ", name='" + name + '\'' +
                 ", url='" + url + '\'' +
                 ", ingredients='" + ingredients + '\'' +
+                ", instructions='" + instructions + '\'' +
                 ", nutrition='" + nutrition + '\'' +
                 ", level='" + level + '\'' +
                 ", numOfRatings=" + numOfRatings +

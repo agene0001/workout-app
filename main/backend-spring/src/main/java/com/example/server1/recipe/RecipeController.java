@@ -25,7 +25,6 @@ public class RecipeController {
             List<Recipe> recipes = recipeService.getSample(k);
             long end = System.currentTimeMillis();
             System.out.println("Execution time for getSample(k): " + (end - start) + " ms");
-
             System.out.println("Retrieved " + recipes.size() + " recipes");
             return recipes;
         } catch (Exception e) {

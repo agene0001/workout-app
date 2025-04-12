@@ -43,7 +43,24 @@ services:
     restart: always
     networks:
       - app-network
-
+  flask-backend:
+    #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
+    image: flask-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api-builder
+    container_name: flask-backend
+    platform: linux/amd64
+    depends_on:
+      - react-frontend
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "8082:8082"
+    restart: always
+    networks:
+      - app-network
   mysql-db:
     image: mysql-db:latest
     build:

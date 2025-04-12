@@ -15,7 +15,7 @@ function HeroSection() {
     const myRef3 = useRef<HTMLDivElement|null>(null);
     const infoTitle1: string = 'Exceptional Archive'
     const infoTitle2: string = 'Personalized Nutrition'
-    const infoTitle3: string = 'Progress Tracker/ Forum Groups'
+    const infoTitle3: string = 'Progress Tracker/ Forum Groups (BETA)'
     const [heroStart, setHeroStartIsVisible] = useState(false);
     const [heroSecond, setHeroSecondIsVisible] = useState(false);
     const [blocks, setBlocksIsVisible] = useState(false);
@@ -133,7 +133,7 @@ function HeroSection() {
             <div className="container text-center vh-100 align-content-center py-3 " id="hero3">
                 <div ref={myRef3} className='row py-3 justify-content-center'>
                     <div className="col-12 col-md-4 ">
-                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero' : ''}`} title={infoTitle1} heading={<h1>{infoTitle1}</h1>} expandable={false} text={[`"Our Exceptional Archive brings together a vast repository of sports achievements and food options. Here, you can search for historical sports events and performance records, as well as explore a wide range of recipes tailored to meet your dietary preferences. Whether you're seeking tips on how to optimize your workout nutrition or interested in the latest sports betting insights, our archive provides the perfect blend of information to help you level up your fitness journey.`]} />
+                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero' : ''}`} title={infoTitle1} heading={<h1>{infoTitle1}</h1>} expandable={false} text={[`"Our Exceptional Archive brings together a vast repository of food options. Here, you can explore a wide range of recipes tailored to meet your dietary preferences. Whether you're seeking tips on how to optimize your workout nutrition or interested in the latest sports betting insights, our archive provides the perfect blend of information to help you level up your fitness journey.`]} />
                     </div>
                     <div className="col-12 col-md-4">
                         <InfoBlock fadeInAnimation={`${blocks ? 'infoHero1' : ''}`} title={infoTitle2} heading={<h1>{infoTitle2}</h1>} expandable={false} text={[`At the heart of our platform is a Personalized Nutrition system powered by a state-of-the-art recommender. This intelligent system analyzes your unique dietary preferences, activity levels, and fitness goals to recommend the most suitable recipes for your needs. We continuously update our meal plans and recipes based on the latest research, ensuring you get the right balance of nutrition to fuel your workouts and promote overall health.`]} />

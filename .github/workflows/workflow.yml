@@ -11,6 +11,7 @@ env:
   GKE_ZONE: us-central1-a
   IMAGE_FRONTEND: react-frontend
   IMAGE_BACKEND: spring-backend
+  IMAGE_FLASK: flask-backend
   REGION: us-central1
   REPOSITORY: workout-app
 jobs:
@@ -50,29 +51,37 @@ jobs:
   
           gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND@{} --quiet --force-delete-tags
           
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK@{} --quiet --force-delete-tags
+
           # Delete all remaining images (ignores timestamp)
           gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
           
           gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND@{} --quiet --force-delete-tags
+          
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK --format='get(digest)' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK@{} --quiet --force-delete-tags
+
       - name: Configure Docker to use Google Cloud authentication
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
       - name: Build images with Docker Compose
         run: |
           # Build images using Docker Compose
-          docker compose build spring-backend react-frontend 
+          docker compose build spring-backend react-frontend flask-backend
 
       - name: Tag and push images
         run: |
           # Tag backend image
-          docker tag spring-backend:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/spring-backend:latest
+          docker tag ${IMAGE_BACKEND}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_BACKEND}:latest
           # Tag frontend image
-          docker tag react-frontend:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/react-frontend:latest
+          docker tag ${IMAGE_FRONTEND}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
+          # Tag flask image
+          docker tag ${IMAGE_FLASK}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
           # Tag MySQL image
    
           # Push all images
-          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/spring-backend:latest
-          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/react-frontend:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_BACKEND}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
 
       # Deploy the application to the GKE cluster
       - name: Deploy to GKE
@@ -85,6 +94,7 @@ jobs:
           echo "Forcing rollout restart to pick up latest images..."
           kubectl rollout restart deployment/react-frontend
           kubectl rollout restart deployment/spring-backend
+          kubectl rollout restart deployment/flask-backend
           # Only restart mysql if you intend to update its image too
           # kubectl rollout restart deployment/mysql-db
       # ---------------------
@@ -93,6 +103,7 @@ jobs:
         run: |-
           kubectl rollout status deployment/react-frontend
           kubectl rollout status deployment/spring-backend
+          kubectl rollout status deployment/flask-backend
           # kubectl rollout status deployment/mysql-db
 
       # Output the public IP address

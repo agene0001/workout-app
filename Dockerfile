@@ -72,33 +72,31 @@ CMD ["java", \
 #COPY main/Frontend/ ./
 #RUN npm run build
 
-#FROM python:3.9 as api-builder
-#
-## Set working directory
-#WORKDIR /app
-#
-## Copy requirements and install dependencies
-#COPY main/python/requirements.txt .
-#RUN pip install --upgrade pip && pip install -r requirements.txt
-#RUN python -m nltk.downloader punkt
-#RUN python -m nltk.downloader punkt_tab
-#
-## Copy the entire python directory
-#COPY main/python/ .
-#
-## Print directory structure for debugging
-##RUN ls -la
-##RUN ls -la data/
-#
-## Environment variables
-##ENV DOCKER=true
-#ENV PORT=8082
-#ENV PYTHONUNBUFFERED=1
-#
-#EXPOSE 8082
-#
-## Run the application (removed the WORKDIR app command)
-#CMD ["python", "recommenderRoute.py"]
+FROM --platform=linux/amd64 python:3.12 as api-builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY main/python/requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN python -m spacy download en_core_web_sm
+
+
+# Copy the entire python directory
+COPY main/python/ .
+
+# Print directory structure for debugging
+RUN ls -la
+
+# Environment variables
+#ENV DOCKER=true
+ENV PORT=8082
+
+EXPOSE 8082
+
+# Run the application (removed the WORKDIR app command)
+CMD ["python", "xtract-server.py"]
 
 #WORKDIR app
 # Stage 4: Final image for Spring Boot service

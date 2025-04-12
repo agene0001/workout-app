@@ -1,42 +1,62 @@
 'use client'
 
-import  {useRef, useState, useEffect, ReactNode, FC} from "react";
-import { createPortal } from "react-dom";
-
-interface InfoBlockProps {
-    heading: ReactNode,
-    title: string,
-
-    text: ReactNode[],
-    icon?: string,
-    fadeInAnimation?: string,
-    bg?: string,
-    nutrition?: string,
-    ingredients?: string,
-    expandable: boolean,
-    url?: string
-}
+import {useRef, useState, useEffect, FC} from "react";
+import {createPortal} from "react-dom";
+import {InfoBlockProps, InstacartRes} from "../types";
+import axios from "axios";
 
 const InfoBlock: FC<InfoBlockProps> = ({
-                                                 heading,
-    title,
-                                                 text,
-                                                 icon = null,
-                                                 fadeInAnimation = '',
-                                                 bg = 'bg-danger',
-                                                 expandable,
-    url = null
-                                             }) => {
+                                           heading,
+                                           title,
+                                           text,
+                                           recipe = null,
+                                           icon = null,
+                                           fadeInAnimation = '',
+                                           bg = 'bg-danger',
+                                           expandable,
+                                           url = null
+                                       }) => {
     const ref = useRef(null);
     const title1 = useRef(null);
     const content = useRef(null);
     const [expanded, setExpanded] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [instacartData, setInstacartData] = useState<InstacartRes|null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         setMounted(true);
         return () => setMounted(false);
     }, []);
+
+    // Fetch Instacart data when expanded and we have a recipe
+    useEffect(() => {
+        if (expanded && recipe && !instacartData && !isLoading) {
+            fetchInstacartData();
+        }
+    }, [expanded, recipe]);
+
+    const fetchInstacartData = async () => {
+        if (!recipe) return;
+
+        setIsLoading(true);
+        try {
+            
+            recipe.instructions.split(/(?=\d\s?:\s)/).map(step => step.trim()).forEach((val:string)=>console.log(val))
+            const res = await axios.post('/recipes/process-recipe', {
+                'ingredients': recipe.ingredients,
+                'instructions': recipe.instructions.split(/(?=\d\s?:\s)/).map(step => step.trim()),
+                'title': recipe.name,
+                'image_url': recipe.imgSrc
+            });
+            console.log(res.data)
+            setInstacartData(res.data || "");
+        } catch (error) {
+            console.error("Error fetching Instacart data:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const toggleExpand = () => {
         if (expandable) {
@@ -58,18 +78,14 @@ const InfoBlock: FC<InfoBlockProps> = ({
             <div
                 className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
                 style={{
-                    backgroundColor: 'rgba(0,0,0,0.7)',
-                    zIndex: 9999
+                    backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999
                 }}
                 onClick={toggleExpand}
             >
                 <div
                     className={`${bg} p-5 rounded-3`}
                     style={{
-                        width: '80%',
-                        maxWidth: '600px',
-                        maxHeight: '80vh',
-                        overflowY: 'auto'
+                        width: '80%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto'
                     }}
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -82,10 +98,37 @@ const InfoBlock: FC<InfoBlockProps> = ({
                         </button>
                     </div>
 
-                    {icon !== null ? <img className='img-fluid mb-3' src={icon} alt="" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }} /> : ''}
+                    {icon !== null ? (
+                        <img
+                            className='img-fluid mb-3'
+                            src={icon}
+                            alt=""
+                            style={{maxWidth: '100%', maxHeight: '200px', objectFit: 'contain'}}
+                        />
+                    ) : ''}
+
                     <h1 ref={title1} className='textAnimate'>{title}</h1>
-                    {text.map((item, index) => <p key={index} ref={content} className='paraAnimate' style={{ fontSize: '1.2rem' }}>{item}</p>)}
-                    {url?<a href={url} target="_blank">Food Network Site</a>:""}
+
+                    {text.map((item, index) => (
+                        <p
+                            key={index}
+                            ref={content}
+                            className='paraAnimate'
+                            style={{fontSize: '1.2rem'}}
+                        >
+                            {item}
+                        </p>
+                    ))}
+
+                    {url ? <a href={url} target="_blank" rel="noopener noreferrer">Food Network Site</a> : ""}
+
+                    {isLoading ? (
+                        <div>Loading Instacart data...</div>
+                    ) : instacartData ? (
+                        <div>
+                        <a target="_blank" className="text-black" href={instacartData.response.products_link_url}>Instacart Link</a>
+                        </div>
+                    ) : null}
                 </div>
             </div>
         );
@@ -121,9 +164,22 @@ const InfoBlock: FC<InfoBlockProps> = ({
                 }}
             >
                 {/* Existing content */}
-                {icon !== null ? <img className='img-fluid' src={icon} alt="" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'contain' }} /> : ''}
+                {icon !== null ? (
+                    <img
+                        className='img-fluid'
+                        src={icon}
+                        alt=""
+                        style={{maxWidth: '100%', maxHeight: '100px', objectFit: 'contain'}}
+                    />
+                ) : ''}
+
                 {heading}
-                {text.map((item, index) => <div key={index} ref={content} className='paraAnimate'>{item}</div>)}
+
+                {text.map((item, index) => (
+                    <div key={index} ref={content} className='paraAnimate'>
+                        {item}
+                    </div>
+                ))}
             </div>
 
             {/* Portal for expanded view */}
@@ -131,4 +187,5 @@ const InfoBlock: FC<InfoBlockProps> = ({
         </>
     );
 }
+
 export default InfoBlock;

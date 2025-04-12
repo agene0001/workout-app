@@ -3,10 +3,9 @@ import React from 'react'
 import NavDropdown from 'react-bootstrap/NavDropdown'
 
 import 'bootstrap/dist/js/bootstrap.js'
+import {NavItemProps} from "../types";
 // import {NavItemProps} from "react-bootstrap";
-interface NavItemProps {
-    text: string | JSX.Element; // This allows text to be either a string or JSX.Element
-}
+
 function Navbar( props:{ name: string }) {
     const NavItem:  React.FC<NavItemProps>  = ({ text}) => {
         const [isHovered, setIsHovered] = React.useState(false);

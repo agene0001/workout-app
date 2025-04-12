@@ -1,5 +1,6 @@
 'use client'
 import InfoBlock from './InfoBlock'; /* Corrected from './/InfoBlock' */
+import {RecipeItem} from "../types";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -9,14 +10,7 @@ function toTitleCase(str: string): string {
     });
 }
 
-interface RecipeItem {
-    name: string;
-    nutrition: string;
-    imgSrc: string;
-    duration: string;
-    rating: number;
-    url: string;
-}
+
 
 function Nutrition() {
     const [querySearch, setQuerySearch] = useState('');
@@ -78,6 +72,7 @@ function Nutrition() {
                                 recipe.duration ? <div>Duration: {recipe.duration}</div> : "",
                                 recipe.rating ? <div>Rating: {recipe.rating}</div> : "",
                             ]}
+                            recipe={recipe}
                             icon={recipe.imgSrc}
                             fadeInAnimation="fadeIn"
                             bg="bg-info"
@@ -133,6 +128,7 @@ function Nutrition() {
                             bg='bg-primary col-4'
                             title={searchedRecipe.name}
                             heading={<h1 className="text-start">{searchedRecipe.name}</h1>}
+                            recipe={searchedRecipe}
                             text={[]}
                             expandable={true}
                         />

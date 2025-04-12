@@ -3,9 +3,18 @@ import spacy
 from spacy.matcher import Matcher
 import re
 from dotenv import load_dotenv
+import os
+from flask import Flask, request, jsonify, Blueprint
+from flask_cors import CORS
+# Load environment variables
+load_dotenv()
+
+# Initialize Flask app
+
+recipe_bp = Blueprint('recipes', __name__, url_prefix='/recipes')
 # Load small English model
 nlp = spacy.load("en_core_web_sm")
-import os
+
 # Define common units
 UNITS = {
     "cup", "cups", "c",
@@ -19,6 +28,7 @@ UNITS = {
     "gram", "grams", "g", "kg", "kgs",
     "each", "large", "medium", "small", "can", "cans", "stick", "sticks", "bag", "bags"
 }
+QUANTIY_ERRORS = ['ice']
 # Word-to-number mapping
 WORD_NUMBERS = {
     "zero": 0,
@@ -56,7 +66,6 @@ def parse_fraction(s):
         return None
 
 # Function to extract the core ingredient name from full text
-# Function to extract the core ingredient name from full text
 def extract_core_name(full_name):
     # Check if this is a serving suggestion line
     if re.match(r'(?i).*serving suggestions.*', full_name):
@@ -70,6 +79,9 @@ def extract_core_name(full_name):
 
     # Remove preparation instructions and additional details
     patterns = [
+        r'\s+thinly\s+sliced.*$',
+        r'\s+finely\s+minced.*$',
+        r'\s+roughly\s+chopped.*$',
         r'\s+cut\s+into.*$',
         r'\s+peeled.*$',
         r'\s+melted.*$',
@@ -107,6 +119,32 @@ def extract_ingredients(text):
         unit = ''
         name = ''
         display_text = ''
+        dash_pattern = re.match(r'^(\d+(?:\s+\d+/\d+)?|\d+/\d+)\s*-\s*(\w+)\s+(.*)', line)
+        if dash_pattern:
+            quantity = dash_pattern.group(1).strip()
+            unit = dash_pattern.group(2).strip()
+            name = dash_pattern.group(3).strip()
+            display_text = original_line
+            core_name = extract_core_name(name)
+
+            ingredients.append({
+                "name": core_name.lower(),
+                "display_text": display_text.lower(),
+                "quantity": quantity,
+                "unit": unit
+            })
+            continue
+        # Special handling for optional serving suggestions
+        if re.match(r'(?i)optional\s+serving\s+suggestions.*', line):
+            display_text = original_line.lower()
+            # Specifically extract chocolate milk for name
+            name = "chocolate milk"
+            ingredients.append({
+                "name": name.lower(),
+                "display_text": display_text,
+                "quantity": "optional"
+            })
+            continue
 
         # Handle "Juice of 2 lemons (about 1/4 cup)"
         juice_match = re.match(r'(?i)^(Juice|Zest|Peel)\s+of\s+(.*)', line)
@@ -166,8 +204,12 @@ def extract_ingredients(text):
                 # Convert word numbers to digits
                 if quantity_str in WORD_NUMBERS:
                     quantity = WORD_NUMBERS[quantity_str]
+                elif quantity_str in QUANTIY_ERRORS:
+                    quantity = ""
+                    name = quantity_str+" "
                 else:
                     quantity = quantity_str
+
                 tokens = doc[len(quantity_str.split()):]
             else:
                 tokens = doc
@@ -180,54 +222,43 @@ def extract_ingredients(text):
                 tokens = tokens[1:]
 
             # The rest is the ingredient name
-            name = ' '.join(tokens).strip()
+            name += ' '.join(tokens).strip()
             display_text = name  # This will be the full description with prep instructions
 
             # For the simplified name, remove preparation instructions
             core_name = extract_core_name(name)
-
             if core_name:
                 ingredient = {
                     "name": core_name.lower(),
-                    "display_text": f"{display_text.lower()}".strip() ,
+                    "display_text": f"{display_text.lower()}".strip(),
                     "quantity": f"{quantity}".strip()
                 }
                 if unit:
                     ingredient["unit"] = unit
-                    ingredient['display_text'] = unit +" "+ ingredient['display_text']
-                ingredient['display_text'] = ingredient['quantity'] + " "+ ingredient['display_text']
+                    ingredient['display_text'] = unit + " " + ingredient['display_text']
+                ingredient['display_text'] = ingredient['quantity'] + " " + ingredient['display_text']
                 ingredients.append(ingredient)
 
     return ingredients
 
-if __name__ == "__main__":
-    load_dotenv()
+def process_recipe(ingredients_text, instructions, title, image_url=""):
+    """Process recipe ingredients and instructions and send to Instacart API"""
 
-    text = """
-    2 cups all-purpose flour, 1/2 teaspoon salt, 6 ounces cold unsalted butter cut into cubes plus butter for the pie tin, 1/4 to 1/3 cup ice cold water, 1 stick (8 tablespoons) unsalted butter, 12 large apples such as Granny Smith peeled cored and sliced into eighths (about 14 cups), Juice of 2 lemons (about 1/4 cup), 1/4 cup loosely packed dark brown sugar, 1/4 cup loosely packed light brown sugar, 1/4 cup Southern Comfort, 1 tablespoon ground cinnamon, 1 large egg beaten with 2 tablespoons water, Nonstick canola oil spray, 1 pound marshmallow creme, 4 tablespoons unsalted butter melted and cooled, 1/2 cup powdered sugar, 1/3 cup miniature chocolate-covered candies such as M and M's plus more for garnish, 2 tablespoons bourbon, 1 teaspoon vermouth, 1 teaspoon grenadine, 24 whole graham crackers each broken carefully in half, 80 stackable marshmallows (2 bags), Six 4-ounce bars high-quality semisweet chocolate chopped, Optional serving suggestions: Manhattan's (for the adults) or chocolate milk (for the kids)
-    """
-
-    parsed = extract_ingredients(text)
-
-    for item in parsed:
-        print(item)
+    # Extract ingredients
+    parsed_ingredients = extract_ingredients(ingredients_text)
 
     # Build payload for POST request
     payload = {
-        "title": "1 Smore for the Road and Kiddie Smores",
-        "image_url": "https://food.fnr.sndimg.com/content/dam/images/food/fullset/2013/5/10/0/ZB0403H_kiddie-smores-recipe_s4x3.jpg.rend.hgtvcom.1280.720.suffix/1371616409601.jpeg",
+        "title": title,
+        "image_url": image_url,
         "expires_in": 1,
-        "instructions": [
-            "1 : Coat a large microwave-safe bowl with nonstick spray. Add the marshmallow creme and microwave until warmed through and slightly puffed, 30 to 45 seconds. Add the butter and powdered sugar and whip with a hand mixer until light and fluffy, 1 to 2 minutes. Transfer half of the mixture to another bowl coated with nonstick spray and fold in the candies. Set aside until ready to use.",
-            "2 : Add the bourbon, vermouth and grenadine to the remaining marshmallow mixture and whip with a hand mixer until well combined. Set aside until ready to use.",
-            '3 : To build the "1 smore for the road": On a cooling rack over a half baking sheet, lay down 32 of the graham cracker halves. Spread 1 1/2 teaspoons of the "Manhattan(" marshmallow creme on each graham cracker half. Place 4 stackable marshmallows on 16 of the graham cracker halves. Top with the remaining graham cracker halves.',
-    '4 : To build the kiddie smores: On a cooling rack over a half baking sheet, lay down the remaining 16 graham cracker halves. Spread 1 tablespoon of ")kiddie" marshmallow creme on each graham cracker half. Place 2 stackable marshmallows on 8 of the graham cracker halves. Top with the remaining graham cracker halves.',
-            '5 : In a metal bowl set over a saucepan with about 1 inch of simmering water in it, melt the semisweet chocolate over medium-low heat until completely smooth, stirring constantly, 5 to 7 minutes. Once the chocolate is melted, turn the heat off below the pan. Pour 2 tablespoons of the melted chocolate on top of each smore, letting the chocolate drip down the sides. Once the smores are finished, let the chocolate harden at room temperature for an hour (or if you are in a hurry, then let set up in the refrigerator for 15 minutes). ',
-            '6 : Serve with a side of Manhattans for the adults and some chocolate milk for the kids. '
-    ],
-        "line_items": parsed
+        "instructions": instructions,
+        "line_items": parsed_ingredients
     }
+    print(payload)
+    # Get API key from environment
     api_key = os.getenv("API_KEY")
+
     headers = {
         "Accept": "application/json",
         "Authorization": f"Bearer {api_key}",
@@ -240,5 +271,56 @@ if __name__ == "__main__":
         json=payload
     )
 
-    print("POST response:", response.status_code)
-    print(response.json())
+    return {
+        "status_code": response.status_code,
+        "response": response.json(),
+        "processed_ingredients": parsed_ingredients
+    }
+app = Flask(__name__)
+
+# API routes
+@recipe_bp.route('/process-recipe', methods=['POST'])
+def process_recipe_api():
+    """API endpoint to process recipe ingredients and instructions"""
+    try:
+        data = request.json
+
+        # Check for required fields
+        if 'title' not in data:
+            return jsonify({"error": "Missing name field"}), 400
+        if 'ingredients' not in data:
+            return jsonify({"error": "Missing ingredients field"}), 400
+        if 'instructions' not in data:
+            return jsonify({"error": "Missing instructions field"}), 400
+
+        # Extract optional fields
+        title = data.get('title', 'Recipe')
+        image_url = data.get('image_url', '')
+
+        # Process ingredients and instructions
+        result = process_recipe(
+            data['ingredients'],
+            data['instructions'],
+            title,
+            image_url
+        )
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+app.register_blueprint(recipe_bp)
+CORS(app)  # This allows all domains, you can restrict it if needed
+
+# Simple health check endpoint
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"})
+
+if __name__ == "__main__":
+    host=  os.getenv("NODE_ENV","dev")
+    if host== "production":
+        # debug off so wont see explanatory information in dockercompose or kubernetes
+        app.run(debug=True, host='0.0.0.0', port=8082)
+    elif host == 'dev':
+        app.run(debug=True, host='0.0.0.0', port=5000)

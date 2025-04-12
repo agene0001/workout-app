@@ -13,3 +13,5 @@ cython~=3.0.12
 wheel~=0.45.1
 requests~=2.32.3
 spacy~=3.8.2
+dotenv~=0.9.9
+flask-cors~=5.0.1
