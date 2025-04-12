@@ -29,14 +29,10 @@ public class Autocomplete {
         try {
             this.terms = terms;
             Arrays.sort(terms);
-            FileWriter myWriter = new FileWriter("filename.txt");
-            myWriter.write(Arrays.toString(terms));
-            myWriter.close();
+;
         }
         catch (NullPointerException e) {
             throw new IllegalArgumentException("terms cannot be null");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
 
     }

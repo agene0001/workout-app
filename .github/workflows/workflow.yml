@@ -82,7 +82,18 @@ jobs:
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_BACKEND}:latest
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
-
+  # --- ADD THIS STEP ---
+      - name: Create or Update Instacart Secret
+        env:
+          INSTACART_API_KEY: ${{ secrets.INSTACART_API_KEY }} # Get the key from GitHub Secrets
+        run: |
+          if [ -z "$INSTACART_API_KEY" ]; then
+            echo "Error: INSTACART_API_KEY secret is not set in GitHub Secrets."
+            exit 1
+          fi
+          kubectl create secret generic instacart-creds \
+            --from-literal=api-key="$INSTACART_API_KEY" \
+            --dry-run=client -o yaml | kubectl apply -f -
       # Deploy the application to the GKE cluster
       - name: Deploy to GKE
         run: |-

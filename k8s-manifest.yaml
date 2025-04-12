@@ -73,6 +73,11 @@ spec:
           env:
             - name: NODE_ENV
               value: production
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: instacart-creds # Name of the Secret created above
+                  key: api-key
 
 
       restartPolicy: Always
