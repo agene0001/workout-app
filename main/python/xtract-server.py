@@ -270,10 +270,25 @@ def process_recipe(ingredients_text, instructions, title, image_url=""):
         headers=headers,
         json=payload
     )
+    try:
+        data = response.json()
+    except ValueError:
+        print("Response was not valid JSON.")
+        data = None
+
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err} - Response: {response.text}")
+        data = None
+    except requests.exceptions.Timeout:
+        print("The request timed out.")
+        data = None
+    except requests.exceptions.RequestException as err:
+        print(f"An error occurred: {err}")
+        data = None
 
     return {
         "status_code": response.status_code,
-        "response": response.json(),
+        "response": data,
         "processed_ingredients": parsed_ingredients
     }
 app = Flask(__name__)
@@ -305,7 +320,7 @@ def process_recipe_api():
             image_url
         )
 
-        return jsonify(result)
+        return jsonify(result),200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
