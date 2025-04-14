@@ -198,10 +198,10 @@
     .item10 { animation-delay: calc(var(--item-duration) / var(--item-num) * (var(--item-num) - 10) * -1); }
 
     /* Background image classes */
-    .layer1 { background-image: url('waves.svg'); }
-    .layer3 { background-image: url('wave-haikei2.svg'); }
-    .low-poly2 { background-image: url('low-poly-grid-haikei-2.svg'); }
-    .peaks { background-image: url('wave-haikei.svg'); }
+    .layer1 { background-image: url('/waves.svg'); }
+    .layer3 { background-image: url('/wave-haikei2.svg'); }
+    .low-poly2 { background-image: url('/low-poly-grid-haikei-2.svg'); }
+    .peaks { background-image: url('/wave-haikei.svg'); }
 
     /* Spacer class */
     .spacer {
