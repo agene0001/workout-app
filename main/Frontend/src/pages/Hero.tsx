@@ -1,13 +1,7 @@
 'use client'
 import {useRef, useEffect, useState} from "react";
-import InfoBlock from "./InfoBlock";
-// import Granim from "granim";
+import InfoBlock from "../components/InfoBlock.tsx";
 import anime from 'animejs'
-
-// Responsive styles for headings
-// const heroHeadingStyle: CSSProperties = {textAlign: 'center', fontSize: '4rem', padding: '1.5rem', marginTop: '7rem'};
-// const subHeadingStyle: CSSProperties = {textAlign: 'center', fontSize: '2.5rem'};
-// const paraStyle: CSSProperties = {textAlign: 'center', fontSize: '1.5rem'};
 
 function HeroSection() {
     const myRef1 = useRef<HTMLDivElement|null>(null);
@@ -116,30 +110,32 @@ function HeroSection() {
 
     return (
         <>
-            <div className='container1 peaks container-fluid justify-content-center' style={{textAlign: 'center'}} ref={myRef1}>
-                <div className={`p-3 justify-content-center align-content-center`} id='hero'>
-                    <div className={`${heroStart ? 'heroStart' : ''}`}>
-                        <h1 id='heroText'>Unleashing Your Potential Through Fitness and Nutrition</h1>
+            <div className="container1 peaks w-full" ref={myRef1}>
+                <div className="pt-25 flex justify-center items-center w-full" >
+                    <div className={`w-full text-center ${heroStart ? 'hero-start' : ''}`}>
+                        <h1 id="heroText" className=" text-6xl font-orbital font-bold mx-auto text-[#00dd87]">
+                            Unleashing Your Potential Through <span className='text-gradient-2'>Fitness and Nutrition</span>
+                        </h1>
                     </div>
                 </div>
             </div>
             <div className='container2 spacer layer1'></div>
-            <div ref={myRef2} className="container-fluid stackedHaikei layer3 py-3" id="hero2">
+            <div ref={myRef2} className="bg-no-repeat bg-center bg-cover py-3 layer3 container1">
                 <section>
-                    <h1 className={`display-4 text-danger ${heroSecond ? 'heroStart' : ''}`}>Achieve Peak Fitness and Wellness with Our Comprehensive Site</h1>
-                    <p style={{fontSize:'1.3rem'}} className={`text-primary ${heroSecond ? 'heroStart1' : ''}`}>At our platform, we're passionate about building a vibrant community where individuals can thrive in their active lifestyles. Our goal is to provide a holistic approach to health and wellness by offering a diverse range of workout disciplines, personalized nutrition guidance, and a supportive environment for like-minded peers to connect and learn.</p>
+                    <h1 className={`text-3xl md:text-4xl lg:text-5xl font-orbital font-bold text-[#00A76E] ${heroSecond ? 'hero-start' : ''}`}>Achieve Peak Fitness and Wellness with Our Comprehensive Site</h1>
+                    <p className={`text-xl text-[#faebd7] ${heroSecond ? 'hero-start-delay' : ''}`}>At our platform, we're passionate about building a vibrant community where individuals can thrive in their active lifestyles. Our goal is to provide a holistic approach to health and wellness by offering a diverse range of workout disciplines, personalized nutrition guidance, and a supportive environment for like-minded peers to connect and learn.</p>
                 </section>
             </div>
-            <div className="container text-center vh-100 align-content-center py-3 " id="hero3">
-                <div ref={myRef3} className='row py-3 justify-content-center'>
-                    <div className="col-12 col-md-4 ">
-                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero' : ''}`} title={infoTitle1} heading={<h1>{infoTitle1}</h1>} expandable={false} text={[`"Our Exceptional Archive brings together a vast repository of food options. Here, you can explore a wide range of recipes tailored to meet your dietary preferences. Whether you're seeking tips on how to optimize your workout nutrition or interested in the latest sports betting insights, our archive provides the perfect blend of information to help you level up your fitness journey.`]} />
+            <div className="container mx-auto text-center h-screen flex items-center py-3 relative">
+                <div ref={myRef3} className='grid grid-cols-1 md:grid-cols-3 gap-6 py-3'>
+                    <div>
+                        <InfoBlock fadeInAnimation={`${blocks ? 'info-hero' : ''}`} title={infoTitle1} heading={<h1 className="text-4xl font-orbital font-bold">{infoTitle1}</h1>} expandable={false} text={[`"Our Exceptional Archive brings together a vast repository of food options. Here, you can explore a wide range of recipes tailored to meet your dietary preferences. Whether you're seeking tips on how to optimize your workout nutrition or interested in the latest sports betting insights, our archive provides the perfect blend of information to help you level up your fitness journey.`]} />
                     </div>
-                    <div className="col-12 col-md-4">
-                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero1' : ''}`} title={infoTitle2} heading={<h1>{infoTitle2}</h1>} expandable={false} text={[`At the heart of our platform is a Personalized Nutrition system powered by a state-of-the-art recommender. This intelligent system analyzes your unique dietary preferences, activity levels, and fitness goals to recommend the most suitable recipes for your needs. We continuously update our meal plans and recipes based on the latest research, ensuring you get the right balance of nutrition to fuel your workouts and promote overall health.`]} />
+                    <div>
+                        <InfoBlock fadeInAnimation={`${blocks ? 'info-hero1' : ''}`} title={infoTitle2} heading={<h1 className="text-4xl font-orbital font-bold">{infoTitle2}</h1>} expandable={false} text={[`At the heart of our platform is a Personalized Nutrition system powered by a state-of-the-art recommender. This intelligent system analyzes your unique dietary preferences, activity levels, and fitness goals to recommend the most suitable recipes for your needs. We continuously update our meal plans and recipes based on the latest research, ensuring you get the right balance of nutrition to fuel your workouts and promote overall health.`]} />
                     </div>
-                    <div className="col-12 col-md-4">
-                        <InfoBlock fadeInAnimation={`${blocks ? 'infoHero ' : ''}`} title={infoTitle3} heading={<h1>{infoTitle3}</h1>} expandable={false} text={[`Our Progress Tracker is a powerful tool that lets you monitor your fitness journey with detailed insights into your workouts, nutrition, and milestones. Alongside the tracker, our Forum Groups provide a space for you to connect with others who share similar fitness goals, discuss strategies, and exchange tips. Whether you're aiming to lose weight, build muscle, or simply improve your overall fitness, these tools create a supportive environment for tracking your progress and engaging with a community of like-minded individuals.`]} />
+                    <div>
+                        <InfoBlock fadeInAnimation={`${blocks ? 'info-hero' : ''}`} title={infoTitle3} heading={<h1 className="text-4xl font-orbital font-bold">{infoTitle3}</h1>} expandable={false} text={[`Our Progress Tracker is a powerful tool that lets you monitor your fitness journey with detailed insights into your workouts, nutrition, and milestones. Alongside the tracker, our Forum Groups provide a space for you to connect with others who share similar fitness goals, discuss strategies, and exchange tips. Whether you're aiming to lose weight, build muscle, or simply improve your overall fitness, these tools create a supportive environment for tracking your progress and engaging with a community of like-minded individuals.`]} />
                     </div>
                 </div>
             </div>

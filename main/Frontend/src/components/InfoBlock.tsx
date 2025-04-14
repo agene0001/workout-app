@@ -10,9 +10,8 @@ const InfoBlock: FC<InfoBlockProps> = ({
                                            title,
                                            text,
                                            recipe = null,
-                                           icon = null,
                                            fadeInAnimation = '',
-                                           bg = 'bg-danger',
+                                           bg = 'bg-danger', // bg-danger -> Tailwind equivalent
                                            expandable,
                                            url = null
                                        }) => {
@@ -41,7 +40,7 @@ const InfoBlock: FC<InfoBlockProps> = ({
 
         setIsLoading(true);
         try {
-            
+
             recipe.instructions.split(/(?=\d\s?:\s)/).map(step => step.trim()).forEach((val:string)=>console.log(val))
             const res = await axios.post('/recipes/process-recipe', {
                 'ingredients': recipe.ingredients,
@@ -76,57 +75,63 @@ const InfoBlock: FC<InfoBlockProps> = ({
 
         const modalContent = (
             <div
-                className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                className="fixed top-0 left-0 w-full h-full flex items-center justify-center"
                 style={{
                     backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999
                 }}
                 onClick={toggleExpand}
             >
                 <div
-                    className={`${bg} p-5 rounded-3`}
+                    className={`${bg} p-5 rounded-xl`}
                     style={{
                         width: '80%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto'
                     }}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <div className="d-flex justify-content-end mb-2">
+                    <div className="flex justify-end mb-2">
                         <button
-                            className="btn btn-sm btn-dark"
+                            className="px-2 py-1 text-sm bg-black text-white rounded"
                             onClick={toggleExpand}
                         >
                             ×
                         </button>
                     </div>
 
-                    {icon !== null ? (
+                    {recipe?.imgSrc !== '' ? (
+                        <div className='flex justify-center '>
+                        <div
+                            className=' mb-3 rounded-3xl overflow-hidden '
+                            style={{maxWidth: '45%',maxHeight: '200px'}}
+                        >
                         <img
-                            className='img-fluid mb-3'
-                            src={icon}
+                            className='w-full h-full'
+                            src={recipe?.imgSrc}
                             alt=""
-                            style={{maxWidth: '100%', maxHeight: '200px', objectFit: 'contain'}}
+                            style={{objectFit: 'contain'}}
                         />
+                        </div>
+                        </div>
                     ) : ''}
 
-                    <h1 ref={title1} className='textAnimate'>{title}</h1>
+                    <h1 ref={title1} className='text-5xl font-orbital font-bold text-gray-800 py-4 text-center'>{title}</h1>
 
                     {text.map((item, index) => (
                         <p
                             key={index}
                             ref={content}
-                            className='paraAnimate'
-                            style={{fontSize: '1.2rem'}}
+                            className='paraAnimate text-lg'
                         >
                             {item}
                         </p>
                     ))}
 
-                    {url ? <a href={url} target="_blank" rel="noopener noreferrer">Food Network Site</a> : ""}
+                    {url ? <a href={url} className="hover:text-[#C62368] text-purple-900" target="_blank" rel="noopener noreferrer">Food Network Site</a> : ""}
 
                     {isLoading ? (
-                        <div>Loading Instacart data...</div>
+                        <div className='text-amber-500'>Loading Instacart data...</div>
                     ) : instacartData ? (
                         <div>
-                        <a target="_blank" className="text-black" href={instacartData.response.products_link_url}>Instacart Link</a>
+                            <a target="_blank" className="hover:text-[#C62368] text-purple-900" href={instacartData.response.products_link_url}>Instacart Link</a>
                         </div>
                     ) : null}
                 </div>
@@ -146,7 +151,7 @@ const InfoBlock: FC<InfoBlockProps> = ({
         <>
             <div
                 ref={ref}
-                className={`${fadeInAnimation} ${bg} p-3 m-4 rounded-3 infoBlock`}
+                className={`${fadeInAnimation} ${bg} p-3 m-4 rounded-xl infoBlock`}
                 style={{
                     width: '100%',
                     boxSizing: 'border-box',
@@ -164,19 +169,26 @@ const InfoBlock: FC<InfoBlockProps> = ({
                 }}
             >
                 {/* Existing content */}
-                {icon !== null ? (
-                    <img
-                        className='img-fluid'
-                        src={icon}
-                        alt=""
-                        style={{maxWidth: '100%', maxHeight: '100px', objectFit: 'contain'}}
-                    />
+                {recipe?.imgSrc !== '' ? (
+                    <div className='flex justify-center '>
+                        <div
+                            className=' mb-3 rounded-xl overflow-hidden '
+                            style={{maxWidth: '100%',maxHeight: '200px'}}
+                        >
+                            <img
+                                className='w-full h-full'
+                                src={recipe?.imgSrc}
+                                alt=""
+                                style={{objectFit: 'contain'}}
+                            />
+                        </div>
+                    </div>
                 ) : ''}
 
                 {heading}
 
                 {text.map((item, index) => (
-                    <div key={index} ref={content} className='paraAnimate'>
+                    <div key={index} ref={content} className='text-gray-900 '>
                         {item}
                     </div>
                 ))}

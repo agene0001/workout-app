@@ -50,8 +50,9 @@ public class RecipeController {
     @GetMapping("/recommendations")
     public List<String> getRecommendations(
             @RequestParam String query,
+            @RequestParam String ingredients,
             @RequestParam(defaultValue = "10") int k) {
-        List<Row> recommendations = recipeService.getRecommendations(query, k);
+        List<Row> recommendations = recipeService.getRecommendations(query,ingredients, k);
         return recommendations.stream()
                 .map(row -> row.getAs("name").toString())
                 .collect(Collectors.toList());

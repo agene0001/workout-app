@@ -1,26 +1,40 @@
 package com.example.server1.recipe;
 
-import org.apache.spark.ml.feature.StopWordsRemover;
-import org.apache.spark.ml.feature.Word2Vec;
-import org.apache.spark.ml.feature.Word2VecModel;
+import org.apache.spark.ml.feature.*;
 import org.apache.spark.ml.linalg.Vector;
-import org.apache.spark.ml.feature.Normalizer;
+import org.apache.spark.ml.linalg.Vectors; // Import for Vectors utility if needed later
+import org.apache.spark.ml.Pipeline; // Optional: Could structure preprocessing as a Pipeline
+import org.apache.spark.ml.PipelineModel; // Optional
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.api.java.UDF1;
-import org.apache.spark.sql.api.java.UDF2;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import static org.apache.spark.sql.functions.*;
 import java.io.Serializable;
+import java.util.*;
 
 @Component
 public class SparkRecommender implements Serializable {
 
     private final SparkSession sparkSession;
-    private transient Word2VecModel word2VecModel;
-    private transient Dataset<Row> featuredData;
+    // Make models transient if running in certain distributed environments
+    // where the driver might serialize the component but workers don't need the full model object
+    // However, for typical Spring Boot + local/cluster Spark, they might not need to be transient
+    // if setup() is called appropriately after construction. Let's keep them non-transient for now.
+    private Word2VecModel word2VecModel;
+    private BucketedRandomProjectionLSHModel lshModel;
+    private Dataset<Row> recipeDataWithFeatures; // Store data with features for LSH lookup
+
+    // Define constants for column names
+    private static final String INPUT_COL_TEXT = "text_to_process"; // Combined text
+    private static final String WORDS_COL = "words";
+    private static final String FILTERED_WORDS_COL = "filtered_words";
+    private static final String RAW_FEATURES_COL = "rawFeatures"; // Word2Vec output
+    private static final String NORMALIZED_FEATURES_COL = "normFeatures"; // LSH input
+    private static final String LSH_HASHES_COL = "hashes"; // LSH output (internal)
+    private static final String DISTANCE_COL = "distance"; // LSH approxNearestNeighbors output
+
 
     @Autowired
     public SparkRecommender(SparkSession sparkSession) {
@@ -28,142 +42,223 @@ public class SparkRecommender implements Serializable {
     }
 
     // Preprocessing: normalize text and tokenize
-    public Dataset<Row> preprocess(Dataset<Row> dataset) {
-        // 1. Clean text (consider removing numbers too with "[^a-z\\s]")
-        Dataset<Row> cleanedData = dataset.withColumn("processed_text",
-                lower(regexp_replace(concat_ws(" ", col("name"), col("ingredients")), "[^a-z\\s]", " ")) // Example: Removed numbers
+    // Returns DataFrame with a "filtered_words" column
+    private Dataset<Row> preprocessText(Dataset<Row> dataset) {
+        // 1. Combine relevant text columns and clean
+        Dataset<Row> combinedTextData = dataset.withColumn(INPUT_COL_TEXT,
+                lower(regexp_replace(concat_ws(" ", col("name"), col("ingredients")), "[^a-z\\s]", " "))
         );
 
-        // 2. Split into words (split on one or more whitespace characters)
-        Dataset<Row> tokenizedData = cleanedData.withColumn("words", split(col("processed_text"), "\\s+"));
+        // 2. Tokenize
+        RegexTokenizer tokenizer = new RegexTokenizer()
+                .setInputCol(INPUT_COL_TEXT)
+                .setOutputCol(WORDS_COL)
+                .setPattern("\\s+"); // Split on one or more whitespace characters
+        Dataset<Row> tokenizedData = tokenizer.transform(combinedTextData);
 
         // 3. Remove stop words
-        StopWordsRemover remover = new StopWordsRemover()
-                .setInputCol("words")         // Input is the 'words' column from step 2
-                .setOutputCol("filtered_words"); // Output will be a new column
-
-        // Apply the remover to the tokenized data
-//        Dataset<Row> filteredData = remover.transform(tokenizedData);
-
-        // You can customize the stop words (optional but recommended for recipes)
-        String[] myStopWords = StopWordsRemover.loadDefaultStopWords("english"); // Start with default
-
+        String[] defaultStopWords = StopWordsRemover.loadDefaultStopWords("english");
         String[] recipeStopWords = {"a", "an", "the", "cup", "cups", "oz", "ounce", "ounces", "lb", "lbs", "pound", "pounds", "tsp", "tbsp", "teaspoon", "teaspoons", "tablespoon", "tablespoons", "pinch", "dash", "to", "taste", "chopped", "sliced", "minced", "diced", "optional", "garnish", "for", "and", "or", "with", "into", "in", "on", "at", "as", "if", "of", "add", "mix", "stir", "combine", "bake", "cook", "fry", "saute", "heat", "preheat", "degrees", "fahrenheit", "celsius", "minute", "minutes", "hour", "hours", "about", "approximately", "well", "until", "large", "medium", "small", "finely", "roughly", "fresh", "dried", "ground", "can", "cans", "package", "packages", "room", "temperature", "over", "under", "make", "serve", "set", "aside", "cover", "reduce", "bring", "boil", "simmer", "drain", "rinse", "remove", "cut", "place", "beat", "whisk", "blend", "pour", "spread", "top", "layer", "prepare", "use", "needed", "according", "instructions", "water", "oil", "salt", "pepper"}; // Add many more!
-        java.util.Set<String> stopWordsSet = new java.util.HashSet<>(java.util.Arrays.asList(myStopWords));
-        stopWordsSet.addAll(java.util.Arrays.asList(recipeStopWords));
-        remover.setStopWords(stopWordsSet.toArray(new String[0]));
-        // Re-apply if customizing
+        Set<String> stopWordsSet = new HashSet<>(Arrays.asList(defaultStopWords));
+        stopWordsSet.addAll(Arrays.asList(recipeStopWords));
 
-        return remover.transform(tokenizedData); // Return the dataset including the new 'filtered_words' column
+        StopWordsRemover remover = new StopWordsRemover()
+                .setInputCol(WORDS_COL)
+                .setOutputCol(FILTERED_WORDS_COL)
+                .setStopWords(stopWordsSet.toArray(new String[0]));
+
+        return remover.transform(tokenizedData);
     }
 
     public void setup(String dbUrl, String dbUser, String dbPassword) {
         try {
+            System.out.println("SparkRecommender setup started...");
             Dataset<Row> recipesData = sparkSession.read()
                     .format("jdbc")
                     .option("url", dbUrl)
-                    .option("dbtable", "recipes")
+                    .option("dbtable", "recipes") // Ensure this table name is correct
                     .option("user", dbUser)
                     .option("password", dbPassword)
-                    .option("driver", "com.mysql.cj.jdbc.Driver")
+                    .option("driver", "com.mysql.cj.jdbc.Driver") // Ensure correct driver
                     .load();
 
-            // Preprocess the data
-            Dataset<Row> processedData = preprocess(recipesData);
-            System.out.println("Processed Data Sample:");
-            // Train Word2Vec model and transform data
-            this.word2VecModel = buildWord2VecModel(processedData);
-            Dataset<Row> transformedData = word2VecModel.transform(processedData);
+            System.out.println("Loaded " + recipesData.count() + " recipes from database.");
+            recipesData.printSchema();
+            recipesData.show(5, false);
 
-            // Normalize the features vectors
+            // --- Preprocessing and Feature Engineering ---
+            System.out.println("Preprocessing text...");
+            Dataset<Row> processedData = preprocessText(recipesData);
+            processedData.select(FILTERED_WORDS_COL).show(5, false);
+
+            System.out.println("Training Word2Vec model...");
+            Word2Vec word2Vec = new Word2Vec()
+                    .setInputCol(FILTERED_WORDS_COL)
+                    .setOutputCol(RAW_FEATURES_COL) // Output raw features first
+                    .setVectorSize(100)
+                    .setMinCount(2)
+                    .setNumPartitions(8) // Adjust based on data/cluster size
+                    .setWindowSize(5);   // Added window size hyperparameter
+
+            this.word2VecModel = word2Vec.fit(processedData);
+            Dataset<Row> featuredData = word2VecModel.transform(processedData);
+            featuredData.select(RAW_FEATURES_COL).show(5, false);
+
+
+            System.out.println("Normalizing feature vectors...");
             Normalizer normalizer = new Normalizer()
-                    .setInputCol("features")
-                    .setOutputCol("normFeatures") // Output to a new column
-                    .setP(2.0);
-            this.featuredData = normalizer.transform(transformedData)
-                    .select("name", "ingredients", "normFeatures");
+                    .setInputCol(RAW_FEATURES_COL)
+                    .setOutputCol(NORMALIZED_FEATURES_COL)
+                    .setP(2.0); // L2 normalization for cosine similarity
+
+            Dataset<Row> normalizedData = normalizer.transform(featuredData);
+            normalizedData.select(NORMALIZED_FEATURES_COL).show(5, false);
+
+
+            // Keep only necessary columns for LSH fitting and final lookup
+            this.recipeDataWithFeatures = normalizedData
+                    .select("id", "name", "ingredients", NORMALIZED_FEATURES_COL) // Keep id if available and useful
+                    .filter(col(NORMALIZED_FEATURES_COL).isNotNull()) // Ensure vectors exist
+                    .cache(); // Cache for faster LSH fitting and querying
+
+            System.out.println("Recipe data with features count: " + this.recipeDataWithFeatures.count());
+            this.recipeDataWithFeatures.printSchema();
+
+            // --- LSH Model Training ---
+            System.out.println("Training LSH model...");
+            BucketedRandomProjectionLSH brp = new BucketedRandomProjectionLSH()
+                    .setInputCol(NORMALIZED_FEATURES_COL)
+                    .setOutputCol(LSH_HASHES_COL) // Internal column for hash values
+                    .setBucketLength(2.0) // Adjust this hyperparameter - controls bucket width
+                    .setNumHashTables(3);  // Adjust this - more tables increase accuracy but cost more
+
+            this.lshModel = brp.fit(this.recipeDataWithFeatures);
+
+            // Optional: Transform data with LSH model if you want to see the hashes (not usually needed)
+            // this.lshModel.transform(this.recipeDataWithFeatures).show(5, false);
+
+            System.out.println("SparkRecommender setup finished successfully.");
 
         } catch (Exception e) {
-            System.err.println("Error connecting to the database: " + e.getMessage());
+            System.err.println("Error during SparkRecommender setup: " + e.getMessage());
             e.printStackTrace();
+            // Consider re-throwing or handling more gracefully depending on application needs
+            throw new RuntimeException("Failed to initialize SparkRecommender", e);
         }
     }
 
-    private Word2VecModel buildWord2VecModel(Dataset<Row> dataset) {
-        Word2Vec word2Vec = new Word2Vec()
-                .setInputCol("filtered_words")
-                .setOutputCol("features")
-                .setVectorSize(100)  // Reduce dimensionality for efficiency
-                .setMinCount(2)  // Ignore words with frequency < 2
-                .setNumPartitions(16); // Example: Set based on your cluster cores
-        return word2Vec.fit(dataset);
-    }
+    // No longer needed Word2VecModel builder as it's done in setup()
+    // private Word2VecModel buildWord2VecModel(Dataset<Row> dataset) { ... }
 
-    public Dataset<Row> findKSimilar(String query, int k) {
+    public Dataset<Row> findKSimilar(String queryName, String queryIngredients, int k) {
         if (sparkSession == null) {
-            throw new IllegalStateException("SparkSession is not initialized");
+            throw new IllegalStateException("SparkSession is not initialized.");
         }
-
         if (word2VecModel == null) {
             throw new IllegalStateException("Word2Vec model is null. Ensure setup() was called successfully.");
         }
-
-        if (featuredData == null) {
-            throw new IllegalStateException("Featured data is null. Ensure setup() was called successfully.");
+        if (lshModel == null) {
+            throw new IllegalStateException("LSH model is null. Ensure setup() was called successfully.");
         }
-        Dataset<Row> queryDataset = sparkSession.createDataFrame(
-                java.util.Collections.singletonList(RowFactory.create(query, query)),
-                new StructType()
-                        .add("name", "string")
-                        .add("ingredients", "string")
-        );
+        if (recipeDataWithFeatures == null) {
+            throw new IllegalStateException("Recipe feature data is null. Ensure setup() was called successfully.");
+        }
+        if (queryName == null || queryIngredients == null) {
+            throw new IllegalArgumentException("Query name and ingredients cannot be null.");
+        }
 
-        // Transform query with Word2Vec
-        Dataset<Row> processedQuery = preprocess(queryDataset);
-        Dataset<Row> queryFeaturesRaw = word2VecModel.transform(processedQuery);
-        Normalizer queryNormalizer = new Normalizer()
-                .setInputCol("features")
-                .setOutputCol("normFeatures")
+        System.out.println("Finding similar recipes for query: name='" + queryName + "', ingredients='...'");
+
+        // 1. Create DataFrame for the query
+        // Use same schema structure as initial loading for consistency in preprocessing
+        List<Row> queryList = Arrays.asList(RowFactory.create(queryName, queryIngredients));
+        StructType querySchema = new StructType()
+                .add("name", DataTypes.StringType)
+                .add("ingredients", DataTypes.StringType);
+        Dataset<Row> queryDataset = sparkSession.createDataFrame(queryList, querySchema);
+
+
+        // 2. Preprocess the query text (same steps as training data)
+        System.out.println("Preprocessing query...");
+        Dataset<Row> processedQuery = preprocessText(queryDataset);
+        // processedQuery.show(false); // Debug
+
+        // 3. Transform query with Word2Vec model
+        System.out.println("Applying Word2Vec to query...");
+        Dataset<Row> queryFeatured = word2VecModel.transform(processedQuery);
+        // queryFeatured.show(false); // Debug
+
+        // 4. Normalize the query feature vector
+        System.out.println("Normalizing query vector...");
+        Normalizer normalizer = new Normalizer()
+                .setInputCol(RAW_FEATURES_COL)
+                .setOutputCol(NORMALIZED_FEATURES_COL)
                 .setP(2.0);
+        Dataset<Row> queryNormalized = normalizer.transform(queryFeatured);
+        // queryNormalized.show(false); // Debug
 
-        Dataset<Row> queryFeatures = queryNormalizer.transform(queryFeaturesRaw);
-        // Extract query vector
-        Row featuresRow = queryFeatures.select("normFeatures").first();
-        Vector queryVector = featuresRow.getAs(0);
-
-        // Make the vector final to help indicate it's captured by the lambda
-        final Vector capturedQueryVector = queryVector;
-
-        // --- Define and Register the UDF (now UDF1) ---
-        sparkSession.udf().register(
-                "dot_product_udf", // Same UDF name is fine
-                // UDF1 takes the Vector from the column (`colVector`)
-                (UDF1<Vector, Double>) (colVector) -> colVector.dot(capturedQueryVector), // Use the captured vector here
-                DataTypes.DoubleType // Specify the return type
-        );
-        // -------------------------------------------
-
-        // --- Calculate similarity using the UDF ---
-        Dataset<Row> results = featuredData.withColumn(
-                        "similarity",
-                        // Call the UDF with only the 'features' column
-                        callUDF("dot_product_udf", col("normFeatures"))
-                )
-                .select("name", "ingredients", "similarity")
-                .orderBy(col("similarity").desc())
-                .limit(k);
-        // ----------------------------------------
-
-        return results;
-    }
-
-
-    // Helper function to convert vector to a Spark SQL-compatible array
-    private String arrayToString(double[] array) {
-        StringBuilder sb = new StringBuilder();
-        for (double num : array) {
-            sb.append(num).append(",");
+        // 5. Extract the query vector
+        Vector queryVector =null;
+        try {
+            Row queryRow = queryNormalized.select(NORMALIZED_FEATURES_COL).first();
+            if (queryRow != null && !queryRow.isNullAt(0)) {
+                queryVector = queryRow.getAs(0);
+                System.out.println("Query vector generated.");
+                // System.out.println("Query Vector (first 10 dims): " + Arrays.toString(Arrays.copyOf(queryVector.toArray(), 10))); // Debug
+            }
+        } catch (Exception e) {
+            System.err.println("Error extracting query vector: " + e.getMessage());
+            // This can happen if the query contains only unknown words or stop words
         }
-        return sb.substring(0, sb.length() - 1); // Remove last comma
+
+        if (queryVector == null) {
+            System.err.println("Could not generate a feature vector for the query (perhaps only unknown/stop words?). Returning empty results.");
+            StructType emptySchema = new StructType()
+                    .add("name", DataTypes.StringType)
+                    .add("ingredients", DataTypes.StringType)
+                    .add(DISTANCE_COL, DataTypes.DoubleType); // Match LSH output schema
+
+            // Create an empty list of Row objects
+            List<Row> emptyData = Collections.emptyList(); // Or: new java.util.ArrayList<>();
+            return sparkSession.createDataFrame(emptyData, emptySchema);
+
+        }
+
+
+        // 6. Use LSH model to find approximate nearest neighbors
+        System.out.println("Performing approximate nearest neighbor search using LSH...");
+        // The k+1 is often recommended as the query itself might be considered a neighbor if it exists
+        // Or adjust k based on whether you expect the exact query to be in the dataset
+        Dataset<Row> similarItems = (Dataset<Row>) lshModel.approxNearestNeighbors(
+                this.recipeDataWithFeatures, // The dataset containing features of all recipes
+                queryVector,                 // The query vector
+                k + 1                       // Number of neighbors to find
+        );
+
+        System.out.println("LSH search complete. Found potential neighbors.");
+        similarItems.printSchema();
+        similarItems.show(k+1, false); // Debug: Show results before filtering/renaming
+
+        // 7. Process results
+        // The output DataFrame 'similarItems' contains columns from recipeDataWithFeatures
+        // plus a 'distCol' column representing the approximate Euclidean distance.
+        // We sort by distance ascending (smaller distance is more similar).
+        // We might want to filter out the query itself if it was perfectly matched.
+        // Let's assume the query is *not* an exact recipe name/ingredient list from the DB for now.
+
+        // 7. Process results
+        Dataset<Row> finalResults = similarItems
+                // Use col() for all arguments to select
+                .select(col("name"), col("ingredients"), col("distCol").alias(DISTANCE_COL))
+                .orderBy(asc(DISTANCE_COL)) // Sort by ascending distance
+                .limit(k);                  // Limit to top k results
+
+        System.out.println("Final top " + k + " similar recipes:");
+        finalResults.show(k, false);
+
+        return finalResults;
     }
+
+    // No longer needed
+    // private String arrayToString(double[] array) { ... }
 }

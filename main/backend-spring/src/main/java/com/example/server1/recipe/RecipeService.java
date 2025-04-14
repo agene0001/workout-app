@@ -88,7 +88,7 @@ public class RecipeService {
         }
     }
 
-    public List<Row> getRecommendations(String query, int topK) {
+    public List<Row> getRecommendations(String query,String ingredients, int topK) {
         try {
             if (!isInitialized.get()) {
                 logger.warn("SparkRecommender not initialized. Attempting reinitialization...");
@@ -98,7 +98,7 @@ public class RecipeService {
                 }
             }
 
-            return sparkRecommender.findKSimilar(query, topK).collectAsList();
+            return sparkRecommender.findKSimilar(query,ingredients, topK).collectAsList();
         } catch (IllegalStateException e) {
             logger.error("SparkRecommender not properly initialized: ", e);
             return null;

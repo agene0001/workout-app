@@ -31,3 +31,38 @@ export  interface InfoBlockProps {
     expandable: boolean,
     url?: string
 }
+
+// About us properties
+// Interface for TeamMember component props
+interface TeamMemberProps {
+    name: string;
+    role: string;
+    bio: string;
+    imgSrc: string;
+    animationClass: string;
+}
+
+// Interface for ValueCard component props
+interface ValueCardProps {
+    icon: ReactNode;
+    title: string;
+    description: string;
+    animationClass: string;
+}
+
+// Interface for AnimatedSection component props
+interface AnimatedSectionProps {
+    id: string;
+    refProp: RefObject<HTMLDivElement>;
+    isVisible: boolean;
+    children: ReactNode;
+    bgClass?: string;
+}
+interface MilestoneProp{
+    year: number|string,
+    title:string,
+    description:string,
+    isRight: boolean,
+    animationClass:string
+}
+

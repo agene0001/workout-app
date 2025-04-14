@@ -1,5 +1,5 @@
 
-function Games(){
+function Groups(){
     return (
         <div>
             // code goes here
@@ -7,4 +7,4 @@ function Games(){
     )
 }
 
-export default Games
+export default Groups
