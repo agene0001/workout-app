@@ -96,7 +96,7 @@ ENV PORT=8082
 EXPOSE 8082
 
 # Run the application (removed the WORKDIR app command)
-CMD ["python", "xtract-server.py"]
+CMD ["python", "xtractServer.py"]
 
 #WORKDIR app
 # Stage 4: Final image for Spring Boot service

@@ -133,6 +133,7 @@ function Nutrition() {
                                 onClick={() => {
                                     setRecommendedRecipes([]);
                                     setQuerySearch('');
+                                    setSearchedRecipe(null);
                                 }}>
                                 Clear
                             </button>
