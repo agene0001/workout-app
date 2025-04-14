@@ -101,6 +101,7 @@ CMD ["python", "xtractServer.py"]
 #WORKDIR app
 # Stage 4: Final image for Spring Boot service
 
+
 # Expose Spring Boot port
 
 
