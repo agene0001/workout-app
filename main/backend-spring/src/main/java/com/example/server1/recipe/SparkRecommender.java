@@ -251,7 +251,8 @@ public class SparkRecommender implements Serializable {
                 // Use col() for all arguments to select
                 .select(col("name"), col("ingredients"), col("distCol").alias(DISTANCE_COL))
                 .orderBy(asc(DISTANCE_COL)) // Sort by ascending distance
-                .limit(k);                  // Limit to top k results
+                .limit(k+1)                  // Limit to top k results
+                .filter(col("name").notEqual(queryName));
 
         System.out.println("Final top " + k + " similar recipes:");
         finalResults.show(k, false);

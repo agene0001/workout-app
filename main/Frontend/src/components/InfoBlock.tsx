@@ -22,33 +22,44 @@ const InfoBlock: FC<InfoBlockProps> = ({
     const [mounted, setMounted] = useState(false);
     const [instacartData, setInstacartData] = useState<InstacartRes|null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [currentRecipeId, setCurrentRecipeId] = useState<string|null>(null);
 
     useEffect(() => {
         setMounted(true);
         return () => setMounted(false);
     }, []);
 
+    // Reset instacart data when recipe changes
+    useEffect(() => {
+        if (recipe && (!currentRecipeId || currentRecipeId !== recipe.name)) {
+            setInstacartData(null);
+            setCurrentRecipeId(recipe.name);
+        }
+    }, [recipe]);
+
     // Fetch Instacart data when expanded and we have a recipe
     useEffect(() => {
         if (expanded && recipe && !instacartData && !isLoading) {
             fetchInstacartData();
         }
-    }, [expanded, recipe]);
+    }, [expanded, recipe, instacartData, isLoading]);
 
     const fetchInstacartData = async () => {
         if (!recipe) return;
 
         setIsLoading(true);
         try {
+            const instructions = recipe.instructions.split(/(?=\d\s?:\s)/).map(step => step.trim());
+            console.log("Processing recipe:", recipe.name);
 
-            recipe.instructions.split(/(?=\d\s?:\s)/).map(step => step.trim()).forEach((val:string)=>console.log(val))
             const res = await axios.post('/recipes/process-recipe', {
                 'ingredients': recipe.ingredients,
-                'instructions': recipe.instructions.split(/(?=\d\s?:\s)/).map(step => step.trim()),
+                'instructions': instructions,
                 'title': recipe.name,
                 'image_url': recipe.imgSrc
             });
-            console.log(res.data)
+
+            console.log("Instacart response:", res.data);
             setInstacartData(res.data || "");
         } catch (error) {
             console.error("Error fetching Instacart data:", error);
@@ -82,7 +93,7 @@ const InfoBlock: FC<InfoBlockProps> = ({
                 onClick={toggleExpand}
             >
                 <div
-                    className={`${bg} p-5 rounded-xl`}
+                    className={`${bg.split(' ')[0]} p-5 rounded-xl`}
                     style={{
                         width: '80%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto'
                     }}
@@ -99,17 +110,17 @@ const InfoBlock: FC<InfoBlockProps> = ({
 
                     {recipe?.imgSrc !== '' ? (
                         <div className='flex justify-center '>
-                        <div
-                            className=' mb-3 rounded-3xl overflow-hidden '
-                            style={{maxWidth: '45%',maxHeight: '200px'}}
-                        >
-                        <img
-                            className='w-full h-full'
-                            src={recipe?.imgSrc}
-                            alt=""
-                            style={{objectFit: 'contain'}}
-                        />
-                        </div>
+                            <div
+                                className='mb-3 rounded-3xl overflow-hidden'
+                                style={{maxWidth: '45%',maxHeight: '200px'}}
+                            >
+                                <img
+                                    className='w-full h-full'
+                                    src={recipe?.imgSrc}
+                                    alt=""
+                                    style={{objectFit: 'contain'}}
+                                />
+                            </div>
                         </div>
                     ) : ''}
 
@@ -172,7 +183,7 @@ const InfoBlock: FC<InfoBlockProps> = ({
                 {recipe?.imgSrc !== '' ? (
                     <div className='flex justify-center '>
                         <div
-                            className=' mb-3 rounded-xl overflow-hidden '
+                            className='mb-3 rounded-xl overflow-hidden'
                             style={{maxWidth: '100%',maxHeight: '200px'}}
                         >
                             <img
