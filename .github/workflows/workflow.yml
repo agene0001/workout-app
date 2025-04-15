@@ -1,0 +1,123 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  PROJECT_ID: ${{ secrets.PROJECT_ID }}
+  GKE_CLUSTER: react-cluster
+  GKE_ZONE: us-central1-a
+  IMAGE_FRONTEND: react-frontend
+  IMAGE_BACKEND: spring-backend
+  IMAGE_FLASK: flask-backend
+  REGION: us-central1
+  REPOSITORY: workout-app
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+#
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}  # No quotes
+          export_environment_variables: true  # Export credentials to environment variables
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+          project_id: ${{ env.PROJECT_ID }}  # Added project_id
+   # Configure Docker to use the gcloud command-line tool as a credential helper
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+      # Get the GKE credentials so we can deploy to the cluster
+      - name: Clean up old images
+        run: |
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
+  
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND@{} --quiet --force-delete-tags
+          
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK@{} --quiet --force-delete-tags
+
+          # Delete all remaining images (ignores timestamp)
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
+          
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND@{} --quiet --force-delete-tags
+          
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK --format='get(digest)' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK@{} --quiet --force-delete-tags
+
+      - name: Configure Docker to use Google Cloud authentication
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - name: Build images with Docker Compose
+        run: |
+          # Build images using Docker Compose
+          docker compose build spring-backend react-frontend flask-backend
+
+      - name: Tag and push images
+        run: |
+          # Tag backend image
+          docker tag ${IMAGE_BACKEND}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_BACKEND}:latest
+          # Tag frontend image
+          docker tag ${IMAGE_FRONTEND}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
+          # Tag flask image
+          docker tag ${IMAGE_FLASK}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
+          # Tag MySQL image
+   
+          # Push all images
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_BACKEND}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
+  # --- ADD THIS STEP ---
+      - name: Create or Update Instacart Secret
+        env:
+          INSTACART_API_KEY: ${{ secrets.INSTACART_API_KEY }} # Get the key from GitHub Secrets
+        run: |
+          if [ -z "$INSTACART_API_KEY" ]; then
+            echo "Error: INSTACART_API_KEY secret is not set in GitHub Secrets."
+            exit 1
+          fi
+          kubectl create secret generic instacart-creds \
+            --from-literal=api-key="$INSTACART_API_KEY" \
+            --dry-run=client -o yaml | kubectl apply -f -
+      # Deploy the application to the GKE cluster
+      - name: Deploy to GKE
+        run: |-
+          kubectl apply -f k8s-manifest.yaml
+      # --- ADD THIS STEP ---
+      - name: Force rollout restart
+        if: success() # Only run if apply succeeded
+        run: |
+          echo "Forcing rollout restart to pick up latest images..."
+          kubectl rollout restart deployment/react-frontend
+          kubectl rollout restart deployment/spring-backend
+          kubectl rollout restart deployment/flask-backend
+          # Only restart mysql if you intend to update its image too
+          # kubectl rollout restart deployment/mysql-db
+      # ---------------------
+      # Wait for deployment to complete
+      - name: Wait for deployments to stabilize
+        run: |-
+          kubectl rollout status deployment/react-frontend
+          kubectl rollout status deployment/spring-backend
+          kubectl rollout status deployment/flask-backend
+          # kubectl rollout status deployment/mysql-db
+
+      # Output the public IP address
+      - name: Get service URLs
+        run: |-
+          echo "Frontend service available at: $(kubectl get service react-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
