@@ -10,7 +10,7 @@ lerna-debug.log*
 main/backend-spring/target
 main/Frontend/node_modules
 main/python/.env
-.env
+*.env
 service-account-key.json
 backup.sql
 dist
