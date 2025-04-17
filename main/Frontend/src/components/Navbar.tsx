@@ -14,18 +14,18 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/config";
 import app from "../firebase/config";
-import { getFirestore, doc, setDoc, getDoc, Timestamp } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
 // --- Import the new form components ---
 import { LoginForm } from "./LoginForm";   // Adjust path if necessary
 import { SignupForm } from "./SignupForm"; // Adjust path if necessary
-const userfp = 'userfp'
-const userdoc = 'users'
-// Initialize Firestore
-// const db = getFirestore();
 
-const db = getFirestore(app,'docs');// Initialize FingerprintJS
+const functions = getFunctions(app);
+const associateFingerprint = httpsCallable(functions, 'associateFingerprint');
+const checkFingerprintExists = httpsCallable(functions, 'checkFingerprintExists');
+
+
 const fpPromise = FingerprintJS.load();
 
 // Modal component (Keep as is from your code)
@@ -122,13 +122,16 @@ function Navbar(props: { name: string }) {
         return () => { isMounted = false; };
     }, []); // Empty dependency array - run once
 
+    // --- Auth State Effect ---
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             console.log("Auth state changed:", currentUser?.uid || "No user");
             setUser(currentUser);
             if (currentUser && fingerprint) {
-                // Run association asynchronously, don't await here
-                associateFingerprintWithUser(currentUser.uid, fingerprint).catch(err => console.error("Failed background fingerprint association:", err));
+                // Run association asynchronously
+                associateFingerprint({ fpId: fingerprint })
+                    .then(() => console.log("Fingerprint associated with user"))
+                    .catch(err => console.error("Failed to associate fingerprint:", err));
             }
             // Finish initial loading check if fingerprint is now known
             if (fingerprint !== null || error.includes("fingerprint")) {
@@ -138,48 +141,7 @@ function Navbar(props: { name: string }) {
         return () => unsubscribe();
     }, [fingerprint, error]); // Re-run if fingerprint loads or errors
 
-    // --- Firestore Functions (Keep as is) ---
-    const associateFingerprintWithUser = useCallback(async (userId: string, fpId: string) => {
-        console.log(`Associating user ${userId} with fingerprint ${fpId}`);
-        if (!userId || !fpId) return;
-        try {
-            const now = Timestamp.now();
-            await setDoc(doc(db, userdoc, userId), { fingerprint: fpId, lastLogin: now }, { merge: true });
-            await setDoc(doc(db, userfp, fpId), { userId: userId, lastSeen: now }, { merge: true });
-            console.log(`Successfully associated user ${userId} with fingerprint ${fpId}`);
-        } catch (error) {
-            console.error(`Error storing fingerprint ${fpId} for user ${userId}:`, error);
-            // Optionally set a non-critical error state here if needed
-        }
-    }, [db]); // Added db dependency
-
-    const checkExistingFingerprint = useCallback(async (fpId: string): Promise<string | null> => {
-        console.log(`Checking fingerprint ID: ${fpId} in Firestore...`);
-        if (!fpId) return null;
-        try {
-            const docRef = doc(db, userfp, fpId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                console.log(`Fingerprint ${fpId} found, associated userId:`, data.userId);
-                return data.userId || null;
-            }
-            console.log(`Fingerprint ${fpId} not found.`);
-            return null;
-        } catch (error) {
-            console.error(`Error checking fingerprint ${fpId} in Firestore:`, error);
-            const firebaseError = error as AuthError; // Type assertion
-            if (firebaseError.code === 'permission-denied') {
-                setError("Error checking device status (permissions)."); // Set error for user
-            } else {
-                setError("Error checking device status."); // Generic error
-            }
-            throw error; // Re-throw to potentially stop the auth flow
-        }
-    }, [db]); // Added db dependency
-
-    // --- MODIFIED Auth Handlers (passed to forms) ---
-
+    // --- Auth Handlers ---
     const handleLoginAttempt = useCallback(async (emailParam: string, passwordParam: string) => {
         setError(""); // Clear previous errors
         setIsOperationLoading(true);
@@ -187,7 +149,6 @@ function Navbar(props: { name: string }) {
             await signInWithEmailAndPassword(auth, emailParam, passwordParam);
             // Association happens in onAuthStateChanged effect
             setIsLoginModalOpen(false); // Close modal on success
-            // No need to clear email/password, form state is local
         } catch (err: unknown) {
             const firebaseError = err as AuthError;
             console.error("Login error:", firebaseError);
@@ -212,24 +173,20 @@ function Navbar(props: { name: string }) {
             const fpError = "Could not verify device fingerprint. Please refresh and try again.";
             setError(fpError);
             setIsOperationLoading(false);
-            console.log("[handleSignupAttempt] Exited early: No fingerprint. Loading: false"); // Debug log
-            return
-                    }
+            return;
+        }
 
         try {
-            // Check fingerprint first
+            // Check fingerprint first using Cloud Function
             console.log("Checking fingerprint before signup...");
-            const existingUserId = await checkExistingFingerprint(fingerprint);
-            if (existingUserId) {
-                const fpExistsError = `This device seems linked to an existing account (User ID starting: ${existingUserId.substring(0, 3)}...). Please log in or contact support.`;
-                console.warn(`Signup blocked: Fingerprint ${fingerprint} linked to user ${existingUserId}`);
+            const fpCheckResult = await checkFingerprintExists({ fpId: fingerprint });
+            const fpData = fpCheckResult.data as { exists: boolean; userId: string | null };
+
+            if (fpData.exists && fpData.userId) {
+                const fpExistsError = `This device seems linked to an existing account (User ID starting: ${fpData.userId.substring(0, 3)}...). Please log in or contact support.`;
+                console.warn(`Signup blocked: Fingerprint ${fingerprint} linked to user ${fpData.userId}`);
                 setError(fpExistsError);
-                setIsOperationLoading(false);
-                console.warn(`[handleSignupAttempt] Signup blocked: Fingerprint ${fingerprint} linked to user ${existingUserId}`);
-                setError(fpExistsError);
-                // No need to throw here, error state is set.
-                // The finally block will handle resetting loading state.
-                return; // Exit the function early AFTER setting error, BEFORE finally block
+                return; // Exit early
             }
             console.log("Fingerprint check passed.");
 
@@ -237,8 +194,8 @@ function Navbar(props: { name: string }) {
             const userCredential = await createUserWithEmailAndPassword(auth, emailParam, passwordParam);
             console.log("Signup successful:", userCredential.user.uid);
 
-            // Explicitly associate fingerprint immediately after creation
-            await associateFingerprintWithUser(userCredential.user.uid, fingerprint);
+            // Associate fingerprint using Cloud Function after successful signup
+            await associateFingerprint({ fpId: fingerprint });
 
             setIsSignupModalOpen(false); // Close modal on success
 
@@ -257,14 +214,10 @@ function Navbar(props: { name: string }) {
                     setError(`Signup failed: ${firebaseError.message || 'Please try again.'}`);
                 }
             }
-            // throw err; // Re-throw so form's catch block is notified
         } finally {
-            // Only set loading false if it wasn't already set by an early return/throw
-            if (isOperationLoading) {
-                setIsOperationLoading(false);
-            }
+            setIsOperationLoading(false);
         }
-    }, [auth, fingerprint, checkExistingFingerprint, associateFingerprintWithUser, error, isOperationLoading]); // Dependencies
+    }, [auth, fingerprint, error, associateFingerprint, checkFingerprintExists]);
 
     const handleSocialAuthAttempt = useCallback(async (providerKey: string) => {
         setError("");
@@ -284,14 +237,16 @@ function Navbar(props: { name: string }) {
         }
 
         try {
-            // Check fingerprint first
+            // Check fingerprint first using Cloud Function
             console.log(`Checking fingerprint before ${providerKey} sign-in...`);
-            const existingUserId = await checkExistingFingerprint(fingerprint);
-            if (existingUserId) {
-                const fpExistsError = `This device seems linked to an existing account (User ID starting: ${existingUserId.substring(0, 6)}). Please log in or contact support.`;
-                console.warn(`${providerKey} sign-in blocked: Fingerprint ${fingerprint} linked to user ${existingUserId}`);
+            const fpCheckResult = await checkFingerprintExists({ fpId: fingerprint });
+            const fpData = fpCheckResult.data as { exists: boolean; userId: string | null };
+
+            if (fpData.exists && fpData.userId) {
+                const fpExistsError = `This device seems linked to an existing account (User ID starting: ${fpData.userId.substring(0, 6)}). Please log in or contact support.`;
+                console.warn(`${providerKey} sign-in blocked: Fingerprint ${fingerprint} linked to user ${fpData.userId}`);
                 setError(fpExistsError);
-                throw new Error(fpExistsError); // Throw to stop
+                throw new Error(fpExistsError);
             }
             console.log("Fingerprint check passed.");
 
@@ -299,8 +254,8 @@ function Navbar(props: { name: string }) {
             const userCredential = await signInWithPopup(auth, socialProvider);
             console.log(`${providerKey} sign-in successful:`, userCredential.user.uid);
 
-            // Associate fingerprint
-            await associateFingerprintWithUser(userCredential.user.uid, fingerprint);
+            // Associate fingerprint using Cloud Function
+            await associateFingerprint({ fpId: fingerprint });
 
             // Close modals on success
             setIsLoginModalOpen(false);
@@ -319,11 +274,10 @@ function Navbar(props: { name: string }) {
                     setError(`Sign-in failed: ${firebaseError.message || 'Please try again.'}`);
                 }
             }
-            // Don't re-throw here, error state is set for user feedback
         } finally {
             setIsOperationLoading(false);
         }
-    }, [auth, fingerprint, checkExistingFingerprint, associateFingerprintWithUser, error]); // Dependencies
+    }, [auth, fingerprint, error, associateFingerprint, checkFingerprintExists]);
 
     const handleLogout = useCallback(async () => {
         setError("");

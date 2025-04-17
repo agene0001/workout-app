@@ -56,18 +56,19 @@ export default defineConfig(({ command, mode }) => {
       proxy: {
         '/api/v1/recipes': {
           // Use dev values for 'vite dev' (mode='development')
-          target: `${protocol}://localhost:${SPRING_PORT}`,
+          target: `${protocol}://${SPRING_SERVICE}:${SPRING_PORT}`,
           headers: { 'Cache-Control': 'no-store' },
           changeOrigin: true,
           secure: false,
         },
         "/recipes": {
           // Use dev values for 'vite dev' (mode='development')
-          target: `${protocol}://localhost:5000`, // Flask dev port
+          target: `${protocol}://${FLASK_SERVICE}:${FLASK_PORT} `, // Flask dev port
           headers: { 'Cache-Control': 'no-store' },
           changeOrigin: true,
           secure: false,
-        }
+        },
+
       }
     },
 
@@ -91,7 +92,8 @@ export default defineConfig(({ command, mode }) => {
           headers: { 'Cache-Control': 'no-store' },
           changeOrigin: true,
           secure: false,
-        }
+        },
+
       }
     }
   };
