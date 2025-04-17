@@ -1,6 +1,6 @@
 "use client";
-import React, {useState, useEffect} from "react";
-import {NavItemProps} from "../types";
+import React, { useState, useEffect, useCallback } from "react"; // Added useCallback
+import { NavItemProps } from "../types";
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
@@ -8,15 +8,27 @@ import {
     onAuthStateChanged,
     User,
     GoogleAuthProvider,
-    // FacebookAuthProvider,
     GithubAuthProvider,
-    // TwitterAuthProvider,
-    // OAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    AuthError // Import AuthError for better type checking
 } from "firebase/auth";
-import {auth} from "../firebase/config";
+import { auth } from "../firebase/config";
+import app from "../firebase/config";
+import { getFirestore, doc, setDoc, getDoc, Timestamp } from "firebase/firestore";
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
-// Modal component - use React.memo to prevent unnecessary re-renders
+// --- Import the new form components ---
+import { LoginForm } from "./LoginForm";   // Adjust path if necessary
+import { SignupForm } from "./SignupForm"; // Adjust path if necessary
+const userfp = 'userfp'
+const userdoc = 'users'
+// Initialize Firestore
+// const db = getFirestore();
+
+const db = getFirestore(app,'docs');// Initialize FingerprintJS
+const fpPromise = FingerprintJS.load();
+
+// Modal component (Keep as is from your code)
 const Modal = React.memo(({isOpen, onClose, title, children}: {
     isOpen: boolean;
     onClose: () => void;
@@ -24,36 +36,52 @@ const Modal = React.memo(({isOpen, onClose, title, children}: {
     children: React.ReactNode
 }) => {
     if (!isOpen) return null;
-
-    return (<div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div className="bg-zinc-800 p-6 rounded-lg w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+    const handleModalContentClick = (e: React.MouseEvent) => e.stopPropagation();
+    return (<div
+        className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center transition-opacity duration-300"
+        onClick={onClose}
+    >
+        <div
+            className="bg-zinc-800 p-6 rounded-lg w-full max-w-md shadow-xl transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale"
+            onClick={handleModalContentClick}
+        >
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-white">{title}</h2>
-                <button
-                    onClick={onClose}
-                    className="text-gray-400 hover:text-white"
-                >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                              d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors" aria-label="Close modal">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             {children}
         </div>
+        <style>{`
+          @keyframes fade-in-scale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+          }
+          .animate-fade-in-scale { animation: fade-in-scale 0.3s ease-out forwards; }
+        `}</style>
     </div>);
 });
-
-// Ensure Modal has a display name for React DevTools
 Modal.displayName = "Modal";
 
 // Authentication providers configuration
 const providers = {
     google: new GoogleAuthProvider(),
-    // facebook: new FacebookAuthProvider(),
     github: new GithubAuthProvider(),
-    // twitter: new TwitterAuthProvider(),
-    // apple: new OAuthProvider('apple.com')
+};
+
+// NavItem component (Keep as is from your code)
+const NavItem: React.FC<NavItemProps> = ({ text }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    return (
+        <li
+            className={`text-lg px-4 py-2 mx-1 cursor-pointer transition-all duration-200 ease-in-out transform ${isHovered ? "text-secondary scale-105" : "text-[#00dd87] hover:text-secondary"}`}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {text}
+        </li>
+    );
 };
 
 function Navbar(props: { name: string }) {
@@ -61,431 +89,410 @@ function Navbar(props: { name: string }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [isAuthLoading, setIsAuthLoading] = useState(false);
+    // --- REMOVED email, password state ---
+    const [error, setError] = useState(""); // For displaying errors (can be set by handlers)
+    const [isOperationLoading, setIsOperationLoading] = useState(false); // Renamed for clarity - controls loading state for auth actions
+    const [isInitialLoading, setIsInitialLoading] = useState(true); // Tracks initial fingerprint/auth check
+    const [fingerprint, setFingerprint] = useState<string | null>(null);
 
-    // Check authentication state when component mounts
+    // --- Fingerprint and Auth State Effects (Keep similar logic) ---
+    useEffect(() => {
+        let isMounted = true;
+        const getFingerprint = async () => {
+            try {
+                const fp = await fpPromise;
+                const result = await fp.get();
+                if (isMounted) {
+                    setFingerprint(result.visitorId);
+                    console.log("Browser fingerprint loaded:", result.visitorId);
+                }
+            } catch (error) {
+                console.error("Error getting fingerprint:", error);
+                if (isMounted) {
+                    setError("Could not get browser fingerprint. Some features might be limited.");
+                }
+            } finally {
+                // Check if auth state is already known to potentially finish initial loading
+                if (isMounted && auth.currentUser !== undefined) { // Check if onAuthStateChanged already ran
+                    setIsInitialLoading(false);
+                }
+            }
+        };
+        getFingerprint();
+        return () => { isMounted = false; };
+    }, []); // Empty dependency array - run once
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            console.log("Auth state changed:", currentUser?.uid || "No user");
             setUser(currentUser);
+            if (currentUser && fingerprint) {
+                // Run association asynchronously, don't await here
+                associateFingerprintWithUser(currentUser.uid, fingerprint).catch(err => console.error("Failed background fingerprint association:", err));
+            }
+            // Finish initial loading check if fingerprint is now known
+            if (fingerprint !== null || error.includes("fingerprint")) {
+                setIsInitialLoading(false);
+            }
         });
-
-        // Clean up subscription
         return () => unsubscribe();
-    }, []);
+    }, [fingerprint, error]); // Re-run if fingerprint loads or errors
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setIsAuthLoading(true);
+    // --- Firestore Functions (Keep as is) ---
+    const associateFingerprintWithUser = useCallback(async (userId: string, fpId: string) => {
+        console.log(`Associating user ${userId} with fingerprint ${fpId}`);
+        if (!userId || !fpId) return;
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const now = Timestamp.now();
+            await setDoc(doc(db, userdoc, userId), { fingerprint: fpId, lastLogin: now }, { merge: true });
+            await setDoc(doc(db, userfp, fpId), { userId: userId, lastSeen: now }, { merge: true });
+            console.log(`Successfully associated user ${userId} with fingerprint ${fpId}`);
+        } catch (error) {
+            console.error(`Error storing fingerprint ${fpId} for user ${userId}:`, error);
+            // Optionally set a non-critical error state here if needed
+        }
+    }, [db]); // Added db dependency
+
+    const checkExistingFingerprint = useCallback(async (fpId: string): Promise<string | null> => {
+        console.log(`Checking fingerprint ID: ${fpId} in Firestore...`);
+        if (!fpId) return null;
+        try {
+            const docRef = doc(db, userfp, fpId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                console.log(`Fingerprint ${fpId} found, associated userId:`, data.userId);
+                return data.userId || null;
+            }
+            console.log(`Fingerprint ${fpId} not found.`);
+            return null;
+        } catch (error) {
+            console.error(`Error checking fingerprint ${fpId} in Firestore:`, error);
+            const firebaseError = error as AuthError; // Type assertion
+            if (firebaseError.code === 'permission-denied') {
+                setError("Error checking device status (permissions)."); // Set error for user
+            } else {
+                setError("Error checking device status."); // Generic error
+            }
+            throw error; // Re-throw to potentially stop the auth flow
+        }
+    }, [db]); // Added db dependency
+
+    // --- MODIFIED Auth Handlers (passed to forms) ---
+
+    const handleLoginAttempt = useCallback(async (emailParam: string, passwordParam: string) => {
+        setError(""); // Clear previous errors
+        setIsOperationLoading(true);
+        try {
+            await signInWithEmailAndPassword(auth, emailParam, passwordParam);
+            // Association happens in onAuthStateChanged effect
+            setIsLoginModalOpen(false); // Close modal on success
+            // No need to clear email/password, form state is local
+        } catch (err: unknown) {
+            const firebaseError = err as AuthError;
+            console.error("Login error:", firebaseError);
+            if (['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential', 'auth/invalid-email'].includes(firebaseError.code)) {
+                setError("Invalid email or password.");
+            } else if (firebaseError.code === 'auth/too-many-requests') {
+                setError("Too many login attempts. Please try again later.");
+            } else {
+                setError(`Login failed: ${firebaseError.message || 'Please try again.'}`);
+            }
+            throw err; // Re-throw so form's catch block can be notified if needed
+        } finally {
+            setIsOperationLoading(false);
+        }
+    }, [auth]); // Dependency: auth
+
+    const handleSignupAttempt = useCallback(async (emailParam: string, passwordParam: string) => {
+        setError("");
+        setIsOperationLoading(true);
+
+        if (!fingerprint) {
+            const fpError = "Could not verify device fingerprint. Please refresh and try again.";
+            setError(fpError);
+            setIsOperationLoading(false);
+            console.log("[handleSignupAttempt] Exited early: No fingerprint. Loading: false"); // Debug log
+            return
+                    }
+
+        try {
+            // Check fingerprint first
+            console.log("Checking fingerprint before signup...");
+            const existingUserId = await checkExistingFingerprint(fingerprint);
+            if (existingUserId) {
+                const fpExistsError = `This device seems linked to an existing account (User ID starting: ${existingUserId.substring(0, 3)}...). Please log in or contact support.`;
+                console.warn(`Signup blocked: Fingerprint ${fingerprint} linked to user ${existingUserId}`);
+                setError(fpExistsError);
+                setIsOperationLoading(false);
+                console.warn(`[handleSignupAttempt] Signup blocked: Fingerprint ${fingerprint} linked to user ${existingUserId}`);
+                setError(fpExistsError);
+                // No need to throw here, error state is set.
+                // The finally block will handle resetting loading state.
+                return; // Exit the function early AFTER setting error, BEFORE finally block
+            }
+            console.log("Fingerprint check passed.");
+
+            // Proceed with signup
+            const userCredential = await createUserWithEmailAndPassword(auth, emailParam, passwordParam);
+            console.log("Signup successful:", userCredential.user.uid);
+
+            // Explicitly associate fingerprint immediately after creation
+            await associateFingerprintWithUser(userCredential.user.uid, fingerprint);
+
+            setIsSignupModalOpen(false); // Close modal on success
+
+        } catch (err: unknown) {
+            // Check if error was already set by fingerprint check
+            if (!error) {
+                const firebaseError = err as AuthError;
+                console.error("Signup error:", firebaseError);
+                if (firebaseError.code === 'auth/email-already-in-use') {
+                    setError("This email is already registered. Please log in.");
+                } else if (firebaseError.code === 'auth/weak-password') {
+                    setError("Password is too weak (min. 6 characters).");
+                } else if (firebaseError.code === 'auth/invalid-email') {
+                    setError("Please enter a valid email address.");
+                } else {
+                    setError(`Signup failed: ${firebaseError.message || 'Please try again.'}`);
+                }
+            }
+            // throw err; // Re-throw so form's catch block is notified
+        } finally {
+            // Only set loading false if it wasn't already set by an early return/throw
+            if (isOperationLoading) {
+                setIsOperationLoading(false);
+            }
+        }
+    }, [auth, fingerprint, checkExistingFingerprint, associateFingerprintWithUser, error, isOperationLoading]); // Dependencies
+
+    const handleSocialAuthAttempt = useCallback(async (providerKey: string) => {
+        setError("");
+        setIsOperationLoading(true);
+
+        if (!fingerprint) {
+            setError("Could not verify device fingerprint. Please refresh and try again.");
+            setIsOperationLoading(false);
+            return; // Stop here
+        }
+
+        const socialProvider = providers[providerKey as keyof typeof providers];
+        if (!socialProvider) {
+            setError(`Invalid social provider: ${providerKey}`);
+            setIsOperationLoading(false);
+            return; // Stop here
+        }
+
+        try {
+            // Check fingerprint first
+            console.log(`Checking fingerprint before ${providerKey} sign-in...`);
+            const existingUserId = await checkExistingFingerprint(fingerprint);
+            if (existingUserId) {
+                const fpExistsError = `This device seems linked to an existing account (User ID starting: ${existingUserId.substring(0, 6)}). Please log in or contact support.`;
+                console.warn(`${providerKey} sign-in blocked: Fingerprint ${fingerprint} linked to user ${existingUserId}`);
+                setError(fpExistsError);
+                throw new Error(fpExistsError); // Throw to stop
+            }
+            console.log("Fingerprint check passed.");
+
+            // Proceed with social sign in
+            const userCredential = await signInWithPopup(auth, socialProvider);
+            console.log(`${providerKey} sign-in successful:`, userCredential.user.uid);
+
+            // Associate fingerprint
+            await associateFingerprintWithUser(userCredential.user.uid, fingerprint);
+
+            // Close modals on success
             setIsLoginModalOpen(false);
-            setEmail("");
-            setPassword("");
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
-            setError(errorMessage);
-        } finally {
-            setIsAuthLoading(false);
-        }
-    };
-
-    const handleSignup = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setIsAuthLoading(true);
-        try {
-            await createUserWithEmailAndPassword(auth, email, password);
             setIsSignupModalOpen(false);
-            setEmail("");
-            setPassword("");
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
-            setError(errorMessage);
-        } finally {
-            setIsAuthLoading(false);
-        }
-    };
 
-    const handleSocialAuth = async (provider: string) => {
+        } catch (err: unknown) {
+            // Check if error was already set by fingerprint check
+            if (!error) {
+                const firebaseError = err as AuthError;
+                console.error(`${providerKey} auth error:`, firebaseError);
+                if (firebaseError.code === 'auth/account-exists-with-different-credential') {
+                    setError("Account exists with this email but a different sign-in method.");
+                } else if (['auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(firebaseError.code)) {
+                    setError("Sign-in popup was closed or cancelled.");
+                } else {
+                    setError(`Sign-in failed: ${firebaseError.message || 'Please try again.'}`);
+                }
+            }
+            // Don't re-throw here, error state is set for user feedback
+        } finally {
+            setIsOperationLoading(false);
+        }
+    }, [auth, fingerprint, checkExistingFingerprint, associateFingerprintWithUser, error]); // Dependencies
+
+    const handleLogout = useCallback(async () => {
         setError("");
-        setIsAuthLoading(true);
-        try {
-            await signInWithPopup(auth, providers[provider as keyof typeof providers]);
-            setIsLoginModalOpen(false);
-            setIsSignupModalOpen(false);
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
-            setError(errorMessage);
-        } finally {
-            setIsAuthLoading(false);
-        }
-    };
-
-    const handleLogout = async () => {
         try {
             await signOut(auth);
+            console.log("User signed out");
         } catch (err: unknown) {
-            console.error("Error signing out:", err instanceof Error ? err.message : "Unknown error");
+            const firebaseError = err as AuthError;
+            console.error("Error signing out:", firebaseError);
+            setError("Failed to sign out. Please try again.");
         }
-    };
+    }, [auth]);
 
-    const NavItem: React.FC<NavItemProps> = ({text}) => {
-        const [isHovered, setIsHovered] = useState(false);
+    // --- Modal Control Functions ---
+    const openLoginModal = useCallback(() => {
+        setError(''); // Clear errors when opening
+        setIsSignupModalOpen(false);
+        setIsLoginModalOpen(true);
+    }, []);
 
-        return (<li
-            className={`text-lg px-4 py-2 mx-1 cursor-pointer transition-all duration-200 ${isHovered ? "text-secondary scale-105" : "text-[#00dd87]"}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}>
-            {text}
-        </li>);
-    };
+    const openSignupModal = useCallback(() => {
+        setError(''); // Clear errors when opening
+        setIsLoginModalOpen(false);
+        setIsSignupModalOpen(true);
+    }, []);
 
-    // Social login buttons component
-    const SocialLoginButtons = () => {
+    const closeLoginModal = useCallback(() => setIsLoginModalOpen(false), []);
+    const closeSignupModal = useCallback(() => setIsSignupModalOpen(false), []);
+
+    const switchToSignup = useCallback(() => {
+        closeLoginModal();
+        openSignupModal(); // This already clears errors
+    }, [closeLoginModal, openSignupModal]);
+
+    const switchToLogin = useCallback(() => {
+        closeSignupModal();
+        openLoginModal(); // This already clears errors
+    }, [closeSignupModal, openLoginModal]);
+
+
+    // --- Render Logic ---
+    if (isInitialLoading) { // Use the dedicated initial loading state
         return (
-            <div className="flex flex-col space-y-3 mt-4">
-                <div className="relative flex items-center">
-                    <div className="flex-grow border-t border-gray-600"></div>
-                    <span className="flex-shrink mx-4 text-gray-400">or continue with</span>
-                    <div className="flex-grow border-t border-gray-600"></div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                    <button
-                        type="button"
-                        onClick={() => handleSocialAuth('google')}
-                        disabled={isAuthLoading}
-                        className="flex items-center justify-center bg-zinc-700 hover:bg-zinc-600 text-white py-2 px-3 rounded transition-colors"
-                    >
-                        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                            <path
-                                fill="currentColor"
-                                d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
-                            />
-                        </svg>
-                        Google
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => handleSocialAuth('facebook')}
-                        disabled={isAuthLoading}
-                        className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded transition-colors"
-                    >
-                        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                            <path
-                                fill="currentColor"
-                                d="M22,12c0-5.52-4.48-10-10-10S2,6.48,2,12c0,4.84,3.44,8.87,8,9.8V15H8v-3h2V9.5C10,7.57,11.57,6,13.5,6H16v3h-2 c-0.55,0-1,0.45-1,1v2h3v3h-3v6.95C18.05,21.45,22,17.19,22,12z"
-                            />
-                        </svg>
-                        Facebook
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                    <button
-                        type="button"
-                        onClick={() => handleSocialAuth('github')}
-                        disabled={isAuthLoading}
-                        className="flex items-center justify-center bg-gray-800 hover:bg-gray-900 text-white py-2 px-3 rounded transition-colors"
-                    >
-                        <svg className="w-5 h-5 mr-1" viewBox="0 0 24 24">
-                            <path
-                                fill="currentColor"
-                                d="M12,2C6.48,2,2,6.48,2,12c0,4.42,2.87,8.17,6.84,9.5c0.5,0.09,0.68-0.22,0.68-0.48c0-0.24-0.01-0.87-0.01-1.7c-2.78,0.6-3.37-1.34-3.37-1.34c-0.45-1.16-1.11-1.47-1.11-1.47c-0.91-0.62,0.07-0.6,0.07-0.6c1,0.07,1.53,1.03,1.53,1.03c0.89,1.52,2.34,1.08,2.91,0.83c0.09-0.65,0.35-1.09,0.63-1.34c-2.22-0.25-4.55-1.11-4.55-4.94c0-1.09,0.39-1.98,1.03-2.68c-0.1-0.25-0.45-1.27,0.1-2.64c0,0,0.84-0.27,2.75,1.02c0.8-0.22,1.65-0.33,2.5-0.33c0.85,0,1.7,0.11,2.5,0.33c1.91-1.29,2.75-1.02,2.75-1.02c0.55,1.37,0.2,2.39,0.1,2.64c0.64,0.7,1.03,1.59,1.03,2.68c0,3.84-2.34,4.68-4.57,4.93c0.36,0.31,0.68,0.92,0.68,1.85c0,1.34-0.01,2.41-0.01,2.74c0,0.27,0.18,0.58,0.69,0.48C19.14,20.16,22,16.42,22,12C22,6.48,17.52,2,12,2z"
-                            />
-                        </svg>
-                        GitHub
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => handleSocialAuth('twitter')}
-                        disabled={isAuthLoading}
-                        className="flex items-center justify-center bg-blue-400 hover:bg-blue-500 text-white py-2 px-3 rounded transition-colors"
-                    >
-                        <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M22.46,6c-0.77,0.35-1.6,0.58-2.46,0.69c0.88-0.53,1.56-1.37,1.88-2.38c-0.83,0.5-1.75,0.85-2.72,1.05C18.37,4.5,17.26,4,16,4c-2.35,0-4.27,1.92-4.27,4.29c0,0.34,0.04,0.67,0.11,0.98C8.28,9.09,5.11,7.38,3,4.79c-0.37,0.63-0.58,1.37-0.58,2.15c0,1.49,0.75,2.81,1.91,3.56c-0.71,0-1.37-0.2-1.95-0.5v0.03c0,2.08,1.48,3.82,3.44,4.21c-0.36,0.1-0.74,0.15-1.13,0.15c-0.27,0-0.54-0.03-0.8-0.08c0.54,1.69,2.11,2.95,4,2.98c-1.46,1.16-3.31,1.84-5.33,1.84c-0.34,0-0.68-0.02-1.02-0.06C3.44,20.29,5.7,21,8.12,21c9.13,0,14.12-7.54,14.12-14.08c0-0.22-0.01-0.42-0.02-0.64C21.37,7.63,22,6.87,22,6"/>
-                        </svg>
-                        Twitter
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => handleSocialAuth('apple')}
-                        disabled={isAuthLoading}
-                        className="flex items-center justify-center bg-black hover:bg-gray-900 text-white py-2 px-3 rounded transition-colors"
-                    >
-                        <svg className="w-5 h-5 mr-1" viewBox="0 0 24 24">
-                            <path
-                                fill="currentColor"
-                                d="M17.05,15.5c-.3.64-.68,1.23-1.13,1.75-.57.69-1.03,1.16-1.38,1.41-.55.41-1.14.62-1.77.63-.45,0-1-.13-1.63-.38s-1.21-.38-1.71-.38c-.55,0-1.13.13-1.76.38-.63.26-1.14.39-1.53.42-.59.02-1.18-.2-1.77-.67-.39-.29-.87-.78-1.45-1.49-.62-.76-1.13-1.63-1.52-2.61-.43-1.07-.65-2.11-.65-3.12,0-1.15.25-2.14.74-2.97.39-.65.9-1.17,1.54-1.55.64-.38,1.33-.58,2.08-.59.5,0,1.17.14,2,.42.83.28,1.36.42,1.58.42.17,0,.76-.16,1.77-.49.95-.3,1.75-.43,2.4-.38,1.77.15,3.1.89,3.98,2.23-1.58.96-2.37,2.3-2.36,4.03,0,1.34.5,2.46,1.49,3.34.44.42.94.74,1.49.97-.12.36-.25.7-.38,1.02zM13.29,2.71c0,1.05-.27,2.04-.82,2.97-.66,1.09-1.46,1.72-2.34,1.88-.11-.91-.17-1.77-.17-2.57,0-1.01.3-2.04.9-2.97.3-.47.68-.86,1.13-1.17.45-.31.87-.48,1.27-.52.12.91.19,1.71.19,2.38z"
-                            />
-                        </svg>
-                        Apple
-                    </button>
-                </div>
+            <div className="flex justify-center items-center h-screen bg-zinc-900">
+                <p className="text-white text-xl">Initializing...</p>
+                {/* Optional Spinner */}
             </div>
         );
-    };
+    }
 
-    return (<header className="relative px-4">
-        <nav className="bg-zinc-900 text-danger sticky top-0 shadow-md rounded-2xl py-4">
-            <div className="container mx-auto px-4">
-                <div className="flex items-center justify-between">
-                    {/* Logo/Brand and Desktop Navigation */}
-                    <div className="flex items-center">
+    return (
+        <header className="relative px-4 py-2">
+            <nav className="bg-zinc-900 text-danger sticky top-0 shadow-md rounded-2xl py-3 z-40">
+                <div className="container mx-auto px-4">
+                    <div className="flex items-center justify-between">
+                        {/* Logo/Brand and Desktop Navigation */}
+                        <div className="flex items-center flex-shrink-0">
+                            <a href="/" className="text-3xl lg:text-4xl font-orbital flex items-center font-bold px-2 py-2 text-[#00dd87]">
+                                <img src="/leaf.png" alt="Gains Trackers Logo" className="mr-2 h-8 lg:h-10 w-auto"/>
+                                Gains Trackers
+                            </a>
+                            <ul className="hidden lg:flex items-center ml-6">
+                                <NavItem text={<a className={`${props.name.toLowerCase() === "nutrition" ? "text-info font-bold" : ""}`} href="/Nutrition">Nutrition</a>} />
+                                <NavItem text={<a className={`${props.name.toLowerCase() === "groups" ? "text-info font-bold " : ""}`} href="/Groups">Workout Groups</a>} />
+                                <NavItem text={<a className={`${props.name.toLowerCase() === "about-us" ? "text-info font-bold " : ""} `} href="/About-Us">About Us</a>} />
+                            </ul>
+                        </div>
 
-                        <a href="/" className="text-4xl font-orbital flex flex-row font-bold px-4 py-2">
-                            <img src="/leaf.png" alt="favicon"
-                                 className="pb-1 px-3 h-10 max-h-12 w-auto bg-zinc-900"/>
-                            Gains Trackers
-                        </a>
+                        {/* Authentication Buttons (Desktop) */}
+                        <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+                            {user ? (
+                                <div className="flex items-center gap-3">
+                                <span className="text-green-400 text-sm lg:text-base truncate max-w-[150px] lg:max-w-[250px]" title={user.email || user.displayName || 'User'}>
+                                    Hello, {user.displayName || user.email?.split('@')[0] || "User"}
+                                </span>
+                                    <button
+                                        className="border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-md transition-all text-sm lg:text-base"
+                                        onClick={handleLogout}>
+                                        Logout
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <button
+                                        className="border border-green-500 text-green-500 hover:bg-green-500 hover:text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-md transition-all text-sm lg:text-base"
+                                        onClick={openLoginModal}> {/* Use callback */}
+                                        Login
+                                    </button>
+                                    <button
+                                        className="bg-green-500 text-white hover:bg-green-600 px-3 lg:px-4 py-1.5 lg:py-2 rounded-md transition-all text-sm lg:text-base"
+                                        onClick={openSignupModal}> {/* Use callback */}
+                                        Sign Up
+                                    </button>
+                                </>
+                            )}
+                        </div>
 
-                        {/* Desktop Navigation Items */}
-                        <ul className="hidden lg:flex items-center">
-                            <NavItem
-                                text={<a
-                                    className={`${props.name.toLowerCase() === "nutrition" ? "text-info font-bold" : ""}`}
-                                    href="/Nutrition">
-                                    Nutrition
-                                </a>}
-                            />
-                            <NavItem
-                                text={<a
-                                    className={`${props.name.toLowerCase() === "groups" ? "text-info font-bold " : ""}`}
-                                    href="/Groups">
-                                    Workout Groups
-                                </a>}
-                            />
-                            <NavItem
-                                text={<a
-                                    className={`${props.name.toLowerCase() === "about-us" ? "text-info font-bold " : ""} `}
-                                    href="/About-Us">
-                                    About Us
-                                </a>}
-                            />
+                        {/* Mobile menu button */}
+                        <button
+                            className="lg:hidden block text-gray-300 hover:text-white p-2"
+                            type="button" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu" aria-expanded={isMenuOpen}>
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {isMenuOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/>}
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Mobile Navigation Menu */}
+                    <div className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMenuOpen ? "max-h-screen mt-4 opacity-100" : "max-h-0 mt-0 opacity-0"}`}>
+                        <ul className="flex flex-col items-center border-t border-zinc-700 pt-4">
+                            <NavItem text={<a className={`${props.name.toLowerCase() === "nutrition" ? "text-white font-bold underline" : "text-green-500"}`} href="/Nutrition">Nutrition</a>} />
+                            <NavItem text={<a className={`${props.name.toLowerCase() === "groups" ? "text-white font-bold underline" : "text-green-500"}`} href="/Groups">Workout Groups</a>} />
+                            <NavItem text={<a className={`${props.name.toLowerCase() === "about-us" ? "text-white font-bold underline" : "text-green-500"}`} href="/About-Us">About Us</a>}/>
                         </ul>
-                    </div>
-
-                    {/* Authentication Buttons */}
-                    <div className="hidden lg:flex items-center gap-3">
-                        {user ? (<div className="flex items-center gap-3">
-                            <span className="text-green-500">Hello, {user.email?.split('@')[0] || user.displayName || "User"}</span>
-                            <button
-                                className="border border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white px-4 py-2 rounded-md transition-all"
-                                onClick={handleLogout}
-                            >
-                                Logout
-                            </button>
-                        </div>) : (<>
-                            <button
-                                className="border border-green-500 text-green-500 hover:bg-green-500 hover:text-white px-4 py-2 rounded-md transition-all"
-                                onClick={() => setIsLoginModalOpen(true)}
-                            >
-                                Login
-                            </button>
-                            <button
-                                className="bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md transition-all"
-                                onClick={() => setIsSignupModalOpen(true)}
-                            >
-                                Sign Up
-                            </button>
-                        </>)}
-                    </div>
-
-                    {/* Mobile menu button */}
-                    <button
-                        className="lg:hidden block text-white"
-                        type="button"
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        aria-label="Toggle menu">
-                        <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M4 6h16M4 12h16M4 18h16"
-                            />
-                        </svg>
-                    </button>
-                </div>
-
-                {/* Mobile Navigation Menu */}
-                <div
-                    className={`${isMenuOpen ? "block" : "hidden"} lg:hidden mt-4`}
-                >
-                    {/* Mobile Nav Links */}
-                    <ul className="flex flex-col items-center">
-                        <NavItem
-                            text={<a
-                                className={`${props.name.toLowerCase() === "nutrition" ? "text-white font-bold underline" : "text-green-500"}`}
-                                href="/Nutrition">
-                                Nutrition
-                            </a>}
-                        />
-                        <NavItem
-                            text={<a
-                                className={`${props.name.toLowerCase() === "groups" ? "text-white font-bold underline" : "text-green-500"}`}
-                                href="/Groups">
-                                Workout Groups
-                            </a>}
-                        />
-                        <NavItem
-                            text={<a
-                                className={`${props.name.toLowerCase() === "about-us" ? "text-white font-bold underline" : "text-green-500"}`}
-                                href="/About-Us">
-                                About Us
-                            </a>}
-                        />
-                    </ul>
-
-                    {/* Mobile Authentication Buttons */}
-                    <div className="mt-4 flex flex-col items-center gap-2">
-                        {user ? (<div className="flex flex-col items-center gap-2 w-full max-w-md">
-                            <span className="text-green-500">Hello, {user.email?.split('@')[0] || user.displayName || "User"}</span>
-                            <button
-                                className="w-full border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded-md transition-all"
-                                onClick={handleLogout}
-                            >
-                                Logout
-                            </button>
-                        </div>) : (<>
-                            <button
-                                className="w-full max-w-md border border-green-500 text-green-500 hover:bg-green-500 hover:text-white px-4 py-2 rounded-md transition-all"
-                                onClick={() => setIsLoginModalOpen(true)}
-                            >
-                                Login
-                            </button>
-                            <button
-                                className="w-full max-w-md bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md transition-all"
-                                onClick={() => setIsSignupModalOpen(true)}
-                            >
-                                Sign Up
-                            </button>
-                        </>)}
+                        {/* Mobile Authentication Buttons */}
+                        <div className="mt-4 pt-4 border-t border-zinc-700 flex flex-col items-center gap-3 px-4 pb-4">
+                            {user ? (
+                                <div className="flex flex-col items-center gap-3 w-full max-w-xs">
+                                    <span className="text-green-400 text-center truncate w-full" title={user.email || user.displayName || 'User'}> Hello, {user.displayName || user.email?.split('@')[0] || "User"}</span>
+                                    <button className="w-full border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white px-4 py-2 rounded-md transition-all" onClick={handleLogout}> Logout </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <button className="w-full max-w-xs border border-green-500 text-green-500 hover:bg-green-500 hover:text-white px-4 py-2 rounded-md transition-all"
+                                            onClick={() => { setIsMenuOpen(false); openLoginModal(); }}> {/* Close menu and open modal */}
+                                        Login
+                                    </button>
+                                    <button className="w-full max-w-xs bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md transition-all"
+                                            onClick={() => { setIsMenuOpen(false); openSignupModal(); }}> {/* Close menu and open modal */}
+                                        Sign Up
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
 
-        {/* Login Modal */}
-        <Modal
-            isOpen={isLoginModalOpen}
-            onClose={() => setIsLoginModalOpen(false)}
-            title="Login"
-        >
-            <form onSubmit={handleLogin} className="space-y-4">
-                {error && <p className="text-red-500 text-sm">{error}</p>}
-                <div>
-                    <label className="block text-gray-300 mb-1" htmlFor="email">Email</label>
-                    <input
-                        id="email"
-                        type="email"
-                        className="w-full px-4 py-2 rounded bg-zinc-700 text-white border border-zinc-600 focus:border-green-500 focus:outline-none"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="block text-gray-300 mb-1" htmlFor="password">Password</label>
-                    <input
-                        id="password"
-                        type="password"
-                        className="w-full px-4 py-2 rounded bg-zinc-700 text-white border border-zinc-600 focus:border-green-500 focus:outline-none"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <button
-                    type="submit"
-                    disabled={isAuthLoading}
-                    className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition-all disabled:bg-green-800 disabled:cursor-not-allowed"
-                >
-                    {isAuthLoading ? "Logging in..." : "Login"}
-                </button>
-                <p className="text-gray-400 text-sm text-center">
-                    Don't have an account?{" "}
-                    <button
-                        type="button"
-                        className="text-green-500 hover:underline"
-                        onClick={() => {
-                            setIsLoginModalOpen(false);
-                            setIsSignupModalOpen(true);
-                        }}>
-                        Sign up
-                    </button>
-                </p>
+            {/* --- Render Modals with Form Components --- */}
+            <Modal
+                isOpen={isLoginModalOpen}
+                onClose={closeLoginModal}
+                title="Login"
+            >
+                <LoginForm
+                    onLoginSubmit={handleLoginAttempt}
+                    onSocialAuth={handleSocialAuthAttempt}
+                    onSwitchToSignup={switchToSignup}
+                    isLoading={isOperationLoading}
+                    // error={error} // Pass down the error state from Navbar
+                />
+            </Modal>
 
-                <SocialLoginButtons />
-            </form>
-        </Modal>
+            <Modal
+                isOpen={isSignupModalOpen}
+                onClose={closeSignupModal}
+                title="Create Account"
+            >
+                <SignupForm
+                    onSignupSubmit={handleSignupAttempt}
+                    onSocialAuth={handleSocialAuthAttempt}
+                    onSwitchToLogin={switchToLogin}
+                    isLoading={isOperationLoading}
+                    error={error} // Pass down the error state from Navbar
+                />
+            </Modal>
 
-        {/* Signup Modal */}
-        <Modal
-            isOpen={isSignupModalOpen}
-            onClose={() => setIsSignupModalOpen(false)}
-            title="Sign Up"
-        >
-            <form onSubmit={handleSignup} className="space-y-4">
-                {error && <p className="text-red-500 text-sm">{error}</p>}
-                <div>
-                    <label className="block text-gray-300 mb-1" htmlFor="signup-email">Email</label>
-                    <input
-                        id="signup-email"
-                        type="email"
-                        className="w-full px-4 py-2 rounded bg-zinc-700 text-white border border-zinc-600 focus:border-green-500 focus:outline-none"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="block text-gray-300 mb-1" htmlFor="signup-password">Password</label>
-                    <input
-                        id="signup-password"
-                        type="password"
-                        className="w-full px-4 py-2 rounded bg-zinc-700 text-white border border-zinc-600 focus:border-green-500 focus:outline-none"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <button
-                    type="submit"
-                    disabled={isAuthLoading}
-                    className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition-all disabled:bg-green-800 disabled:cursor-not-allowed"
-                >
-                    {isAuthLoading ? "Creating Account..." : "Create Account"}
-                </button>
-                <p className="text-gray-400 text-sm text-center">
-                    Already have an account?{" "}
-                    <button
-                        type="button"
-                        className="text-green-500 hover:underline"
-                        onClick={() => {
-                            setIsSignupModalOpen(false);
-                            setIsLoginModalOpen(true);
-                        }}
-                    >
-                        Login
-                    </button>
-                </p>
-
-                <SocialLoginButtons />
-            </form>
-        </Modal>
-    </header>);
+        </header>
+    );
 }
 
 export default Navbar;
