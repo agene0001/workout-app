@@ -22,8 +22,8 @@ import { LoginForm } from "./LoginForm";   // Adjust path if necessary
 import { SignupForm } from "./SignupForm"; // Adjust path if necessary
 
 const functions = getFunctions(app);
-const associateFingerprint = httpsCallable(functions, 'associateFingerprint');
-const checkFingerprintExists = httpsCallable(functions, 'checkFingerprintExists');
+const associateFingerprint = httpsCallable(functions, 'associate_fingerprint');
+const checkFingerprintExists = httpsCallable(functions, 'check_fingerprint_exists');
 
 
 const fpPromise = FingerprintJS.load();

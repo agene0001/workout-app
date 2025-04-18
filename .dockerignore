@@ -14,3 +14,4 @@ main/python/similarity_matrix.pkl
 **/dist
 **/build
 **/.git
+**/venv/

@@ -8,7 +8,7 @@ import app from "../firebase/config.ts";
 
 // Initialize Firebase functions and get the callable function
 const functions = getFunctions(app);
-const getInstacartBackend = httpsCallable(functions, 'processRecipeWithTokenCheck');
+const getInstacartBackend = httpsCallable(functions, 'processrecipe_cf');
 
 // Define the Firebase error interface
 interface FirebaseFunctionsError extends Error {
