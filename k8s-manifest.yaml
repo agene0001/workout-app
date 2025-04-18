@@ -109,6 +109,14 @@ spec:
       labels:
         app: react-frontend
     spec:
+      nodeSelector:
+        cloud.google.com/gke-spot: "true"
+      # Add tolerations for Spot VMs
+      tolerations:
+        - key: "cloud.google.com/gke-spot"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
       imagePullSecrets:
         - name: my-registry-secret
       containers:

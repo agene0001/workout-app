@@ -111,16 +111,16 @@ function Nutrition() {
                                         setSearchedRecipe(res.data);
                                         axios.get(`api/v1/recipes/recommendations?query=${encodeURIComponent(querySearch)}&ingredients=${res.data?.ingredients}`).then(async (res) => {
                                             console.log(res.data);
-                                            const data: RecipeItem[] = []
-                                            for (const name of res.data) {
-                                                console.log(name)
-                                                await axios.get(`/api/v1/recipes/recipe/${encodeURIComponent(name)}`).then((res) => {
-                                                    console.log(res.data)
-                                                    if (res.data) data.push(res.data);
-                                                })
-                                            }
-                                            console.log(data)
-                                            setRecommendedRecipes(data);
+                                            setRecommendedRecipes(res.data)
+                                            // for (const name of res.data) {
+                                            //     console.log(name)
+                                            //     await axios.get(`/api/v1/recipes/recipe/${encodeURIComponent(name)}`).then((res) => {
+                                            //         console.log(res.data)
+                                            //         if (res.data) data.push(res.data);
+                                            //     })
+                                            // }
+                                            // console.log(data)
+                                            // setRecommendedRecipes(data);
                                         });
                                     });
                                 }}>
