@@ -56,8 +56,7 @@ jobs:
 
       - name: Build images with Docker Compose
         run: |
-          docker compose build spring-backend react-frontend flask-backend
-
+          docker compose build spring-backend react-frontend
       - name: Tag and push images
         run: |
           docker tag ${IMAGE_BACKEND}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_BACKEND}:latest
