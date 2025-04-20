@@ -142,7 +142,7 @@ function HeroSection() {
                             Unleashing Your Potential Through <span className='text-gradient-2'>Fitness and Nutrition</span>
                         </h1>
                         <p className="text-xl text-white mt-6 max-w-3xl mx-auto">
-                            Your all-in-one platform for personalized nutrition plans, workout tracking, and a supportive fitness community.
+                            Your all-in-one platform for personalized nutrition plans, workout tracking, and a supportive fitness community (BETA).
                         </p>
                         <div className="mt-8 flex justify-center gap-4">
                             <button className="bg-[#00dd87] hover:bg-[#00bb74] text-black font-bold py-3 px-6 rounded-full transition-all">

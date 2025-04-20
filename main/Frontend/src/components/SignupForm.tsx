@@ -20,12 +20,16 @@ export const SignupForm: React.FC<SignupFormProps> = ({
                                                       }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     // Removed local error state
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         // Don't clear parent error here
         try {
+            if(password !== confirmPassword) throw new Error(
+                "Passwords do not match"
+            )
             await onSignupSubmit(email, password);
             // Parent handles success
         } catch (err) {
@@ -58,6 +62,18 @@ export const SignupForm: React.FC<SignupFormProps> = ({
                     className="w-full px-4 py-2 rounded bg-zinc-700 text-white border border-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition-colors"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                />
+            </div>
+            <div>
+                <label className="block text-gray-300 mb-1 text-sm font-medium" htmlFor="signup-password-confirm">Confirm Password (min. 6 characters)</label>
+                <input
+                    id="signup-password-confirm"
+                    type="password"
+                    className="w-full px-4 py-2 rounded bg-zinc-700 text-white border border-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition-colors"
+                    value={password}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     autoComplete="new-password"
                 />

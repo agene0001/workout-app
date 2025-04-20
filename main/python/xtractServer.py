@@ -1,7 +1,5 @@
 import requests
-import spacy
-from spacy.matcher import Matcher
-import re
+
 from dotenv import load_dotenv
 import os
 from flask import Flask, request, jsonify, Blueprint
@@ -35,11 +33,13 @@ def process_recipe(ingredients_text, instructions, title, image_url=""):
     # Get API key from environment
     api_key = os.getenv("API_KEY")
 
+    # Debug log (remove in production)
+
     headers = {
-        "Accept": "application/json",
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
+            "Accept": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
 
     response = requests.post(
         "https://connect.dev.instacart.tools/idp/v1/products/products_link",

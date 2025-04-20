@@ -3,18 +3,7 @@
 import {useRef, useState, useEffect, FC} from "react";
 import {createPortal} from "react-dom";
 import {InfoBlockProps, InstacartRes} from "../types";
-import { getFunctions, httpsCallable } from "firebase/functions";
-import app from "../firebase/config.ts";
-
-// Initialize Firebase functions and get the callable function
-const functions = getFunctions(app);
-const getInstacartBackend = httpsCallable(functions, 'processrecipe_cf');
-
-// Define the Firebase error interface
-interface FirebaseFunctionsError extends Error {
-    code?: string;
-    details?: unknown;
-}
+import axios from "axios";
 
 const InfoBlock: FC<InfoBlockProps> = ({
                                            heading,
@@ -34,7 +23,7 @@ const InfoBlock: FC<InfoBlockProps> = ({
     const [instacartData, setInstacartData] = useState<InstacartRes|null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [currentRecipeId, setCurrentRecipeId] = useState<string|null>(null);
-    const [error, setError] = useState<string|null>(null);
+    const [fetchError, setFetchError] = useState<null|string>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -45,65 +34,53 @@ const InfoBlock: FC<InfoBlockProps> = ({
     useEffect(() => {
         if (recipe && (!currentRecipeId || currentRecipeId !== recipe.name)) {
             setInstacartData(null);
-            setError(null);
             setCurrentRecipeId(recipe.name);
         }
-    }, [recipe]);
+    }, [currentRecipeId, recipe]);
 
-    // Fetch Instacart data when expanded and we have a recipe
-    useEffect(() => {
-        if (expanded && recipe && !instacartData && !isLoading && !error) {
-            fetchInstacartData();
-        }
-    }, [expanded, recipe, instacartData, isLoading]);
-
+// Then modify your fetchInstacartData function
     const fetchInstacartData = async () => {
         if (!recipe) return;
 
         setIsLoading(true);
-        setError(null);
+        setFetchError(null); // Reset error state
 
         try {
             const instructions = recipe.instructions.split(/(?=\d\s?:\s)/).map(step => step.trim());
             console.log("Processing recipe:", recipe.name);
 
-            // Use the Firebase callable function instead of direct axios call
-            const result = await getInstacartBackend({
+            const res = await axios.post('/recipes/process-recipe', {
                 'ingredients': recipe.ingredients,
                 'instructions': instructions,
                 'title': recipe.name,
                 'image_url': recipe.imgSrc
             });
 
-            console.log("Instacart response:", result.data);
-            setInstacartData(result.data as InstacartRes);
-        } catch (err) {
-            console.error("Error fetching Instacart data:", err);
-
-            // Handle different error types with proper type checking
-            const firebaseError = err as FirebaseFunctionsError;
-
-            if (firebaseError.code) {
-                switch (firebaseError.code) {
-                    case 'functions/permission-denied':
-                        setError("You don't have enough tokens to process this recipe. Please purchase more tokens.");
-                        break;
-                    case 'functions/unauthenticated':
-                        setError("Please sign in to process recipes.");
-                        break;
-                    case 'functions/not-found':
-                        setError("User profile not found. Please contact support.");
-                        break;
-                    default:
-                        setError("Failed to process recipe. Please try again later.");
-                }
-            } else {
-                setError("An unexpected error occurred. Please try again.");
+            console.log("Instacart response:", res.data);
+            setInstacartData(res.data || "");
+        } catch (error) {
+            console.error("Error fetching Instacart data:", error);
+            // Set error state safely
+            let errorMessage = "Failed to fetch recipe data"; // Default message
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            } else if (typeof error === 'string') {
+                errorMessage = error;
             }
+            setFetchError(errorMessage);
+            // Important: set instacartData to an empty object to prevent retries
+            // Consider setting it to null or undefined if that makes more sense for your logic
+            setInstacartData(null); // Or: setInstacartData({ processed_ingredients: [], response: { products_link_url: '' } });
         } finally {
             setIsLoading(false);
         }
     };
+    // Fetch Instacart data when expanded and we have a recipe
+    useEffect(() => {
+        if (expanded && recipe && !instacartData && !isLoading && !fetchError) {
+            fetchInstacartData();
+        }
+    }, [expanded, recipe, instacartData, isLoading, fetchError]);
 
     const toggleExpand = () => {
         if (expandable) {
@@ -173,10 +150,10 @@ const InfoBlock: FC<InfoBlockProps> = ({
                         </p>
                     ))}
 
+                    {/*{url ? <a href={url} className="hover:text-[#C62368] text-purple-900" target="_blank" rel="noopener noreferrer">Food Network Site</a> : ""}*/}
+
                     {isLoading ? (
                         <div className='text-amber-500'>Loading Instacart data...</div>
-                    ) : error ? (
-                        <div className='text-red-500'>{error}</div>
                     ) : instacartData ? (
                         <div>
                             <button className="h-[46px] bg-[#003D29] px-[18px] py-[16px] text-[#FAF1E5] flex items-center gap-2 rounded-full">
@@ -194,8 +171,9 @@ const InfoBlock: FC<InfoBlockProps> = ({
                                     Get Recipe Ingredients
                                 </a>
                             </button>
+
                         </div>
-                    ) : null}
+                    ) : fetchError}
                 </div>
             </div>
         );

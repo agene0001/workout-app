@@ -60,6 +60,60 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: flask-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-backend
+  template:
+    metadata:
+      labels:
+        app: flask-backend
+    spec:
+      imagePullSecrets:
+        - name: my-registry-secret
+      containers:
+        - name: flask-backend
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/flask-backend:latest
+          # image: peppap1g/spring-backend:latest
+          ports:
+            - containerPort: 8082
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "256Mi"
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: instacart-creds # Name of the Secret created above
+                  key: api-key
+
+
+      restartPolicy: Always
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-backend
+spec:
+  selector:
+    app: flask-backend
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8082
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: react-frontend
 spec:
   replicas: 1
