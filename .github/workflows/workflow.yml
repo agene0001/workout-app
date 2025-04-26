@@ -9,7 +9,7 @@ env:
   PROJECT_ID: ${{ secrets.PROJECT_ID }}
   GKE_CLUSTER: react-cluster
   GKE_ZONE: us-central1-a
-  IMAGE_FRONTEND: react-frontend
+  IMAGE_FRONTEND: svelte-frontend
   IMAGE_BACKEND: spring-backend
   # IMAGE_FLASK: flask-backend
   REGION: us-central1

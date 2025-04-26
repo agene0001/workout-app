@@ -114,22 +114,22 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: react-frontend
+  name: svelte-frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: react-frontend
+      app: svelte-frontend
   template:
     metadata:
       labels:
-        app: react-frontend
+        app: svelte-frontend
     spec:
       imagePullSecrets:
         - name: my-registry-secret
       containers:
-        - name: react-frontend
-          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
+        - name: svelte-frontend
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
           imagePullPolicy: Always
           resources:
             requests:
@@ -149,10 +149,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: react-frontend
+  name: svelte-frontend
 spec:
   selector:
-    app: react-frontend
+    app: svelte-frontend
   type: ClusterIP
   ports:
     - protocol: TCP
@@ -250,7 +250,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: react-frontend
+                name: svelte-frontend
                 port:
                   number: 80
     - host: www.gainztrackers.com
@@ -260,6 +260,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: react-frontend
+                name: svelte-frontend
                 port:
                   number: 80
