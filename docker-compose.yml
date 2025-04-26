@@ -24,14 +24,14 @@ services:
     networks:
       - app-network
 
-  react-frontend:
+  svelte-frontend:
 #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
-    image: react-frontend:latest
+    image: svelte-frontend:latest
     build:
       context: .
       dockerfile: Dockerfile
       target: frontend-final
-    container_name: react-frontend
+    container_name: svelte-frontend
     platform: linux/amd64
     depends_on:
       - spring-backend
@@ -53,7 +53,7 @@ services:
     container_name: flask-backend
     platform: linux/amd64
     depends_on:
-      - react-frontend
+      - svelte-frontend
     environment:
       - NODE_ENV=production
     ports:

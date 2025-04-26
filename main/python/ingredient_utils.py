@@ -42,7 +42,8 @@ WORD_NUMBERS = {
 # Added more descriptive words and refined regex matching
 PREP_WORDS = {
     # Actions/Verbs (often participle adjectives)
-    'melted', 'cooled', 'softened', 'chilled', 'frozen', 'heated', 'warmed',
+    'lengthwise',
+    'undrained','melted', 'cooled', 'softened', 'chilled', 'frozen', 'heated', 'warmed',
     'chopped', 'sliced', 'diced', 'minced', 'grated', 'shredded', 'peeled', 'zested',
     'juiced', 'seeded', 'pitted', 'cored', 'trimmed', 'halved', 'quartered', 'cut',
     'beaten', 'broken', 'whisked', 'mashed', 'crushed', 'ground', 'toasted', 'roasted',
@@ -53,7 +54,7 @@ PREP_WORDS = {
     # Descriptors/Adverbs/Adjectives (often removable)
     'optional', 'plus', 'more', 'additional', 'extra',
     'thinly', 'finely', 'roughly', 'coarsely', # Adverbs modifying prep words
-    # 'freshly', # Keep 'freshly ground' for now
+    'freshly', # Keep 'freshly ground' for now
     'lightly', 'slightly',
     'large', 'medium', 'small', 'thin', 'thick', # Sizes often removable unless key - handle carefully
     'fresh', 'dried', 'canned', 'frozen', 'raw', # States often removable, handle carefully ('dried basil' vs 'basil')
@@ -127,7 +128,10 @@ SUFFIX_PHRASES = [
     r'beaten',
     r'pitted',
     r'softened',
-    r'undrained'
+    r'undrained',
+    r'lengthwise',
+    r'quartered',
+    # r'freshly'
 ]
 # Compile suffix regex (match optional comma/space + phrase at the end)
 SUFFIX_REGEX = re.compile(
@@ -177,7 +181,25 @@ def handle_or_pattern(text):
             return parts[0].strip()
 
     return text
+def preprocess_hyphenated_units(text, units_set):
+    """
+    Finds patterns like 'NUMBER-UNIT' (e.g., '15-ounce') where UNIT is known,
+    and merges them into 'NUMBERUNIT' (e.g., '15ounce') to help tokenization.
+    """
+    def replacer(match):
+        number_part = match.group(1)
+        unit_part = match.group(2)
+        # Check if the part after hyphen is a known unit
+        if unit_part.lower() in units_set:
+            # Merge them without hyphen
+            return f"{number_part}{unit_part}"
+        else:
+            # Not a known unit, leave it as is
+            return match.group(0)
 
+    # Regex: digits/dots/slashes, hyphen, word characters
+    pattern = re.compile(r'(\d[\d./]*)-(\w+)')
+    return pattern.sub(replacer, text)
 def extract_core_name_spacy(full_name_text: str) -> str:
     """
     Extracts the core ingredient name using spaCy, applying suffix phrase removal
@@ -197,25 +219,7 @@ def extract_core_name_spacy(full_name_text: str) -> str:
 
     # --- 2. Iterative Suffix Phrase Removal ---
     # Apply the suffix regex repeatedly to the current string
-    core_name = text
-    iterations = 0
-    max_iterations = len(SUFFIX_PHRASES) + 2 # Safety break
-    while iterations < max_iterations:
-        # Apply the regex
-        new_name = SUFFIX_REGEX.sub('', core_name).strip()
-        # Remove any trailing comma left after substitution
-        if new_name.endswith(','):
-            new_name = new_name[:-1].strip()
-
-        # Check if anything changed
-        if new_name == core_name:
-            break # No change, exit loop
-
-        core_name = new_name
-        # Break if the string becomes empty
-        if not core_name:
-            break
-        iterations += 1
+    core_name = suffix_removal(text)
 
     # --- 3. Fallback if Suffix Removal Emptied String ---
     # If core_name is empty now, revert to the state before suffix removal
@@ -249,7 +253,7 @@ def extract_core_name_spacy(full_name_text: str) -> str:
                     candidate_span = chunk
                     break # Found a potential core chunk
             starts_with_prep_verb = False
-            if chunk.text.split()[0].lower() in ["removed", "chopped", "sliced", "diced", "minced"]:
+            if chunk.text.split()[0].lower() in PREP_WORDS:
                 starts_with_prep_verb = True
 
             if not is_likely_prep_only and not starts_with_prep_verb:
@@ -351,6 +355,27 @@ def extract_core_name_spacy(full_name_text: str) -> str:
         return original_input_after_paren_removal
 
     return final_name
+
+def suffix_removal(word):
+    iterations = 0
+    max_iterations = len(SUFFIX_PHRASES) + 5 # Safety
+    cleaned_line = word.strip()
+    while iterations < max_iterations:
+        new_cleaned_line = SUFFIX_REGEX.sub('', cleaned_line).strip()
+        # Remove any trailing comma left after substitution
+        if new_cleaned_line.endswith(','):
+            new_cleaned_line = new_cleaned_line[:-1].strip()
+
+        # Check if anything changed
+        if new_cleaned_line == cleaned_line:
+            break # No change, exit loop
+
+        cleaned_line = new_cleaned_line
+        # Break if the string becomes empty
+        if not cleaned_line:
+            break
+        iterations += 1
+    return cleaned_line
 # ========================================
 # Rest of your xtractServer code (extract_ingredients)
 # Needs to be updated to USE the refined extract_core_name_spacy
@@ -385,8 +410,10 @@ def extract_ingredients(text):
 
     for line in lines:
         original_line = line
-        display_text = original_line.lower()  # Standardize display text to lower
-
+        # display_text = original_line.lower()  # Standardize display text to lower
+        suffix_removed = suffix_removal(original_line)
+        preprocessed_text = preprocess_hyphenated_units(suffix_removed, UNITS)
+        display_text = suffix_removed.lower()
         # --- Pre-checks for section headers / instructions ---
         if re.match(r'^(?:For the .*?:|Instructions:|Notes:|Optional:|Serving Suggestions:|Garnish:|Equipment:)', line, re.IGNORECASE):
             # Try to extract item after colon if it's a specific garnish/suggestion
@@ -403,178 +430,180 @@ def extract_ingredients(text):
             continue  # Skip parsing this line as a standard ingredient
 
         # --- Parsing Logic ---
-        doc = nlp(line)
+        # --- Parsing Logic ---
+        doc = nlp(preprocessed_text) # Ensure using cleaned text
+        print(f"\n--- PARSING ---")             # <<< DEBUGGING LINE
+        print(f"DEBUG: Input to NLP: '{doc.text}'") # <<< DEBUGGING LINE
+        print(f"DEBUG: Tokens: {[t.text for t in doc]}") # <<< DEBUGGING LINE
+
         quantity = ""
         unit = ""
-        name_part = line  # Start with the full line
-
-        # 1. Find Quantity and Unit at the beginning
-        qty_parts = []
-        unit_candidate = ""
         potential_name_start_index = 0
+        qty_parts = []
+        unit_candidate = "" # Ensure reset
 
-        for i, token in enumerate(doc):
-            token_text_lower = token.text.lower()
-            # Check for numbers (digits, fractions, words)
+        # 1. Find Quantity and Unit
+        i = 0
+        # --- WHILE LOOP BLOCK TO REPLACE/INSERT ---
+        while i < len(doc):
+            token = doc[i]
+            token_text = token.text
+            token_text_lower = token_text.lower()
             is_number_word = token_text_lower in WORD_NUMBERS
-            is_numeric = token.like_num or '/' in token.text
+            # Strict check: '-' not allowed in quantity parts unless it's a fraction like 1/2
+            is_numeric_strict = (token.like_num or '/' in token_text) and '-' not in token_text[1:] # Allow leading '-' ?
 
-            if is_numeric or is_number_word:
-                qty_parts.append(token.text)
-                potential_name_start_index = token.i + 1
-            # Check for unit immediately after quantity parts
-            elif qty_parts and token_text_lower in UNITS:
-                # Check if previous token was indeed part of quantity
-                if token.i == potential_name_start_index:
-                    unit_candidate = token_text_lower
-                    potential_name_start_index = token.i + 1
-                else:  # Word after quantity isn't a unit, likely start of name
-                    break
-            # Handle "a pinch", "a clove" - where 'a' is quantity 1
-            elif token_text_lower in ['a', 'an'] and i == 0 and i + 1 < len(doc) and doc[i+1].lemma_.lower() in UNITS:
-                qty_parts.append("1")
-                unit_candidate = doc[i+1].lemma_.lower()
-                potential_name_start_index = i + 2
-                break  # Found qty and unit
-            # Handle "to taste" - no quantity/unit
-            elif token_text_lower == 'to' and i + 1 < len(doc) and doc[i+1].lemma_ == 'taste':
-                potential_name_start_index = 0  # The whole phrase is the name
-                qty_parts = []  # Reset quantity
-                break
-            # Stop searching for quantity/unit if we hit a non-qty/non-unit word after finding some quantity
-            # or if we hit a clear name part (Noun/Propn not in units)
-            elif token.pos_ in ['NOUN', 'PROPN', 'ADJ'] and token_text_lower not in UNITS:
-                if qty_parts:  # Found name part after quantity
-                    break
-                else:  # Found name part before any quantity (e.g., "Salt")
-                    potential_name_start_index = i
-                    break
-            # Stop if we hit the end or punctuation generally
-            elif token.is_punct and token.text != '/':  # Allow '/' for fractions
-                if qty_parts: break  # Stop after quantity if punctuation hit
-                else: potential_name_start_index = i+1  # Punctuation before name start
-            # Allow adjectives between quantity and unit/name? (e.g., "1 large egg")
-            elif token.pos_ == 'ADJ' and qty_parts:
-                # If the *next* token is a unit, treat this ADJ as a unit
-                if i + 1 < len(doc) and doc[i+1].text.lower() in UNITS:
-                    unit_candidate = token.text.lower()  # e.g. 'large'
-                    potential_name_start_index = i + 1
-                # Otherwise, assume it's start of name
-                else:
-                    break
-            elif qty_parts:  # Found something else after qty parts, assume name starts
-                break
-            else:  # Haven't found quantity yet, continue scan
+            # --- Step 1: Accumulate Quantity ---
+            if (is_numeric_strict or is_number_word) and not unit_candidate and i == potential_name_start_index:
+                qty_parts.append(token_text)
                 potential_name_start_index = i + 1
+                i += 1
+                continue
+
+            # --- Step 2: Evaluate token immediately after quantity stops ---
+            elif qty_parts and i == potential_name_start_index:
+                current_token_is_unit = token_text_lower in UNITS
+                next_token_exists = i + 1 < len(doc)
+                next_token_is_unit = next_token_exists and doc[i+1].text.lower() in UNITS
+
+                # CASE 2a: Current token is the unit
+                if current_token_is_unit:
+                    unit_candidate = token_text_lower
+                    potential_name_start_index = i + 1
+                    if next_token_is_unit: i += 1; continue # Compound unit check
+                    else: break # Unit found
+
+                # CASE 2b: Current token NOT unit, BUT NEXT IS unit (QTY DESC UNIT)
+                elif next_token_is_unit:
+                    unit_candidate = doc[i+1].text.lower() # Unit is NEXT token
+                    potential_name_start_index = i + 2     # Name starts after unit
+                    break # Unit found
+
+                # CASE 2c: Neither current nor next is unit -> Name starts here
+                else: break # Name identified, current token is start of name
+
+            # --- Step 3: Handle second part of compound unit ---
+            elif unit_candidate and i == potential_name_start_index:
+                if token_text_lower in UNITS:
+                    unit_candidate += " " + token_text_lower
+                    potential_name_start_index = i + 1
+                break # Stop after checking for second unit part
+
+            # --- Step 4: Handle starting "a/an" ---
+            elif token_text_lower in ['a', 'an'] and i == 0 and not qty_parts:
+                if i + 1 < len(doc) and doc[i+1].lemma_.lower() in UNITS:
+                    qty_parts.append("1")
+                    unit_candidate = doc[i+1].lemma_.lower()
+                    potential_name_start_index = i + 2
+                else: potential_name_start_index = i # Name starts at 'a'/'an'
+                break # Exit after handling 'a'/'an'
+
+            # --- Step 5: Loop termination condition ---
+            else:
+                if not qty_parts: potential_name_start_index = i # No qty found
+                break # Exit loop
+        # --- END OF WHILE LOOP BLOCK ---
+
+        print(f"DEBUG: Loop finished. Qty='{qty_parts}', UnitCand='{unit_candidate}', NameIdx={potential_name_start_index}") # <<< DEBUGGING LINE
 
         # Process collected quantity parts
         if qty_parts:
             quantity_str = " ".join(qty_parts)
-            # Try parsing quantity (handles fractions, words etc.)
             parsed_qty_val = parse_fraction(quantity_str)
             if parsed_qty_val is not None:
-                # Format to avoid unnecessary decimals for integers
-                quantity = str(int(parsed_qty_val)) if parsed_qty_val == int(parsed_qty_val) else f"{parsed_qty_val:.2f}".rstrip('0').rstrip('.')  # Format nicely
+                quantity = str(int(parsed_qty_val)) if parsed_qty_val == int(parsed_qty_val) else f"{parsed_qty_val:.2f}".rstrip('0').rstrip('.')
             else:
-                # Could be a word quantity we didn't parse, or something else.
-                # If it was a word number, handle it
                 word_val = WORD_NUMBERS.get(quantity_str.lower())
-                if word_val is not None:
-                    quantity = str(word_val)
-                else:
-                    # Failed to parse, maybe it wasn't quantity? Reset.
-                    quantity = ""
-                    potential_name_start_index = 0  # Assume name starts from beginning
-                    unit_candidate = ""  # Reset unit too
+                if word_val is not None: quantity = str(word_val)
+                else: quantity = ""; potential_name_start_index = 0; unit_candidate = "" # Reset
 
-        # Assign unit if found
-        if unit_candidate:
+        # Assign unit IF FOUND
+        # --- MODIFIED UNIT ASSIGNMENT WITH DEBUG ---
+        if unit_candidate: # Check if unit_candidate has a non-empty value
             unit = unit_candidate
+            print(f"DEBUG: Assigned unit = '{unit}' (from unit_candidate = '{unit_candidate}')") # <<< DEBUGGING LINE
+        else:
+            unit = "" # Explicitly set to empty if no candidate
+            print(f"DEBUG: No unit assigned (unit_candidate was '{unit_candidate}')")       # <<< DEBUGGING LINE
 
-        # Extract name part from the rest of the line
-        name_part = doc[potential_name_start_index:].text.strip()
+        # Extract name part
+        if not quantity and not unit and potential_name_start_index != 0 and not qty_parts:
+            potential_name_start_index = 0
 
-        # 2. Check for "juice of X" pattern BEFORE extracting core name
-        juice_match = re.match(r'(?i)^(juice|zest|peel)\s+of\s+(.*)', name_part)
+        # Ensure name_part is derived from the correct doc and index
+        # Check bounds before slicing
+        if potential_name_start_index < len(doc):
+            name_part = doc[potential_name_start_index:].text.strip()
+        else:
+            name_part = "" # Handle index out of bounds
+        print(f"DEBUG: Derived name_part = '{name_part}' (from index {potential_name_start_index})") # <<< DEBUGGING LINE
+
+        # Check for Juice Pattern
+        # ... (juice logic remains the same) ...
         has_juice_pattern = False
-
+        core_name = ""
+        juice_match = re.match(r'(?i)^(juice|zest|peel)\s+of\s+(.*)', name_part)
         if juice_match:
+            # ... (juice logic - ensure core_name is assigned here) ...
             has_juice_pattern = True
             prep_type = juice_match.group(1).lower()
             rest = juice_match.group(2).strip()
-
-            # Try to find the item name ("lemon", "orange")
             item_doc = nlp(rest)
             item_name = ""
-            for token in item_doc:
-                if token.pos_ in ['NOUN', 'PROPN']:
-                    item_name = token.lemma_  # Use lemma for singular form
-                    break
+            for token_j in item_doc: # Use different loop variable
+                if token_j.pos_ in ['NOUN', 'PROPN']: item_name = token_j.lemma_; break
+            if item_name: core_name = f"{item_name} {prep_type}"
+            # ... quantity/unit override for juice ...
+            if not quantity:
+                for token_j in item_doc:
+                    if token_j.like_num or token_j.text.lower() in WORD_NUMBERS:
+                        if token_j.like_num: quantity = token_j.text
+                        else: quantity = str(WORD_NUMBERS[token_j.text.lower()])
+                        break
+                if not quantity: quantity = "1"
+            if not unit: unit = item_name # Override unit only if not found earlier
 
-            if item_name:
-                # Correctly format as "lemon juice" instead of "juice lemon"
-                core_name = f"{item_name} {prep_type}"
-                # Quantity might be in rest, e.g., "2 lemons" - handled by initial parse?
-                # If quantity wasn't found initially, try to extract from the rest
-                if not quantity:
-                    # Look for numbers in the rest part
-                    for token in item_doc:
-                        if token.like_num or token.text.lower() in WORD_NUMBERS:
-                            if token.like_num:
-                                quantity = token.text
-                            else:
-                                quantity = str(WORD_NUMBERS[token.text.lower()])
-                            break
-                    # If still no quantity, default to 1
-                    if not quantity:
-                        quantity = "1"
-
-                # If unit wasn't found, use the item name as unit (e.g., "1 lemon")
-                if not unit:
-                    unit = item_name
-
-        # Only extract core name if we didn't handle a juice pattern
-        if not has_juice_pattern:
-            # Extract Core Name using the refined function
+        # Extract core name if not juice pattern
+        if not has_juice_pattern and name_part: # Ensure name_part is not empty
             core_name = extract_core_name_spacy(name_part)
+        elif not name_part:
+            core_name = "" # Ensure core_name is empty if name_part was empty
 
-        # 3. Handle special cases / Refinements
-        # Handle parentheses with quantity and unit info
-        paren_match = re.search(r'\((?:about|approx\.?|yields?)\s*([\d\s./]+)\s*(\w+)\s*\)', name_part, re.IGNORECASE)
+        print(f"DEBUG: Core name = '{core_name}' (from name_part = '{name_part}')") # <<< DEBUGGING LINE
 
-        # Prefer quantity/unit from parentheses if available and standard
+
+        # Handle Parentheses (Check suffix_removed string)
+        # Important: This could potentially overwrite the unit found by the loop!
+        paren_match = re.search(r'\((?:about|approx\.?|yields?|around)\s*([\d\s./]+)\s*(\w+)\s*\)', suffix_removed, re.IGNORECASE) # Added 'around'
         if paren_match:
+            print(f"DEBUG: Found parenthesis match: {paren_match.groups()}") # <<< DEBUGGING LINE
             paren_qty_str = paren_match.group(1).strip()
             paren_unit = paren_match.group(2).strip().lower()
             parsed_paren_qty = parse_fraction(paren_qty_str)
-
+            # Check if the unit found in parentheses is valid
             if parsed_paren_qty is not None and paren_unit in UNITS:
+                print(f"DEBUG: Overwriting quantity/unit from parentheses. Old unit='{unit}'") # <<< DEBUGGING LINE
                 paren_quantity = str(int(parsed_paren_qty)) if parsed_paren_qty == int(parsed_paren_qty) else f"{parsed_paren_qty:.2f}".rstrip('0').rstrip('.')
-                # Overwrite if parenthesis provides standard unit/qty
                 quantity = paren_quantity
-                unit = paren_unit
+                unit = paren_unit # <<< THIS IS A POTENTIAL OVERWRITE POINT
+                print(f"DEBUG: New quantity='{quantity}', New unit='{unit}'") # <<< DEBUGGING LINE
+            else:
+                print(f"DEBUG: Parenthesis unit '{paren_unit}' not in UNITS or quantity invalid.") # <<< DEBUGGING LINE
 
-        # Handle "salt and pepper to taste"
-        if "to taste" in name_part.lower() and not quantity:
-            core_name = extract_core_name_spacy(name_part.lower().replace("to taste", "").strip())
-            quantity = ""  # Explicitly empty
-            unit = ""
 
-        # --- Final Assembly ---
-        # Only add if a core name was identified
-        if core_name:
+        # Final Assembly
+        print(f"DEBUG: Final check before assembly: Qty='{quantity}', Unit='{unit}', Name='{core_name}'") # <<< DEBUGGING LINE
+        if core_name or (quantity and unit): # Add if core name OR both quantity and unit exist
             ingredient = {
-                "name": core_name.lower(),
-                "display_text": display_text,  # Use original line, lowercased
+                "name": core_name.lower() if core_name else "",
+                "display_text": display_text,
                 "quantity": quantity.strip(),
             }
-            # Add unit only if it exists
-            if unit:
+            # Add unit only if it exists and is not empty
+            if unit: # Check if unit has a non-empty value
                 ingredient["unit"] = unit.lower().strip()
 
             ingredients.append(ingredient)
-        elif line and not re.match(r'^\s*$', line):  # Log lines that didn't parse to anything useful
-            # Maybe add it with just display_text? Or log?
-            print(f"Skipping line - no core ingredient name found: '{line}' -> Name Part: '{name_part}' -> Core Name: '{core_name}'")
+            print(f"DEBUG: Appended ingredient: {ingredient}") # <<< DEBUGGING LINE
 
     return ingredients

@@ -110,8 +110,8 @@ FROM --platform=linux/amd64 node:22 AS frontend-final
 WORKDIR /app/frontend
 
 # Copy the necessary files for frontend
-COPY main/Frontend/package*.json ./
-COPY main/Frontend/ ./
+COPY main/frontend-svelte/package*.json ./
+COPY main/frontend-svelte/ ./
 
 # Install dependencies for serving the frontend
 RUN npm install
