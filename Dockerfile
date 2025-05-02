@@ -1,66 +1,50 @@
 # Stage 1: Build the Spring Boot application
-FROM mysql:8.0 AS mysql-with-backup
+FROM postgres AS postgres-with-backup
 
 COPY  ./backup.sql /docker-entrypoint-initdb.d/
 
 # Expose the MySQL port
-EXPOSE 3306
+EXPOSE 5432
 
-FROM --platform=linux/amd64 maven:3.8-openjdk-17 AS backend-builder
+FROM --platform=linux/amd64 gradle:7.6-jdk21 AS backend-builder
 
 # Install Maven
-WORKDIR /app/backend-spring
 
-# Copy pom.xml and source code for Spring Boot
+# Use a non-root user provided by the Gradle image
+USER gradle
+WORKDIR /home/gradle/project
 
-COPY main/backend-spring/libs /libs
+# Copy only Gradle wrapper and build scripts to cache dependencies
+COPY --chown=gradle:gradle main/backend-quarkus/gradlew .
+COPY --chown=gradle:gradle main/backend-quarkus/gradle/ gradle/
+COPY --chown=gradle:gradle main/backend-quarkus/settings.gradle.kts .
+COPY --chown=gradle:gradle main/backend-quarkus/build.gradle.kts .
 
-# Copy pom.xml and source code for Spring Boot
-COPY main/backend-spring ./
+# Pre-download dependencies
+RUN ./gradlew --no-daemon dependencies
 
-RUN mvn install:install-file \
-  -Dfile=/libs/algs4.jar \
-  -DgroupId=edu.princeton.cs \
-  -DartifactId=algs4 \
-  -Dversion=1.0 \
-  -Dpackaging=jar
+# Copy the rest of the source
+COPY --chown=gradle:gradle main/backend-quarkus/src ./src
 
-# Install dependencies and build the Spring Boot project
-RUN mvn clean package -DskipTests
+# Build the Quarkus "legacy jar" layout (quarkus-app/)
+RUN ./gradlew --no-daemon clean build -x test
+# ----------------------------------
+# Stage 2: Run on a minimal JVM image
+# ----------------------------------
+FROM registry.access.redhat.com/ubi8/openjdk-17-runtime:latest
 
+WORKDIR /work/
 
-# Set environment variables for Spring Boot
-#ENV SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/automation
-ENV SPRING_DATASOURCE_USERNAME=root
-ENV SPRING_DATASOURCE_PASSWORD=LexLuthern246!!??
-ENV SERVER_PORT=8081
+# Copy the Quarkus application artifacts
+COPY --from=build /home/gradle/project/build/quarkus-app/lib/ lib/
+COPY --from=build /home/gradle/project/build/quarkus-app/*.jar ./
+COPY --from=build /home/gradle/project/build/quarkus-app/app/ app/
 
-# Start the Spring Boot application
+# Expose the port your Javalin app uses
+EXPOSE 8081
 
-# Stage 2: Use CMD for starting the Spring Boot application
-# Stage 2: Use CMD for starting the Spring Boot application
-
-# CMD with ALL required --add-opens arguments
-CMD ["java", \
-     "--add-opens=java.base/java.lang=ALL-UNNAMED", \
-     "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", \
-     "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", \
-     "--add-opens=java.base/java.io=ALL-UNNAMED", \
-     "--add-opens=java.base/java.net=ALL-UNNAMED", \
-     "--add-opens=java.base/java.nio=ALL-UNNAMED", \
-     "--add-opens=java.base/java.util=ALL-UNNAMED", \
-     "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED", \
-     # Exports might not strictly be needed but were in your POM, safer to include
-     "--add-exports=java.base/java.util.concurrent.atomic=ALL-UNNAMED", \
-     "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED", \
-     "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED", \
-     "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", \
-     "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED", \
-     "--add-opens=java.base/sun.security.action=ALL-UNNAMED", \
-     "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED", \
-     "-jar", \
-     "target/backend-spring-0.0.1-SNAPSHOT.jar"]
-
+# Run in JVM mode
+CMD ["java", "-jar", "quarkus-run.jar"]
 #FROM node:16 AS frontend-builder
 #WORKDIR /app/frontend
 #
@@ -72,14 +56,14 @@ CMD ["java", \
 #COPY main/Frontend/ ./
 #RUN npm run build
 
-FROM --platform=linux/amd64 python:3.12 as api-builder
-
+FROM --platform=linux/amd64 python3.12 as api-builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Set working directory
 WORKDIR /app
-
+RUN uv pip install spacy
 # Copy requirements and install dependencies
-COPY main/python/requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+#COPY main/python/requirements.txt .
+RUN #pip install --upgrade pip && pip install -r requirements.txt
 RUN python -m spacy download en_core_web_sm
 
 
@@ -96,7 +80,7 @@ ENV PORT=8082
 EXPOSE 8082
 
 # Run the application (removed the WORKDIR app command)
-CMD ["python", "xtractServer.py"]
+CMD ["uv","run", "xtractServer.py"]
 
 #WORKDIR app
 # Stage 4: Final image for Spring Boot service

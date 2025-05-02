@@ -1,26 +1,24 @@
 services:
-  spring-backend:
+  backend-quarkus:
     #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
-    image: spring-backend:latest
+    image: backend-quarkus:latest
     build:
       context: .
       dockerfile: Dockerfile
       target: backend-builder
-    container_name: spring-backend
+    container_name: backend-quarkus
     platform: linux/amd64
     ports:
       - "8081:8081"
     environment:
-      - DB_HOST=mysql-db
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/automation
+      - DB_HOST=postgres-db
+      - SPRING_DATASOURCE_URL=jdbc:postgres://postgres-db:5432/automation
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=LexLuthern246!!??
       - SERVER_PORT=8081
     depends_on:
-      - mysql-db
+      - postgres-db
     restart: always
-    volumes:
-      - ./main/backend-spring/src/main/resources/static/automation_recipes.csv:/main/backend-spring/src/main/resources/static/automation_recipes.csv
     networks:
       - app-network
 
@@ -34,7 +32,7 @@ services:
     container_name: svelte-frontend
     platform: linux/amd64
     depends_on:
-      - spring-backend
+      - backend-quarkus
     environment:
       - NODE_ENV=production
     ports:
@@ -61,19 +59,19 @@ services:
     restart: always
     networks:
       - app-network
-  mysql-db:
-    image: mysql-db:latest
+  postgres-db:
+    image: postgres-db:latest
     build:
       context: .
       dockerfile: Dockerfile
-      target: mysql-with-backup
-    container_name: mysql-db
+      target: postgres-with-backup
+    container_name: postgres-db
     environment:
       MYSQL_ROOT_PASSWORD: LexLuthern246!!??
       MYSQL_DATABASE: automation
 
     ports:
-      - "3307:3306"
+      - "5432:5432"
     #    volumes:
     #      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
     #      - mysql_data:/var/lib/mysql
