@@ -1,0 +1,265 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spring-backend
+  template:
+    metadata:
+      labels:
+        app: spring-backend
+    spec:
+      imagePullSecrets:
+        - name: my-registry-secret
+      containers:
+        - name: spring-backend
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
+          ports:
+            - containerPort: 8081
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "512Mi"
+            limits:
+              cpu: "300m"
+              memory: "1Gi"
+          env:
+            - name: DB_HOST
+              value: mysql-db.default.svc.cluster.local
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-db:3306/automation
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
+            - name: SERVER_PORT
+              value: "8081"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-backend
+spec:
+  selector:
+    app: spring-backend
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-backend
+  template:
+    metadata:
+      labels:
+        app: flask-backend
+    spec:
+      imagePullSecrets:
+        - name: my-registry-secret
+      containers:
+        - name: flask-backend
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/flask-backend:latest
+          # image: peppap1g/spring-backend:latest
+          ports:
+            - containerPort: 8082
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "256Mi"
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: instacart-creds # Name of the Secret created above
+                  key: api-key
+
+
+      restartPolicy: Always
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-backend
+spec:
+  selector:
+    app: flask-backend
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8082
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: svelte-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: svelte-frontend
+  template:
+    metadata:
+      labels:
+        app: svelte-frontend
+    spec:
+      imagePullSecrets:
+        - name: my-registry-secret
+      containers:
+        - name: svelte-frontend
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: NODE_ENV
+              value: production
+          command: ["npm", "run", "preview"]
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svelte-frontend
+spec:
+  selector:
+    app: svelte-frontend
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-db
+  template:
+    metadata:
+      labels:
+        app: mysql-db
+    spec:
+      imagePullSecrets:
+        - name: my-registry-secret
+      containers:
+        - name: mysql-db
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/mysql-db:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
+            - name: MYSQL_DATABASE
+              value: automation
+      volumes:
+        - name: backup-volume
+          persistentVolumeClaim:
+            claimName: backup-file-pvc
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+type: Opaque
+stringData:
+  username: root
+  password: LexLuthern246!!??
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-file-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-db
+spec:
+  selector:
+    app: mysql-db
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: workout-app-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: workout-app-static-ip
+    networking.gke.io/managed-certificates: workout-app-cert
+spec:
+  rules:
+    - host: gainztrackers.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: svelte-frontend
+                port:
+                  number: 80
+    - host: www.gainztrackers.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: svelte-frontend
+                port:
+                  number: 80
