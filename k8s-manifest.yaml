@@ -1,18 +1,4 @@
 
-# PVC for the initialization script (e.g., backup.sql)
-#apiVersion: v1
-#kind: PersistentVolumeClaim
-#metadata:
-#  name: postgres-init-script-pvc
-#  # The name the Deployment expects
-#spec:
-#  accessModes:
-#    - ReadWriteOnce # Or ReadOnlyMany if multiple pods might read it, but RWO is fine here.
-#  resources:
-#    requests:
-#      storage: 10Mi # Small size, just enough for the script(s).
-#  # storageClassName: <your-storage-class> # Optional: Specify if needed.
-#---
 apiVersion: v1
 kind: Secret
 metadata:
@@ -37,8 +23,8 @@ spec:
         app: backend-quarkus # Updated label
     spec:
       # If your image is private, add imagePullSecrets here
-#      imagePullSecrets:
-#         - name: my-registry-secret
+      imagePullSecrets:
+         - name: my-registry-secret
       containers:
         - name: backend-quarkus # Renamed container
           # --- IMPORTANT: Update this image path ---
@@ -107,8 +93,8 @@ spec:
       labels:
         app: flask-backend
     spec:
-#      imagePullSecrets:
-#        - name: my-registry-secret
+      imagePullSecrets:
+        - name: my-registry-secret
       containers:
         - name: flask-backend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/flask-backend:latest
@@ -165,8 +151,8 @@ spec:
       labels:
         app: svelte-frontend
     spec:
-#      imagePullSecrets:
-#        - name: my-registry-secret
+      imagePullSecrets:
+        - name: my-registry-secret
       containers:
         - name: svelte-frontend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
@@ -186,32 +172,32 @@ spec:
           env:
             - name: NODE_ENV
               value: production
-            - name: VITE_FIREBASE_API_KEY
+            - name: FIREBASE_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_API_KEY
-            - name: VITE_FIREBASE_AUTH_DOMAIN
+            - name: FIREBASE_AUTH_DOMAIN
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_AUTH_DOMAIN
-            - name: VITE_FIREBASE_PROJECT_ID
+            - name: FIREBASE_PROJECT_ID
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_PROJECT_ID
-            - name: VITE_FIREBASE_STORAGE_BUCKET
+            - name: FIREBASE_STORAGE_BUCKET
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_STORAGE_BUCKET
-            - name: VITE_FIREBASE_MESSAGING_SENDER_ID
+            - name: FIREBASE_MESSAGING_SENDER_ID
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_MESSAGING_SENDER_ID
-            - name: VITE_FIREBASE_APP_ID
+            - name: FIREBASE_APP_ID
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
@@ -231,62 +217,7 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8080
-#---
-#apiVersion: apps/v1
-#kind: Deployment
-#metadata:
-#  name: mysql-db
-#spec:
-#  replicas: 1
-#  selector:
-#    matchLabels:
-#      app: mysql-db
-#  template:
-#    metadata:
-#      labels:
-#        app: mysql-db
-#    spec:
-#      imagePullSecrets:
-#        - name: my-registry-secret
-#      containers:
-#        - name: mysql-db
-#          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/mysql-db:latest
-#          imagePullPolicy: Always
-#          resources:
-#            requests:
-#              cpu: "200m"
-#              memory: "512Mi"
-#            limits:
-#              cpu: "500m"
-#              memory: "1Gi"
-#          ports:
-#            - containerPort: 3306
-#          env:
-#            - name: MYSQL_ROOT_PASSWORD
-#              valueFrom:
-#                secretKeyRef:
-#                  name: db-credentials
-#                  key: password
-#            - name: MYSQL_DATABASE
-#              value: automation
-#      volumes:
-#        - name: backup-volume
-#          persistentVolumeClaim:
-#            claimName: backup-file-pvc
-#      restartPolicy: Always
-#---
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: mysql-db
-#spec:
-#  selector:
-#    app: mysql-db
-#  ports:
-#    - protocol: TCP
-#      port: 3306
-#      targetPort: 3306
-#
+
 ---
 # MODIFIED: PostgreSQL Deployment (was mysql-db)
 apiVersion: apps/v1
