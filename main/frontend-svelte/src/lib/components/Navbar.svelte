@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { auth } from '../firebase/config'; // Adjust path as needed
+    import { clientAuth } from '../firebase/firebase.client.js'; // Adjust path as needed
     import {
         signInWithEmailAndPassword,
         createUserWithEmailAndPassword,
@@ -12,8 +12,8 @@
     } from 'firebase/auth';
     import { doc, setDoc, getDoc, Timestamp,getFirestore } from 'firebase/firestore';
 
-    import app from "../firebase/config";
-    const db = getFirestore(app,'docs');// Initialize FingerprintJS
+    import {clientApp} from "$lib/firebase/firebase.client.js";
+    const db = getFirestore(clientApp,'docs');// Initialize FingerprintJS
     // Props
     export let name = "";
 
