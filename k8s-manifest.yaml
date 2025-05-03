@@ -162,8 +162,8 @@ spec:
 #          imagePullPolicy: Always
           resources:
             requests:
-              cpu: "20m"
-              memory: "6Mi"
+              cpu: "50m"
+              memory: "100Mi"
             limits:
               cpu: "100m"
               memory: "256Mi"
@@ -172,36 +172,7 @@ spec:
           env:
             - name: NODE_ENV
               value: production
-            - name: VITE_FIREBASE_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: firebase-config
-                  key: VITE_FIREBASE_API_KEY
-            - name: VITE_FIREBASE_AUTH_DOMAIN
-              valueFrom:
-                secretKeyRef:
-                  name: firebase-config
-                  key: VITE_FIREBASE_AUTH_DOMAIN
-            - name: VITE_FIREBASE_PROJECT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: firebase-config
-                  key: VITE_FIREBASE_PROJECT_ID
-            - name: VITE_FIREBASE_STORAGE_BUCKET
-              valueFrom:
-                secretKeyRef:
-                  name: firebase-config
-                  key: VITE_FIREBASE_STORAGE_BUCKET
-            - name: VITE_FIREBASE_MESSAGING_SENDER_ID
-              valueFrom:
-                secretKeyRef:
-                  name: firebase-config
-                  key: VITE_FIREBASE_MESSAGING_SENDER_ID
-            - name: VITE_FIREBASE_APP_ID
-              valueFrom:
-                secretKeyRef:
-                  name: firebase-config
-                  key: VITE_FIREBASE_APP_ID
+
 #          command: ["npm", "run", "preview"]
       restartPolicy: Always
 ---
