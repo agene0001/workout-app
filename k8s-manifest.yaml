@@ -50,11 +50,11 @@ spec:
             - containerPort: 8081 # Same port as before
           resources: # Kept resources, adjust if needed for Quarkus
             requests:
-              cpu: "200m"
-              memory: "1Gi"
+              cpu: "50m"
+              memory: "256Mi"
             limits:
-              cpu: "500m" # Slightly increase CPU limit if needed
-              memory: "2Gi" # Increase memory limit (e.g., to 2 Gigabytes)
+              cpu: "200m" # Slightly increase CPU limit if needed
+              memory: "512Mi" # Increase memory limit (e.g., to 2 Gigabytes)
 
           env:
             # MODIFIED: Point to PostgreSQL service name
@@ -119,11 +119,11 @@ spec:
             - containerPort: 8082
           resources:
             requests:
-              cpu: "100m"   # Increase CPU request slightly
+              cpu: "50m"   # Increase CPU request slightly
               memory: "512Mi" # Increase memory request significantly (e.g., 512 MiB)
 
             limits:
-              cpu: "500m"   # Increase CPU limit
+              cpu: "200m"   # Increase CPU limit
               memory: "1Gi" # Increase memory limit significantly (e.g., 1 GiB)
 
           env:
@@ -176,8 +176,8 @@ spec:
 #          imagePullPolicy: Always
           resources:
             requests:
-              cpu: "50m"
-              memory: "128Mi"
+              cpu: "20m"
+              memory: "6Mi"
             limits:
               cpu: "100m"
               memory: "256Mi"
@@ -186,6 +186,36 @@ spec:
           env:
             - name: NODE_ENV
               value: production
+            - name: FIREBASE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-config
+                  key: api-key
+            - name: FIREBASE_AUTH_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-config
+                  key: auth-domain
+            - name: FIREBASE_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-config
+                  key: project-id
+            - name: FIREBASE_STORAGE_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-config
+                  key: storage-bucket
+            - name: FIREBASE_MESSAGING_SENDER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-config
+                  key: messaging-sender-id
+            - name: FIREBASE_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-config
+                  key: app-id
           command: ["npm", "run", "preview"]
       restartPolicy: Always
 ---
@@ -285,10 +315,10 @@ spec:
           imagePullPolicy: Always
           resources: # Kept resources, adjust if needed for PostgreSQL
             requests:
-              cpu: "200m"
-              memory: "512Mi"
+              cpu: "50m"
+              memory: "256Mi"
             limits:
-              cpu: "500m"
+              cpu: "150m"
               memory: "1Gi"
           ports:
             - containerPort: 5432 # PostgreSQL default port
