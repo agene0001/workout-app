@@ -102,22 +102,27 @@ CMD ["uv", "run", "gunicorn", "--workers", "4", "--bind", "0.0.0.0:8082", "xtrac
 
 
 # Stage 5: Serving the React app using npm start
-FROM node:22 AS frontend-final
-WORKDIR /app/frontend
-
-# Copy the necessary files for frontend
-COPY main/frontend-svelte/package*.json ./
+FROM node:22 AS builder
+WORKDIR /app
+COPY main/frontend-svelte/package.json main/frontend-svelte/package-lock.json ./
+RUN npm ci
 COPY main/frontend-svelte/ ./
-
-# Install dependencies for serving the frontend
-RUN npm install
+# This build uses adapter-node and creates the 'build' dir
 RUN npm run build
+# Optional: Verify build output
+RUN ls -la /app/build
 
-# Expose the port for the frontend
+# ---- Stage 2: Production Stage ----
+FROM node:22-slim AS frontend-final
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/package.json /app/package-lock.json ./
+RUN npm ci --omit=dev
+# Copy the built server code
+COPY --from=builder /app/build ./build
 EXPOSE 8080
-
-# Use npm start to serve the React app
-CMD ["npm","run", "preview"]
+# Command to run the actual Node.js server
+CMD [ "node", "build/index.js" ]
 
 
 # Stage 6: Final image for Python API service
