@@ -7,7 +7,7 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.PROJECT_ID }}
-  GKE_CLUSTER: react-cluster
+  GKE_CLUSTER: svelte-cluster
   GKE_ZONE: us-central1-a
   IMAGE_FRONTEND: svelte-frontend
   IMAGE_QUARKUS: backend-quarkus
