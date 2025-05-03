@@ -3,7 +3,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 // Import PUBLIC variables - these MUST start with VITE_ and be set at BUILD time
-const env = import.meta.env;
+const env = import.meta.env.VITE_FIREBASE_API_KEY!=null ? import.meta.env : process.env;
 
 const firebaseConfigClient = {
     apiKey: env.VITE_FIREBASE_API_KEY,
