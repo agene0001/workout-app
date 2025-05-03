@@ -3,6 +3,6 @@
 node_modules
 *.env
 service-account-key.json
-backup.sql
+#backup.sql
 dist
 *uv.lock
