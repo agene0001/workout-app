@@ -30,11 +30,10 @@ Although integration with services like Amazon Fresh or Instacart is not yet fin
 
 ### Requirements
 
-- Java 17
-- Node.js
+- Java 21
+- Svelte
 - Python 3.12+
 - Docker (optional)
-- Spark (for backend vector processing)
 
 ### Quickstart
 
@@ -57,11 +56,6 @@ Search for recipes, get recommendations based on ingredients, or chat with the A
 
 Example:
 
-```bash
-# Run the recommender manually
-cd main/backend-spring
-mvn spring-boot:run
-```
 
 ---
 
