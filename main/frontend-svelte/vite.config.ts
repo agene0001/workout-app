@@ -12,7 +12,7 @@ const protocol = "http";
 // Use the function form of defineConfig
 export default defineConfig(({ command, mode }) => {
   // Load .env files based on the mode
-  loadEnv(mode, process.cwd(), ''); // Load all env vars without VITE_ prefix
+  const env = loadEnv(mode, process.cwd(), ''); // Load all env vars without VITE_ prefix
 
   // Determine if we're in production based on Vite's mode
   const isProduction = mode === 'production';
@@ -25,13 +25,12 @@ export default defineConfig(({ command, mode }) => {
   console.log(`[vite.config.ts] Running command: ${command}, mode: ${mode}`);
 
   // Create client environment variables if needed
-  const clientEnv = {};
 
   return {
     plugins: [tailwindcss(), sveltekit()],
     
     // Define variables to be exposed to client-side code
-    define: clientEnv,
+    define: env,
 
     // Development server configuration
     server: {
