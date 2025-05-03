@@ -172,32 +172,32 @@ spec:
           env:
             - name: NODE_ENV
               value: production
-            - name: PUBLIC_FIREBASE_API_KEY
+            - name: FIREBASE_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_API_KEY
-            - name: PUBLIC_FIREBASE_AUTH_DOMAIN
+            - name: FIREBASE_AUTH_DOMAIN
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_AUTH_DOMAIN
-            - name: PUBLIC_FIREBASE_PROJECT_ID
+            - name: FIREBASE_PROJECT_ID
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_PROJECT_ID
-            - name: PUBLIC_FIREBASE_STORAGE_BUCKET
+            - name: FIREBASE_STORAGE_BUCKET
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_STORAGE_BUCKET
-            - name: PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+            - name: FIREBASE_MESSAGING_SENDER_ID
               valueFrom:
                 secretKeyRef:
                   name: firebase-config
                   key: VITE_FIREBASE_MESSAGING_SENDER_ID
-            - name: PUBLIC_FIREBASE_APP_ID
+            - name: FIREBASE_APP_ID
               valueFrom:
                 secretKeyRef:
                   name: firebase-config

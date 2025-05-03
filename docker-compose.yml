@@ -38,7 +38,7 @@ services:
       - NODE_ENV=production
     ports:
       - "8080:8080"
-    command: ["npm", "run", "preview"]
+#    command: ["node", ".svelte-kit/output/server/index.js"]
     restart: always
     networks:
       - app-network
