@@ -36,11 +36,13 @@ public class RecipeRepository implements PanacheRepository<Recipe> {
     }
     
     // Find recipes by category name
-    public List<Recipe> findRecipesByCategoryName(String categoryName) {
+    public List<Recipe> findRecipesByCategoryName(String categoryName,Integer offset,Integer limit) {
         return getEntityManager().createNativeQuery(
             "SELECT r.* FROM recipes r JOIN recipes_categories rc ON r.id = rc.recipeid " +
-            "JOIN categories c ON rc.catid = c.id WHERE LOWER(c.name) = :categoryName limit 10", Recipe.class)
+            "JOIN categories c ON rc.catid = c.id WHERE LOWER(c.name) = :categoryName ORDER BY r.id ASC limit :limit OFFSET :offset", Recipe.class)
             .setParameter("categoryName", categoryName.toLowerCase())
+            .setParameter("offset", offset*limit)
+            .setParameter("limit", limit)
             .getResultList();
     }
 }

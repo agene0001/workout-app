@@ -31,7 +31,7 @@ def process_recipe(ingredients_list, instructions, title, image_url=""):
     }
     print(payload)
     # Get API key from environment
-    api_key = os.getenv("API_KEY")
+    api_key = os.getenv("INSTACART_API_KEY")
 
     # Debug log (remove in production)
 

@@ -1,3 +1,4 @@
+
 plugins {
     id 'java'
     id 'io.quarkus'
@@ -14,6 +15,7 @@ def quarkusPlatformArtifactId = project.property("quarkusPlatformArtifactId")
 def quarkusPlatformVersion = project.property("quarkusPlatformVersion")
 
 dependencies {
+    implementation 'io.quarkus:quarkus-container-image-docker'
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
     implementation 'io.quarkus:quarkus-rest'
     implementation 'io.quarkus:quarkus-arc'

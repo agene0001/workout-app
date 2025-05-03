@@ -136,51 +136,104 @@
     let categoryRecipes = [];
     let isLoadingCategory = false;
     let activeTab = 'popular'; // 'popular' or 'recent'
+    let isLoadingMore = false; // Loading state for "Show More"
+    let currentPage = 0; // Track the current page for the selected category
+    const pageSize = 6; // Number of recipes to fetch per page
+    let hasMoreRecipes = false; // Flag to check if more recipes might exist
 
     // Function to fetch recipes by category
-    async function fetchRecipesByCategory(category) {
+    async function fetchInitialRecipesByCategory(category) {
         isLoadingCategory = true;
         selectedCategory = category;
+        categoryRecipes = []; // Reset recipes when category changes
+        currentPage = 0; // Reset page number
+        hasMoreRecipes = false; // Reset flag
 
         try {
-            // In a real implementation, this would call your API with the category
-            // For now, we'll simulate a delay and return dummy data
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // This would be replaced with your actual API call
-            const response = await axios.get(`/api/v1/recipes/category/${encodeURIComponent(category.name.toLowerCase())}`);
-
-            // This is just a fallback in case the API call fails or returns no data
-            categoryRecipes = response.data || [
-                {
-                    name: `${category.name} Recipe 1`,
-                    duration: '30 mins',
-                    rating: '4.7',
-                    description: `A delicious ${category.name.toLowerCase()} recipe that's quick to make.`,
-                    image: '/api/placeholder/400/300'
-                },
-                {
-                    name: `${category.name} Recipe 2`,
-                    duration: '45 mins',
-                    rating: '4.5',
-                    description: `Perfect ${category.name.toLowerCase()} for any occasion.`,
-                    image: '/api/placeholder/400/300'
-                },
-                {
-                    name: `${category.name} Recipe 3`,
-                    duration: '25 mins',
-                    rating: '4.8',
-                    description: `Everyone's favorite ${category.name.toLowerCase()} recipe.`,
-                    image: '/api/placeholder/400/300'
-                }
-            ];
+            const response = await axios.get(
+                `/api/v1/recipes/category/${encodeURIComponent(category.name.toLowerCase())}?page=${currentPage}&pageSize=${pageSize}`
+            );
+            categoryRecipes = response.data || [];
+            // Assume more recipes exist if we received a full page
+            hasMoreRecipes = response.data && response.data.length === pageSize;
         } catch (err) {
-            console.error(`Error fetching ${category.name} recipes:`, err);
+            console.error(`Error fetching initial ${category.name} recipes:`, err);
             categoryRecipes = [];
+            hasMoreRecipes = false;
         } finally {
             isLoadingCategory = false;
         }
     }
+
+    // Function to fetch the NEXT page of recipes
+    async function fetchMoreRecipes() {
+        if (isLoadingMore || !selectedCategory || !hasMoreRecipes) return; // Prevent multiple loads or loading when done
+
+        isLoadingMore = true;
+        currentPage++; // Go to the next page
+
+        try {
+            const response = await axios.get(
+                `/api/v1/recipes/category/${encodeURIComponent(selectedCategory.name.toLowerCase())}?page=${currentPage}&pageSize=${pageSize}`
+            );
+            const newRecipes = response.data || [];
+            console.log("New recipes:", newRecipes);
+            console.log("Current recipes:", categoryRecipes);
+            categoryRecipes = [...categoryRecipes, ...newRecipes]; // Append new recipes
+            // Update flag based on the new response
+            hasMoreRecipes = newRecipes.length === pageSize;
+        } catch (err) {
+            console.error(`Error fetching more ${selectedCategory.name} recipes:`, err);
+            // Optionally revert page number or handle error state
+            currentPage--;
+        } finally {
+            isLoadingMore = false;
+        }
+    }
+
+    // async function fetchRecipesByCategory(category) {
+    //     isLoadingCategory = true;
+    //     selectedCategory = category;
+    //
+    //     try {
+    //         // In a real implementation, this would call your API with the category
+    //         // For now, we'll simulate a delay and return dummy data
+    //         await new Promise(resolve => setTimeout(resolve, 500));
+    //
+    //         // This would be replaced with your actual API call
+    //         const response = await axios.get(`/api/v1/recipes/category/${encodeURIComponent(category.name.toLowerCase())}`);
+    //
+    //         // This is just a fallback in case the API call fails or returns no data
+    //         categoryRecipes = response.data || [
+    //             {
+    //                 name: `${category.name} Recipe 1`,
+    //                 duration: '30 mins',
+    //                 rating: '4.7',
+    //                 description: `A delicious ${category.name.toLowerCase()} recipe that's quick to make.`,
+    //                 image: '/api/placeholder/400/300'
+    //             },
+    //             {
+    //                 name: `${category.name} Recipe 2`,
+    //                 duration: '45 mins',
+    //                 rating: '4.5',
+    //                 description: `Perfect ${category.name.toLowerCase()} for any occasion.`,
+    //                 image: '/api/placeholder/400/300'
+    //             },
+    //             {
+    //                 name: `${category.name} Recipe 3`,
+    //                 duration: '25 mins',
+    //                 rating: '4.8',
+    //                 description: `Everyone's favorite ${category.name.toLowerCase()} recipe.`,
+    //                 image: '/api/placeholder/400/300'
+    //             }
+    //         ];
+    //     } catch (err) {
+    //         console.error(`Error fetching ${category.name} recipes:`, err);
+    //         categoryRecipes = [];
+    //     } finally {
+    //         isLoadingCategory = false;
+    //     }
+    // }
 
     function changeTab(tab) {
         activeTab = tab;
@@ -300,6 +353,8 @@
                             }}
                                 on:click={(ele) => {
                                 querySearch = ele.target.innerText
+
+                                searchRecipe()
                             }}
                                 class='px-4 py-2 cursor-pointer'>
                             {toTitleCase(val.query)}
@@ -352,7 +407,8 @@
         </div>
     {/if}
 </div>
-<!-- Tasty-inspired Category Browse Section -->
+
+<!-- Spotify-inspired Category Browse Section -->
 <section class="category-browse py-16 ">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
@@ -370,24 +426,18 @@
                         style="border: 2px solid {category.color};"
                         on:mouseenter={(e) => handleCategoryHover(e, true)}
                         on:mouseleave={(e) => handleCategoryHover(e, false)}
-                        on:click={() => fetchRecipesByCategory(category)}
-                >
-                    <div class="relative h-40">
-                        <!--                        <img-->
-                        <!--                                src={category.image}-->
-                        <!--                                alt={category.name}-->
-                        <!--                                class="w-full h-full object-cover"-->
-                        <!--                        />-->
-                        <div
-                                class="absolute inset-0 flex items-center justify-center"
-                                style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6));"
-                        >
-                            <div class="text-center">
-                                <span class="text-4xl">{category.icon}</span>
-                                <h3 class="text-white font-orbital font-bold text-2xl mt-2">{category.name}</h3>
-                            </div>
+                        on:click={() => fetchInitialRecipesByCategory(category)}>
+                <div class="relative h-40">
+                    <div
+                            class="absolute inset-0 flex items-center justify-center"
+                            style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6));"
+                    >
+                        <div class="text-center">
+                            <span class="text-4xl">{category.icon}</span>
+                            <h3 class="text-white font-orbital font-bold text-2xl mt-2">{category.name}</h3>
                         </div>
                     </div>
+                </div>
                 </div>
             {/each}
         </div>
@@ -403,35 +453,58 @@
                     <span class="mr-2">{selectedCategory.icon}</span>
                     {selectedCategory.name} Recipes
                 </h2>
-
-
+                <!-- Optional: Add sorting/filtering controls here -->
             </div>
 
             {#if isLoadingCategory}
+                <!-- Initial Loading Spinner -->
                 <div class="flex justify-center py-12">
                     <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary"></div>
                 </div>
             {:else if categoryRecipes.length === 0}
+                <!-- No Recipes Found Message -->
                 <div class="text-center py-12">
                     <p class="text-gray-500 text-lg">No recipes found for this category.</p>
                 </div>
             {:else}
-                <!-- Recipe Cards in Tasty.co Style -->
+                <!-- Recipe Cards Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {#each categoryRecipes as recipe}
+                    {#each categoryRecipes as recipe (recipe.id || recipe.name)}
                         <InfoBlock
                                 title={recipe.name}
                                 headingClass="text-gray-800 text-2xl text-center font-orbital font-bold"
                                 text={[
-
-                        recipe.rating ?  `⭐ ${recipe.rating}` : "",
-                    ]}
+                                    recipe.rating ? `⭐ ${recipe.rating}` : "",
+                                ]}
                                 recipe={recipe}
                                 fadeInAnimation="fadeIn"
                                 bg="bg-[#3E92CC]"
                                 expandable={true}
                         />
                     {/each}
+                </div>
+
+                <!-- Show More Button Area -->
+                <div class="text-center mt-12">
+                    {#if isLoadingMore}
+                        <!-- Loading More Spinner -->
+                        <div class="flex justify-center py-4">
+                            <div class="animate-spin rounded-full h-10 w-10 border-t-4 border-b-4 border-primary"></div>
+                        </div>
+                    {:else if hasMoreRecipes}
+                        <!-- Show More Button -->
+                        <button
+                                on:click={fetchMoreRecipes}
+                                class="bg-danger  text-white font-bold py-3 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 shadow-md"
+                                disabled={isLoadingMore}
+                        >
+                            Show More Recipes
+                        </button>
+                    {/if}
+                    {#if !isLoadingMore && !hasMoreRecipes && categoryRecipes.length > 0}
+                        <!-- Optional: Message when all recipes are loaded -->
+                        <p class="text-gray-500 mt-4">You've reached the end!</p>
+                    {/if}
                 </div>
             {/if}
         </div>

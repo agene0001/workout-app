@@ -1,57 +1,93 @@
+
+# PVC for the initialization script (e.g., backup.sql)
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: postgres-init-script-pvc
+#  # The name the Deployment expects
+#spec:
+#  accessModes:
+#    - ReadWriteOnce # Or ReadOnlyMany if multiple pods might read it, but RWO is fine here.
+#  resources:
+#    requests:
+#      storage: 10Mi # Small size, just enough for the script(s).
+#  # storageClassName: <your-storage-class> # Optional: Specify if needed.
+#---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-creds
+type: Opaque
+stringData:
+  username: postgres
+  password: LexLuthern246!!??
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: spring-backend
+  name: backend-quarkus # Renamed from spring-backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: spring-backend
+      app: backend-quarkus # Updated label
   template:
     metadata:
       labels:
-        app: spring-backend
+        app: backend-quarkus # Updated label
     spec:
-      imagePullSecrets:
-        - name: my-registry-secret
+      # If your image is private, add imagePullSecrets here
+#      imagePullSecrets:
+#         - name: my-registry-secret
       containers:
-        - name: spring-backend
-          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
+        - name: backend-quarkus # Renamed container
+          # --- IMPORTANT: Update this image path ---
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/backend-quarkus:latest # Replace with your Quarkus image
+#          image: peppap1g/backend-quarkus:latest # Keep your image name, Kubernetes will look for it locally now
+          imagePullPolicy: IfNotPresent # Or Never
+
           ports:
-            - containerPort: 8081
-          resources:
+            - containerPort: 8081 # Same port as before
+          resources: # Kept resources, adjust if needed for Quarkus
             requests:
-              cpu: "100m"
-              memory: "512Mi"
-            limits:
-              cpu: "300m"
+              cpu: "200m"
               memory: "1Gi"
+            limits:
+              cpu: "500m" # Slightly increase CPU limit if needed
+              memory: "2Gi" # Increase memory limit (e.g., to 2 Gigabytes)
+
           env:
+            # MODIFIED: Point to PostgreSQL service name
             - name: DB_HOST
-              value: mysql-db.default.svc.cluster.local
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql-db:3306/automation
-            - name: SPRING_DATASOURCE_USERNAME
+              value: postgres-db # Use the PostgreSQL Service name
+            # MODIFIED: Quarkus standard JDBC URL property
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: jdbc:postgresql://postgres-db:5432/automation # Full JDBC URL for PostgreSQL
+            # MODIFIED: Use new secret for postgres credentials
+            - name: QUARKUS_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: db-creds # Use the new Secret name
                   key: username
-            - name: SPRING_DATASOURCE_PASSWORD
+            # MODIFIED: Use new secret for postgres credentials
+            - name: QUARKUS_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: db-creds # Use the new Secret name
                   key: password
-            - name: SERVER_PORT
+            # Optional: Quarkus usually defaults to 8080, but docker-compose specifies 8081
+            - name: QUARKUS_HTTP_PORT # Standard Quarkus property for port
               value: "8081"
       restartPolicy: Always
 ---
+# MODIFIED: Quarkus Backend Service (was spring-backend)
 apiVersion: v1
 kind: Service
 metadata:
-  name: spring-backend
+  name: backend-quarkus # Renamed from spring-backend
 spec:
   selector:
-    app: spring-backend
+    app: backend-quarkus # Updated selector
   ports:
     - protocol: TCP
       port: 8081
@@ -71,21 +107,25 @@ spec:
       labels:
         app: flask-backend
     spec:
-      imagePullSecrets:
-        - name: my-registry-secret
+#      imagePullSecrets:
+#        - name: my-registry-secret
       containers:
         - name: flask-backend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/flask-backend:latest
-          # image: peppap1g/spring-backend:latest
+#          image: peppap1g/flask-backend:latest # Keep your image name, Kubernetes will look for it locally now
+          imagePullPolicy: IfNotPresent # Or Never
+
           ports:
             - containerPort: 8082
           resources:
             requests:
-              cpu: "50m"
-              memory: "128Mi"
+              cpu: "100m"   # Increase CPU request slightly
+              memory: "512Mi" # Increase memory request significantly (e.g., 512 MiB)
+
             limits:
-              cpu: "100m"
-              memory: "256Mi"
+              cpu: "500m"   # Increase CPU limit
+              memory: "1Gi" # Increase memory limit significantly (e.g., 1 GiB)
+
           env:
             - name: NODE_ENV
               value: production
@@ -125,12 +165,15 @@ spec:
       labels:
         app: svelte-frontend
     spec:
-      imagePullSecrets:
-        - name: my-registry-secret
+#      imagePullSecrets:
+#        - name: my-registry-secret
       containers:
         - name: svelte-frontend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
-          imagePullPolicy: Always
+#          image: peppap1g/svelte-frontend:latest # Keep your image name, Kubernetes will look for it locally now
+          imagePullPolicy: IfNotPresent # Or Never
+
+#          imagePullPolicy: Always
           resources:
             requests:
               cpu: "50m"
@@ -158,28 +201,89 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8080
+#---
+#apiVersion: apps/v1
+#kind: Deployment
+#metadata:
+#  name: mysql-db
+#spec:
+#  replicas: 1
+#  selector:
+#    matchLabels:
+#      app: mysql-db
+#  template:
+#    metadata:
+#      labels:
+#        app: mysql-db
+#    spec:
+#      imagePullSecrets:
+#        - name: my-registry-secret
+#      containers:
+#        - name: mysql-db
+#          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/mysql-db:latest
+#          imagePullPolicy: Always
+#          resources:
+#            requests:
+#              cpu: "200m"
+#              memory: "512Mi"
+#            limits:
+#              cpu: "500m"
+#              memory: "1Gi"
+#          ports:
+#            - containerPort: 3306
+#          env:
+#            - name: MYSQL_ROOT_PASSWORD
+#              valueFrom:
+#                secretKeyRef:
+#                  name: db-credentials
+#                  key: password
+#            - name: MYSQL_DATABASE
+#              value: automation
+#      volumes:
+#        - name: backup-volume
+#          persistentVolumeClaim:
+#            claimName: backup-file-pvc
+#      restartPolicy: Always
+#---
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: mysql-db
+#spec:
+#  selector:
+#    app: mysql-db
+#  ports:
+#    - protocol: TCP
+#      port: 3306
+#      targetPort: 3306
+#
 ---
+# MODIFIED: PostgreSQL Deployment (was mysql-db)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-db
+  name: postgres-db # Renamed from mysql-db
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mysql-db
+      app: postgres-db # Updated label
   template:
     metadata:
       labels:
-        app: mysql-db
+        app: postgres-db # Updated label
     spec:
+      # If your image is private, add imagePullSecrets here
       imagePullSecrets:
-        - name: my-registry-secret
+         - name: my-registry-secret
       containers:
-        - name: mysql-db
-          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/mysql-db:latest
+        - name: postgres-db # Renamed container
+          # --- IMPORTANT: Update this image path ---
+          image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/postgres-db:latest # Replace with your postgres image with backup included
+          # Or use a standard image like postgres:latest if backup script handling is separate\
+#          image: peppap1g/postgres-db:latest
           imagePullPolicy: Always
-          resources:
+          resources: # Kept resources, adjust if needed for PostgreSQL
             requests:
               cpu: "200m"
               memory: "512Mi"
@@ -187,52 +291,53 @@ spec:
               cpu: "500m"
               memory: "1Gi"
           ports:
-            - containerPort: 3306
+            - containerPort: 5432 # PostgreSQL default port
           env:
-            - name: MYSQL_ROOT_PASSWORD
+            # MODIFIED: Use PostgreSQL standard env vars
+            - name: POSTGRES_DB
+              value: automation
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: db-credentials
+                  name: db-creds # Use the new Secret name
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds # Use the new Secret name
                   key: password
-            - name: MYSQL_DATABASE
-              value: automation
-      volumes:
-        - name: backup-volume
-          persistentVolumeClaim:
-            claimName: backup-file-pvc
+          # MODIFIED: Volume mounts for data persistence and init script
+#          volumeMounts:
+##            - name: postgres-storage
+##              mountPath: /var/lib/postgresql/data # Standard path for PostgreSQL data
+#            - name: init-script-volume
+#
+#              # Mount for the backup.sql script
+#              mountPath: /docker-entrypoint-initdb.d/backup.sql
+#              subPath: backup.sql
+
+      # Standard path for init scripts
+#      volumes:
+#        # MODIFIED: Define volume using the new PVC for the init script
+#        - name: init-script-volume # Renamed volume reference
+#          persistentVolumeClaim:
+#            claimName: postgres-init-script-pvc # Use the PVC created above
+
       restartPolicy: Always
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: db-credentials
-type: Opaque
-stringData:
-  username: root
-  password: LexLuthern246!!??
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: backup-file-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 500Mi
----
+# MODIFIED: PostgreSQL Service (was mysql-db)
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-db
+  name: postgres-db # Renamed from mysql-db
 spec:
   selector:
-    app: mysql-db
+    app: postgres-db # Updated selector
   ports:
     - protocol: TCP
-      port: 3306
-      targetPort: 3306
+      port: 5432 # PostgreSQL default port
+      targetPort: 5432 # PostgreSQL container port
+
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

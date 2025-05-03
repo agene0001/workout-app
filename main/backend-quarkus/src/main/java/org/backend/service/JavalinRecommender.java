@@ -1,5 +1,7 @@
 package org.backend.service;
 
+import io.quarkus.runtime.Startup;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory;
  * A lightweight recipe recommendation service that replaces Spark-based implementation
  * with a pure Java solution using word embeddings and approximate nearest neighbor search.
  */
+@Startup
 @ApplicationScoped
 public class JavalinRecommender implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(JavalinRecommender.class);
@@ -77,26 +80,37 @@ public class JavalinRecommender implements Serializable {
     /**
      * Initialize the recommender by loading recipes and building word vectors
      */
-    public void setup(String dbUrl, String dbUser, String dbPassword) {
-        try {
-            LOG.info("JavalinRecipeRecommender setup started...");
+    @PostConstruct
+    void initialize() {
+        // Check if already initialized (e.g., if reinitializeRecommender was called)
+        // Although with @Startup, this PostConstruct should ideally run only once.
+        if (isInitialized.get()) {
+            LOG.info("JavalinRecommender already initialized.");
+            return;
+        }
 
-            // Load recipe data
+        try {
+            LOG.info("JavalinRecommender initialization started via @PostConstruct...");
+
+            // Load recipe data using the injected DataSource
             loadRecipeData();
 
-            // Build word vectors (a simplified version - in production you'd use a pre-trained model)
+            // Build word vectors
             buildWordVectors();
 
-            // Generate recipe vectors from word vectors
+            // Generate recipe vectors
             generateRecipeVectors();
 
             // Set initialization flag
             isInitialized.set(true);
 
-            LOG.info("JavalinRecipeRecommender setup completed successfully with {} recipes", recipeDataMap.size());
+            LOG.info("JavalinRecommender initialization completed successfully with {} recipes", recipeDataMap.size());
         } catch (Exception e) {
-            LOG.error("Error during JavalinRecipeRecommender setup: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to initialize JavalinRecipeRecommender", e);
+            LOG.error("Error during JavalinRecommender initialization: {}", e.getMessage(), e);
+            // Decide how to handle fatal initialization errors.
+            // Throwing a runtime exception might prevent the app from starting,
+            // which might be desirable if the recommender is critical.
+            throw new RuntimeException("Failed to initialize JavalinRecommender", e);
         }
     }
 
@@ -108,17 +122,36 @@ public class JavalinRecommender implements Serializable {
     }
 
     /**
-     * Reinitialize the recommender
+     * Reinitialize the recommender (if needed, e.g., trigger manually via an endpoint)
      */
     public boolean reinitializeRecommender() {
+        if (!isInitialized.compareAndSet(true, false)) {
+            // If it wasn't initialized, or another thread is already reinitializing, just return false or wait.
+            // For simplicity, we'll just proceed if it was set to false.
+            if(isInitialized.get()){
+                LOG.warn("Recommender is already being reinitialized or wasn't initialized before.");
+                //return false; // Or handle concurrency differently
+            }
+        }
+
+        LOG.info("Attempting to reinitialize recommender...");
+        // Reset state if necessary
+        wordVectors.clear();
+        recipeDataMap.clear();
+        recipeVectors.clear();
+
         try {
-            setup(null, null, null); // DataSource is injected, so we don't need connection parameters
+            // Call the main initialization logic again
+            initialize();
             return true;
         } catch (Exception e) {
             LOG.error("Failed to reinitialize recommender: {}", e.getMessage(), e);
+            isInitialized.set(false); // Ensure it's marked as not initialized on failure
             return false;
         }
     }
+
+
 
     /**
      * Load recipe data from database
@@ -287,39 +320,39 @@ public class JavalinRecommender implements Serializable {
         // Normalize query vector
         normalizeVector(queryVector);
 
-        // Find nearest neighbors
-        List<RecipeSimilarity> similarities = new ArrayList<>();
+        PriorityQueue<RecipeSimilarity> topKHeap = new PriorityQueue<>(k, Comparator.comparingDouble(RecipeSimilarity::getSimilarity));
 
         for (Map.Entry<Integer, float[]> entry : recipeVectors.entrySet()) {
             int id = entry.getKey();
             float[] vector = entry.getValue();
 
-            // Skip if it's the same recipe name
             RecipeData recipe = recipeDataMap.get(id);
             if (recipe.name.equalsIgnoreCase(queryName)) {
                 continue;
             }
 
-            // Calculate cosine similarity
-            double similarity = cosineSimilarity(queryVector, vector);
+            double similarity = cosineSimilarity(queryVector, vector); // Your existing method
 
-            // Store recipe ID and similarity score
-            similarities.add(new RecipeSimilarity(id, recipe.name, similarity));
+            if (topKHeap.size() < k) {
+                topKHeap.offer(new RecipeSimilarity(id, recipe.name, similarity));
+            } else if (similarity > topKHeap.peek().getSimilarity()) {
+                topKHeap.poll(); // Remove the smallest
+                topKHeap.offer(new RecipeSimilarity(id, recipe.name, similarity)); // Add the new larger one
+            }
         }
 
-        // Sort by similarity (descending - higher similarity means more similar)
-        similarities.sort(Comparator.comparingDouble(RecipeSimilarity::getSimilarity).reversed());
-
-        // Create Recipe objects from top k matches
-        List<Recipe> results = new ArrayList<>();
-        for (RecipeSimilarity similarity : similarities.stream().limit(k).toList()) {
+        // Extract results from the heap (they will be in ascending order, so reverse)
+        List<Recipe> results = new LinkedList<>(); // Use LinkedList for efficient addFirst
+        while (!topKHeap.isEmpty()) {
+            RecipeSimilarity sim = topKHeap.poll();
             Recipe recipe = new Recipe();
-            recipe.setId(similarity.getId());
-            recipe.setName(similarity.getName());
-            results.add(recipe);
+            recipe.setId(sim.getId());
+            recipe.setName(sim.getName());
+            results.add(0, recipe); // Add to the beginning to reverse order
         }
 
-        return results;
+        return results; // Now results are sorted descending by similarity
+
     }
 
     // Helper class to store similarity scores

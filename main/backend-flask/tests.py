@@ -72,10 +72,18 @@ ingredient_test_cases = [
     (["2 cups tomato sauce"],
      [{'name': 'tomato sauce', 'display_text': '2 cups tomato sauce', 'quantity': '2', 'unit': 'cups'}]),
     (["1 (1-pound) box dried spaghetti"],
+     [{'name': 'box dried spaghetti', 'display_text': '1 (1-pound) box dried spaghetti', 'quantity': '1'}]),
+    (["1 (200 g) large leek, cleaned, sliced ¼-inch-(.6 cm) thick"],
+     [{'name': 'box dried spaghetti', 'display_text': '1 (1-pound) box dried spaghetti', 'quantity': '1'}]),
+    (["6 cups (335 g) fresh kale, chopped, stems removed"],
+     [{'name': 'box dried spaghetti', 'display_text': '1 (1-pound) box dried spaghetti', 'quantity': '1'}]),
+    (["4 cups (960 ml) vegetable or chicken broth"],
      [{'name': 'box dried spaghetti', 'display_text': '1 (1-pound) box dried spaghetti', 'quantity': '1'}])
 
 ]
-
+# broken recipes
+# grilled chicken lettuce wraps with lemon-green olive tapenade
+# kale and leek soup
 @pytest.mark.parametrize("input_text, expected", ingredient_test_cases)
 def test_ingredient_parsing(input_text, expected):
     """Tests the extract_ingredients function with various inputs."""

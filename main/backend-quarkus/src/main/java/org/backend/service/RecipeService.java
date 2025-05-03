@@ -50,59 +50,6 @@ public class RecipeService {
         this.recipeAutocomplete = new Autocomplete(terms);
     }
 
-    @PostConstruct
-    public void initializeSparkRecommender() {
-        try {
-            logger.info("Initializing SparkRecommender...");
-            // Wrap the initialization in a separate thread with a timeout
-            Thread initThread = new Thread(() -> {
-                try {
-                    // Log the Hadoop configuration for debugging
-                    logger.info("Hadoop home: " + System.getProperty("hadoop.home.dir"));
-                    logger.info("Group mapping: " + System.getProperty("hadoop.security.group.mapping", "<not set>"));
-                    
-                    // Set system properties for Windows
-                    if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                        // Additional Windows-specific settings at runtime
-                        System.setProperty("hadoop.security.group.mapping", 
-                                          "org.apache.hadoop.security.ShellBasedUnixGroupsMapping");
-                        System.setProperty("hadoop.security.authentication", "simple");
-                    }
-                    
-                    this.recommender.setup(dbUrl, dbUser, dbPassword);
-                    isInitialized.set(true);
-                    logger.info("SparkRecommender initialization completed successfully");
-                } catch (Exception e) {
-                    logger.error("Exception in SparkRecommender initialization thread: {}", e.getMessage(), e);
-                }
-            });
-            initThread.setDaemon(true); // Don't block application shutdown
-            initThread.start();
-            
-            // Wait for initialization to complete or timeout
-            initThread.join(120000); // 2 minute timeout
-            
-            if (initThread.isAlive()) {
-                logger.warn("SparkRecommender initialization is taking too long and will continue in background");
-            }
-        } catch (Exception e) {
-            logger.error("Failed to initialize SparkRecommender: {}", e.getMessage(), e);
-            // Don't set isInitialized to true if initialization fails
-        }
-    }
-
-    public boolean reinitializeRecommender() {
-        try {
-            logger.info("Attempting to reinitialize SparkRecommender...");
-            this.recommender.setup(dbUrl, dbUser, dbPassword);
-            isInitialized.set(true);
-            logger.info("SparkRecommender reinitialization completed successfully");
-            return true;
-        } catch (Exception e) {
-            logger.error("Failed to reinitialize SparkRecommender: ", e);
-            return false;
-        }
-    }
 
     public List<Recipe> getSample(int k) {
         try {
@@ -124,9 +71,9 @@ public class RecipeService {
 
     public List<Recipe> getRecommendations(String query, String ingredients, int topK) {
         try {
-            if (!isInitialized.get()) {
+            if (!this.recommender.isInitialized()) {
                 logger.warn("JavalinRecommender not initialized. Attempting reinitialization...");
-                if (!reinitializeRecommender()) {
+                if (!this.recommender.reinitializeRecommender()) {
                     logger.error("Reinitialization failed. Cannot provide recommendations.");
                     return null;
                 }
@@ -163,8 +110,8 @@ public class RecipeService {
     }
 
     // Get recipes by category name
-    public List<Recipe> getRecipesByCategoryName(String categoryName) {
-        return recipeRepository.findRecipesByCategoryName(categoryName);
+    public List<Recipe> getRecipesByCategoryName(String categoryName, int page, int pageSize) {
+        return recipeRepository.findRecipesByCategoryName(categoryName,page,pageSize);
     }
 
     // Alternative way to get recipes by category using the Category entity

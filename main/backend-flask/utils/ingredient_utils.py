@@ -134,6 +134,7 @@ SUFFIX_PHRASES = [
     r'cleaned',
     r'de-bearded',
     r'deveined'
+    r'stems removed'
     # r'freshly'
 ]
 # Compile suffix regex (match optional comma/space + phrase at the end)

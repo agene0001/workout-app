@@ -10,8 +10,9 @@ env:
   GKE_CLUSTER: react-cluster
   GKE_ZONE: us-central1-a
   IMAGE_FRONTEND: svelte-frontend
-  IMAGE_BACKEND: spring-backend
-  # IMAGE_FLASK: flask-backend
+  IMAGE_QUARKUS: backend-quarkus
+  IMAGE_FLASK: flask-backend
+  IMAGE_DB: postgres-db
   REGION: us-central1
   REPOSITORY: workout-app
 
@@ -48,7 +49,9 @@ jobs:
       - name: Clean up old images
         run: |
           gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
-          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_BACKEND@{} --quiet --force-delete-tags
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_QUARKUS --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_QUARKUS@{} --quiet --force-delete-tags
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK@{} --quiet --force-delete-tags
+          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_DB --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_DB@{} --quiet --force-delete-tags
 
       - name: Configure Docker to use Google Cloud authentication
         run: |
@@ -56,12 +59,16 @@ jobs:
 
       - name: Build images with Docker Compose
         run: |
-          docker compose build spring-backend react-frontend
+          docker compose build
       - name: Tag and push images
         run: |
-          docker tag ${IMAGE_BACKEND}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_BACKEND}:latest
+          docker tag ${IMAGE_QUARKUS}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_QUARKUS}:latest
+          docker tag ${IMAGE_FLASK}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
+          docker tag ${IMAGE_DB}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
           docker tag ${IMAGE_FRONTEND}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
-          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_BACKEND}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_QUARKUS}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
 
       - name: Create or Update Instacart Secret
@@ -84,14 +91,18 @@ jobs:
         if: success()
         run: |
           echo "Forcing rollout restart to pick up latest images..."
-          kubectl rollout restart deployment/react-frontend
-          kubectl rollout restart deployment/spring-backend
+          kubectl rollout restart deployment/svelte-frontend
+          kubectl rollout restart deployment/backend-quarkus
+          kubectl rollout restart deployment/flask-backend
+          kubectl rollout restart deployment/postgres-db
 
       - name: Wait for deployments to stabilize
         run: |
-          kubectl rollout status deployment/react-frontend
-          kubectl rollout status deployment/spring-backend
+          kubectl rollout status deployment/svelte-frontend
+          kubectl rollout status deployment/backend-quarkus
+          kubectl rollout status deployment/flask-backend
+          kubectl rollout status deployment/postgres-db
 
       - name: Get service URLs
         run: |
-          echo "Frontend service available at: $(kubectl get service react-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+          echo "Frontend service available at: $(kubectl get service svelte-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"

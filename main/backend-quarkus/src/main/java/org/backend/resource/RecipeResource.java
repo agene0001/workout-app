@@ -20,7 +20,8 @@ import java.util.stream.Collectors;
 @Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
 public class RecipeResource {
-    
+    private static final int DEFAULT_PAGE_SIZE = 6; // Define a default page size
+
     private final RecipeService recipeService;
 
     @Inject
@@ -68,12 +69,29 @@ public class RecipeResource {
         }
         return recipeService.autocompleteRecipe(string);
     }
-    
+
+
     @GET
     @Path("/category/{category}")
-    public List<Recipe> getRecipesByCategory(@PathParam("category") String category) {
-        return recipeService.getRecipesByCategoryName(category);
+    public List<Recipe> getRecipesByCategory(
+            @PathParam("category") String category,
+            @QueryParam("page") @DefaultValue("0") int page, // Add page parameter (0-indexed)
+            @QueryParam("pageSize") @DefaultValue("6") int pageSize) { // Add pageSize parameter
+
+        // Ensure pageSize isn't excessively large or negative, adjust if necessary
+        if (pageSize <= 0) {
+            pageSize = DEFAULT_PAGE_SIZE;
+        }
+        // You might want to add an upper limit to pageSize as well
+
+        Log.infof("Fetching recipes for category: %s, page: %d, pageSize: %d", category, page, pageSize);
+
+        // **IMPORTANT:** You need to update your RecipeService.getRecipesByCategoryName
+        // method to accept and use these page and pageSize parameters to limit the results.
+        // The example below assumes the service method is updated.
+        return recipeService.getRecipesByCategoryName(category, page, pageSize);
     }
+
 
     @GET
     @Path("/recommendations")

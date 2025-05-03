@@ -179,29 +179,36 @@
             See How It Works
         </h2>
         <div class={`bg-gray-800 rounded-lg shadow-xl overflow-hidden max-w-4xl mx-auto ${demoVisible ? 'fade-in-up delay-200' : ''}`}>
-            <div class="bg-gray-900 p-3 flex items-center">
-                <div class="flex space-x-2">
-                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+
+            <div class="bg-gray-700 py-4">
+                <!-- Adjusted Supademo wrapper: removed padding and max-height -->
+                <div style="position: relative; box-sizing: content-box; width: 100%; aspect-ratio: 2.013845185651353;">
+                    <iframe
+                            src="https://app.supademo.com/embed/cma7fh2255hdb13m0l28tzmyw?embed_v=2"
+                            loading="lazy"
+                            title="Gainztracker Demo"
+                            allow="clipboard-write"
+                            frameborder="0"
+                            webkitallowfullscreen="true"
+                            mozallowfullscreen="true"
+                            allowfullscreen
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                    ></iframe>
                 </div>
-                <div class="mx-auto text-gray-400 text-sm">Gainz Trackers Dashboard Demo</div>
+                <!-- Paragraph moved outside the Supademo wrapper, added text-center -->
+                <p class="text-sm text-gray-400 mt-4 text-center">
+                    Explore our personalized meal planning, workout tracking, and community features
+                </p>
             </div>
-            <div class="h-96 bg-gray-700 flex items-center justify-center">
-                <div class="text-center">
-                    <div class="mx-auto w-16 h-16 border-4 border-[#00dd87] border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p class="text-gray-300">Interactive Demo Loading...</p>
-                    <p class="text-sm text-gray-400 mt-2">Explore our personalized meal planning, workout tracking, and community features</p>
-                </div>
-            </div>
-            <div class="p-6 bg-gray-800">
-                <div class="flex flex-wrap gap-4 justify-center">
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Dashboard</button>
-                    <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Meal Planner</button>
-                    <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Workout Tracker</button>
-                    <button class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded">Community</button>
-                </div>
-            </div>
+
+<!--            <div class="p-6 bg-gray-800">-->
+<!--                <div class="flex flex-wrap gap-4 justify-center">-->
+<!--                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Dashboard</button>-->
+<!--                    <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Meal Planner</button>-->
+<!--                    <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Workout Tracker</button>-->
+<!--                    <button class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded">Community</button>-->
+<!--                </div>-->
+<!--            </div>-->
         </div>
         <div class={`mt-10 text-center ${demoVisible ? 'fade-in-up delay-400' : ''}`}>
             <button class="bg-[#00dd87] hover:bg-[#00bb74] text-black font-bold py-3 px-8 rounded-full transition-all">

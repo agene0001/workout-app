@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 
 // Define ports that don't change
-const SPRING_PORT = 8081;
+const JAVA_PORT = 8081;
 const hostIP = "0.0.0.0";
 const port = 8080;
 const protocol = "http";
@@ -17,7 +17,7 @@ export default defineConfig(({ command, mode }) => {
   // Determine if we're in production based on Vite's mode
   const isProduction = mode === 'production';
 
-  const SPRING_SERVICE = isProduction ? 'spring-backend' : 'localhost';
+  const QUARKUS_SERVICE = isProduction ? 'backend-quarkus' : 'localhost';
   const FLASK_SERVICE = isProduction ? 'flask-backend' : 'localhost';
   // Use development port 5000 for Flask unless in production mode
   const FLASK_PORT = isProduction ? 8082 : 5000;
@@ -39,7 +39,7 @@ export default defineConfig(({ command, mode }) => {
       port: port,
       proxy: {
         '/api/v1/recipes': {
-          target: `${protocol}://${SPRING_SERVICE}:${SPRING_PORT}`,
+          target: `${protocol}://${QUARKUS_SERVICE}:${JAVA_PORT}`,
           headers: { 'Cache-Control': 'no-store' },
           changeOrigin: true,
           secure: false,
@@ -60,7 +60,7 @@ export default defineConfig(({ command, mode }) => {
       port: port,
       proxy: {
         '/api/v1/recipes': {
-          target: `${protocol}://${SPRING_SERVICE}:${SPRING_PORT}`,
+          target: `${protocol}://${QUARKUS_SERVICE}:${JAVA_PORT}`,
           headers: { 'Cache-Control': 'no-store' },
           changeOrigin: true,
           secure: false,

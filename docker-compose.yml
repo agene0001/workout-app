@@ -1,20 +1,20 @@
 services:
   backend-quarkus:
-    #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/spring-backend:latest
+    #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/backend-quarku:latest
+    #    image: peppap1g/backend-quarku:latest
     image: backend-quarkus:latest
     build:
       context: .
       dockerfile: Dockerfile
-      target: backend-builder
+      target: backend-quarkus
     container_name: backend-quarkus
     platform: linux/amd64
     ports:
       - "8081:8081"
     environment:
       - DB_HOST=postgres-db
-      - SPRING_DATASOURCE_URL=jdbc:postgres://postgres-db:5432/automation
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=LexLuthern246!!??
+      - QUARKUS_DATASOURCE_USERNAME=postgres
+      - QUARKUS_DATASOURCE_PASSWORD=LexLuthern246!!??
       - SERVER_PORT=8081
     depends_on:
       - postgres-db
@@ -23,7 +23,8 @@ services:
       - app-network
 
   svelte-frontend:
-    #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
+    #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
+    #    image: peppap1g/svelte-frontend:latest
     image: svelte-frontend:latest
     build:
       context: .
@@ -42,7 +43,8 @@ services:
     networks:
       - app-network
   flask-backend:
-    #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/react-frontend:latest
+    #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/flask-backend:latest
+    #    image: peppap1g/flask-backend:latest
     image: flask-backend:latest
     build:
       context: .
@@ -67,20 +69,19 @@ services:
       target: postgres-with-backup
     container_name: postgres-db
     environment:
-      MYSQL_ROOT_PASSWORD: LexLuthern246!!??
-      MYSQL_DATABASE: automation
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: LexLuthern246!!??
+      POSTGRES_DB: automation
 
     ports:
       - "5432:5432"
-    #    volumes:
-    #      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
+    volumes:
+      - ./backup.sql:/docker-entrypoint-initdb.d/backup.sql
     #      - mysql_data:/var/lib/mysql
     restart: always
     networks:
       - app-network
 
-volumes:
-  mysql_data:
 
 networks:
   app-network:
