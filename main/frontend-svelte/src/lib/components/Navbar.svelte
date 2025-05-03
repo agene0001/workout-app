@@ -320,36 +320,36 @@
         closeSignupModal();
         openLoginModal();
     }
-
-    onMount(async () => {
-        if (!currentAuth) {
-            console.warn("Authentication is not available in Navbar component");
-        }
-
-        try {
-            // Only proceed if fingerprint promise is available
-            if (fpPromise) {
-                // Load fingerprint
-                const fp = await fpPromise;
-                const result = await fp.get();
-                fingerprint = result.visitorId;
-                console.log("Browser fingerprint loaded:", fingerprint);
-
-                // Associate fingerprint if user is logged in
-                if (user && fingerprint) {
-                    associateFingerprintWithUser(user.uid, fingerprint).catch(err =>
-                        console.error("Failed background fingerprint association:", err)
-                    );
-                }
-            }
-        } catch (err) {
-            console.error("Error getting fingerprint:", err);
-            error = "Could not get browser fingerprint. Some features might be limited.";
-        }
-
-        // Complete initial loading
-        isInitialLoading = false;
-    });
+    //
+    // onMount(async () => {
+    //     if (!currentAuth) {
+    //         console.warn("Authentication is not available in Navbar component");
+    //     }
+    //
+    //     try {
+    //         // Only proceed if fingerprint promise is available
+    //         if (fpPromise) {
+    //             // Load fingerprint
+    //             const fp = await fpPromise;
+    //             const result = await fp.get();
+    //             fingerprint = result.visitorId;
+    //             console.log("Browser fingerprint loaded:", fingerprint);
+    //
+    //             // Associate fingerprint if user is logged in
+    //             if (user && fingerprint) {
+    //                 associateFingerprintWithUser(user.uid, fingerprint).catch(err =>
+    //                     console.error("Failed background fingerprint association:", err)
+    //                 );
+    //             }
+    //         }
+    //     } catch (err) {
+    //         console.error("Error getting fingerprint:", err);
+    //         error = "Could not get browser fingerprint. Some features might be limited.";
+    //     }
+    //
+    //     // Complete initial loading
+    //     isInitialLoading = false;
+    // });
 </script>
 
 

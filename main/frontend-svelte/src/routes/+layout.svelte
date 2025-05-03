@@ -6,7 +6,7 @@
     import Footer from "$lib/components/Footer.svelte";
     import Navbar from '$lib/components/Navbar.svelte';
     import "../app.css";
-    import {getClientAuth, initializeFirebaseClient,getDb} from "$lib/firebase/firebase.client";
+    // import {getClientAuth, initializeFirebaseClient,getDb} from "$lib/firebase/firebase.client";
     import {writable} from "svelte/store";
     import { onAuthStateChanged } from 'firebase/auth';
     // Create writable stores
@@ -18,39 +18,39 @@
     setContext('user', userStore);
     setContext('auth', authStore);
     setContext('db', dbStore);
-    onMount(() => {
-            console.log("Initializing Firebase in layout...");
-            try {
-                // Initialize Firebase client
-                initializeFirebaseClient();
-
-                // Get instances and update stores
-                const auth = getClientAuth();
-                const db = getDb();
-
-                if (auth) {
-                    authStore.set(auth);
-
-                    // Set up auth state listener
-                    const unsubscribe = onAuthStateChanged(auth, (user) => {
-                        console.log("Auth state changed:", user ? "User logged in" : "No user");
-                        userStore.set(user);
-                    });
-
-                    // Cleanup on component unmount
-                    return unsubscribe;
-                }
-
-                if (db) {
-                    dbStore.set(db);
-                }
-
-                isInitialized = true;
-            } catch (error) {
-                console.error("Error initializing Firebase in layout:", error);
-            }
-
-    });
+    // onMount(() => {
+    //         console.log("Initializing Firebase in layout...");
+    //         try {
+    //             // Initialize Firebase client
+    //             initializeFirebaseClient();
+    //
+    //             // Get instances and update stores
+    //             const auth = getClientAuth();
+    //             const db = getDb();
+    //
+    //             if (auth) {
+    //                 authStore.set(auth);
+    //
+    //                 // Set up auth state listener
+    //                 const unsubscribe = onAuthStateChanged(auth, (user) => {
+    //                     console.log("Auth state changed:", user ? "User logged in" : "No user");
+    //                     userStore.set(user);
+    //                 });
+    //
+    //                 // Cleanup on component unmount
+    //                 return unsubscribe;
+    //             }
+    //
+    //             if (db) {
+    //                 dbStore.set(db);
+    //             }
+    //
+    //             isInitialized = true;
+    //         } catch (error) {
+    //             console.error("Error initializing Firebase in layout:", error);
+    //         }
+    //
+    // });
 </script>
 
 <div class="app">
