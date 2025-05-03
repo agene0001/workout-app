@@ -20,7 +20,7 @@ COPY --chown=gradle:gradle main/backend-quarkus/gradle/ gradle/
 COPY --chown=gradle:gradle main/backend-quarkus/settings.gradle .
 COPY --chown=gradle:gradle main/backend-quarkus/build.gradle .
 COPY --chown=gradle:gradle main/backend-quarkus/gradle.properties .
-
+RUN chmod +x gradlew
 # Pre-download dependencies
 RUN ./gradlew --no-daemon dependencies
 
