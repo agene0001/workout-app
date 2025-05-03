@@ -6,13 +6,13 @@ import { getAuth, type Auth } from "firebase/auth";
 const env = import.meta.env;
 
 const firebaseConfigClient = {
-    apiKey: env.VITE_FIREBASE_API_KEY,
-    authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: env.VITE_FIREBASE_APP_ID,
-    measurementId: env.VITE_FIREBASE_MEASUREMENT_ID
+    apiKey: 'AIzaSyCBaEACR9uDD9ISJ092h2o6y5UzOdY_sJU',
+    authDomain: 'workout-app-441723.firebaseapp.com',
+    projectId: 'workout-app-441723',
+    storageBucket: 'workout-app-441723.firebasestorage.app',
+    messagingSenderId: '209783809936',
+    appId: '1:209783809936:web:fd21752b8673cad1dcb515',
+    measurementId: 'G-RWGLFL9CPN'
 };
 
 // Initialize Client-Side App (ensure singleton pattern)
