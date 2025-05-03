@@ -1,6 +1,5 @@
 <script>
-    import { onMount } from 'svelte';
-    import { clientAuth } from '../firebase/firebase.client.js'; // Adjust path as needed
+    import { onMount, getContext } from 'svelte';
     import {
         signInWithEmailAndPassword,
         createUserWithEmailAndPassword,
@@ -10,10 +9,13 @@
         GithubAuthProvider,
         signInWithPopup
     } from 'firebase/auth';
-    import { doc, setDoc, getDoc, Timestamp,getFirestore } from 'firebase/firestore';
+    import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 
-    import {clientApp} from "$lib/firebase/firebase.client.js";
-    const db = getFirestore(clientApp,'docs');// Initialize FingerprintJS
+    // Get stores from context with safety checks
+    const authStore = getContext('auth') || { subscribe: () => () => {} };
+    const dbStore = getContext('db') || { subscribe: () => () => {} };
+    const userStore = getContext('user') || { subscribe: () => () => {} };
+
     // Props
     export let name = "";
 
@@ -26,6 +28,21 @@
     let isOperationLoading = false;
     let isInitialLoading = true;
     let fingerprint = null;
+    let currentDb = null; // Local variable for db instance
+    let currentAuth = null; // Local variable for auth instance
+
+    // Safe subscriptions with fallbacks
+    $: user = $userStore;
+
+    const unsubDb = dbStore.subscribe(value => {
+        currentDb = value;
+        if (value) console.log("DB store value received");
+    });
+
+    const unsubAuth = authStore.subscribe(value => {
+        currentAuth = value;
+        if (value) console.log("Auth store value received");
+    });
 
     const userfp = 'userfp';
     const userdoc = 'users';
@@ -34,39 +51,54 @@
     let fpPromise;
 
     onMount(() => {
-        // Only import and load FingerprintJS in the browser
-        import('@fingerprintjs/fingerprintjs').then((FingerprintJS) => {
-            fpPromise = FingerprintJS.default.load();
-            // Continue with fingerprint logic here...
-            fpPromise.then(async (fp) => {
-                const result = await fp.get();
-                fingerprint = result.visitorId;
-                console.log("Browser fingerprint loaded:", fingerprint);
-
-                // Complete loading after fingerprint is obtained
-                isInitialLoading = false;
-            }).catch(err => {
-                console.error("Error getting fingerprint:", err);
-                error = "Could not get browser fingerprint. Some features might be limited.";
-                isInitialLoading = false;
-            });
-        });
+        // Cleanup subscriptions
+        return () => {
+            unsubDb();
+            unsubAuth();
+        };
     });
 
-    // Authentication providers
-    const providers = {
+    onMount(() => {
+        // Only import and load FingerprintJS in the browser
+        if (typeof window !== 'undefined') {
+            import('@fingerprintjs/fingerprintjs').then((FingerprintJS) => {
+                fpPromise = FingerprintJS.default.load();
+                // Continue with fingerprint logic here...
+                fpPromise.then(async (fp) => {
+                    const result = await fp.get();
+                    fingerprint = result.visitorId;
+                    console.log("Browser fingerprint loaded:", fingerprint);
+
+                    // Complete loading after fingerprint is obtained
+                    isInitialLoading = false;
+                }).catch(err => {
+                    console.error("Error getting fingerprint:", err);
+                    error = "Could not get browser fingerprint. Some features might be limited.";
+                    isInitialLoading = false;
+                });
+            }).catch(err => {
+                console.error("Error importing fingerprint module:", err);
+                isInitialLoading = false;
+            });
+        } else {
+            isInitialLoading = false;
+        }
+    });
+
+    // Authentication providers - only initialize if we have auth available
+    $: providers = currentAuth ? {
         google: new GoogleAuthProvider(),
         github: new GithubAuthProvider()
-    };
+    } : {};
 
     // Helper function for associating fingerprint with user
     async function associateFingerprintWithUser(userId, fpId) {
         console.log(`Associating user ${userId} with fingerprint ${fpId}`);
-        if (!userId || !fpId) return;
+        if (!userId || !fpId || !currentDb) return;
         try {
             const now = Timestamp.now();
-            await setDoc(doc(db, userdoc, userId), { fingerprint: fpId, lastLogin: now }, { merge: true });
-            await setDoc(doc(db, userfp, fpId), { userId: userId, lastSeen: now }, { merge: true });
+            await setDoc(doc(currentDb, userdoc, userId), { fingerprint: fpId, lastLogin: now }, { merge: true });
+            await setDoc(doc(currentDb, userfp, fpId), { userId: userId, lastSeen: now }, { merge: true });
             console.log(`Successfully associated user ${userId} with fingerprint ${fpId}`);
         } catch (error) {
             console.error(`Error storing fingerprint ${fpId} for user ${userId}:`, error);
@@ -75,9 +107,9 @@
 
     async function checkExistingFingerprint(fpId) {
         console.log(`Checking fingerprint ID: ${fpId} in Firestore...`);
-        if (!fpId) return null;
+        if (!fpId || !currentDb) return null;
         try {
-            const docRef = doc(db, userfp, fpId);
+            const docRef = doc(currentDb, userfp, fpId);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
@@ -97,12 +129,17 @@
         }
     }
 
-    // Auth handlers
+    // Auth handlers - Check if auth is available
     async function handleLoginAttempt(email, password) {
+        if (!currentAuth) {
+            error = "Authentication service not available";
+            return false;
+        }
+
         error = "";
         isOperationLoading = true;
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            await signInWithEmailAndPassword(currentAuth, email, password);
             isLoginModalOpen = false;
             return true;
         } catch (err) {
@@ -121,6 +158,11 @@
     }
 
     async function handleSignupAttempt(email, password) {
+        if (!currentAuth) {
+            error = "Authentication service not available";
+            return false;
+        }
+
         error = "";
         isOperationLoading = true;
 
@@ -144,7 +186,7 @@
             console.log("Fingerprint check passed.");
 
             // Proceed with signup
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(currentAuth, email, password);
             console.log("Signup successful:", userCredential.user.uid);
 
             // Associate fingerprint
@@ -172,6 +214,11 @@
     }
 
     async function handleSocialAuthAttempt(providerKey) {
+        if (!currentAuth) {
+            error = "Authentication service not available";
+            return;
+        }
+
         error = "";
         isOperationLoading = true;
 
@@ -202,7 +249,7 @@
             console.log("Fingerprint check passed.");
 
             // Proceed with social sign in
-            const userCredential = await signInWithPopup(auth, socialProvider);
+            const userCredential = await signInWithPopup(currentAuth, socialProvider);
             console.log(`${providerKey} sign-in successful:`, userCredential.user.uid);
 
             // Associate fingerprint
@@ -228,9 +275,14 @@
     }
 
     async function handleLogout() {
+        if (!currentAuth) {
+            error = "Authentication service not available";
+            return;
+        }
+
         error = "";
         try {
-            await signOut(auth);
+            await signOut(currentAuth);
             console.log("User signed out");
         } catch (err) {
             console.error("Error signing out:", err);
@@ -269,40 +321,37 @@
         openLoginModal();
     }
 
-    // Lifecycle hooks
     onMount(async () => {
+        if (!currentAuth) {
+            console.warn("Authentication is not available in Navbar component");
+        }
+
         try {
-            // Load fingerprint
-            const fp = await fpPromise;
-            const result = await fp.get();
-            fingerprint = result.visitorId;
-            console.log("Browser fingerprint loaded:", fingerprint);
+            // Only proceed if fingerprint promise is available
+            if (fpPromise) {
+                // Load fingerprint
+                const fp = await fpPromise;
+                const result = await fp.get();
+                fingerprint = result.visitorId;
+                console.log("Browser fingerprint loaded:", fingerprint);
+
+                // Associate fingerprint if user is logged in
+                if (user && fingerprint) {
+                    associateFingerprintWithUser(user.uid, fingerprint).catch(err =>
+                        console.error("Failed background fingerprint association:", err)
+                    );
+                }
+            }
         } catch (err) {
             console.error("Error getting fingerprint:", err);
             error = "Could not get browser fingerprint. Some features might be limited.";
         }
 
-        // Setup auth state listener
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            console.log("Auth state changed:", currentUser?.uid || "No user");
-            user = currentUser;
-
-            if (currentUser && fingerprint) {
-                // Run association asynchronously
-                associateFingerprintWithUser(currentUser.uid, fingerprint).catch(err =>
-                    console.error("Failed background fingerprint association:", err)
-                );
-            }
-
-            // Complete initial loading
-            if (fingerprint !== null || error.includes("fingerprint")) {
-                isInitialLoading = false;
-            }
-        });
-
-        return () => unsubscribe();
+        // Complete initial loading
+        isInitialLoading = false;
     });
 </script>
+
 
 {#if isInitialLoading}
     <div class="flex justify-center items-center h-screen bg-zinc-900">
