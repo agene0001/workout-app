@@ -82,7 +82,46 @@ jobs:
           kubectl create secret generic instacart-creds \
             --from-literal=api-key="$INSTACART_API_KEY" \
             --dry-run=client -o yaml | kubectl apply -f -
-
+      - name: Create or Update Firebase K8s Secret from JSON Secret
+        env:
+         # Pass the entire JSON string as an environment variable to this step
+          FIREBASE_JSON_CONFIG: ${{ secrets.FIREBASE_CONFIG_JSON }}
+        run: |
+            # Check if the secret is empty
+            if [ -z "$FIREBASE_JSON_CONFIG" ]; then
+              echo "Error: FIREBASE_CONFIG_JSON secret is not set or empty in GitHub Secrets."
+              exit 1
+            fi
+            
+            # Use jq to parse the JSON string and extract each value
+            # The -r flag gives raw string output without quotes
+            api_key=$(echo "$FIREBASE_JSON_CONFIG" | jq -r '.apiKey')
+            auth_domain=$(echo "$FIREBASE_JSON_CONFIG" | jq -r '.authDomain')
+            project_id=$(echo "$FIREBASE_JSON_CONFIG" | jq -r '.projectId')
+            storage_bucket=$(echo "$FIREBASE_JSON_CONFIG" | jq -r '.storageBucket')
+            messaging_sender_id=$(echo "$FIREBASE_JSON_CONFIG" | jq -r '.messagingSenderId')
+            app_id=$(echo "$FIREBASE_JSON_CONFIG" | jq -r '.appId')
+            measurement_id=$(echo "$FIREBASE_JSON_CONFIG" | jq -r '.measurementId') # Extract measurementId too
+            
+            # Basic validation after parsing (check if apiKey was extracted)
+            if [ -z "$api_key" ] || [ "$api_key" == "null" ]; then
+               echo "Error: Failed to parse apiKey from FIREBASE_CONFIG_JSON secret."
+               exit 1
+            fi
+            
+            # Now create the Kubernetes secret using the extracted values
+            # Using the VITE_ prefix convention here based on previous discussion
+            kubectl create secret generic firebase-config \
+              --from-literal=VITE_FIREBASE_API_KEY="$api_key" \
+              --from-literal=VITE_FIREBASE_AUTH_DOMAIN="$auth_domain" \
+              --from-literal=VITE_FIREBASE_PROJECT_ID="$project_id" \
+              --from-literal=VITE_FIREBASE_STORAGE_BUCKET="$storage_bucket" \
+              --from-literal=VITE_FIREBASE_MESSAGING_SENDER_ID="$messaging_sender_id" \
+              --from-literal=VITE_FIREBASE_APP_ID="$app_id" \
+              --from-literal=VITE_FIREBASE_MEASUREMENT_ID="$measurement_id" \
+              --dry-run=client -o yaml | kubectl apply -f -
+            
+            echo "Firebase K8s secret created or updated using JSON secret."
       - name: Deploy to GKE
         run: |
           kubectl apply -f k8s-manifest.yaml
