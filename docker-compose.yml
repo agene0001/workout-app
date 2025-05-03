@@ -37,7 +37,7 @@ services:
     environment:
       - NODE_ENV=production
     ports:
-      - "8080:3000"
+      - "8080:8080"
 #    command: ["node", ".svelte-kit/output/server/index.js"]
     restart: always
     networks:
