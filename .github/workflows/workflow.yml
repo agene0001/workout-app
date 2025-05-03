@@ -59,7 +59,7 @@ jobs:
 
       - name: Build images with Docker Compose
         run: |
-          docker compose build
+          docker compose build backend-quarkus flask-backend svelte-frontend
       - name: Tag and push images
         run: |
           docker tag ${IMAGE_QUARKUS}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_QUARKUS}:latest
