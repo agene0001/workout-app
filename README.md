@@ -1,6 +1,6 @@
 
 # Gainz Tracker 🏋️
-![Header](./github-header-image.png)
+![Header](assets/github-header-image.png)
 ## Overview
 
 **Gainz Tracker** is a full-stack workout and nutrition app aimed at helping users pursue an active lifestyle and meet dietary goals. Initially conceived as a Jiu-Jitsu/Judo technique archive, the project evolved into a personalized nutrition assistant with integrated recipe recommendations, meal planning, and grocery export features.
@@ -22,7 +22,7 @@ Although integration with services like Amazon Fresh or Instacart is not yet fin
 
 ## Visuals
 
-![Recommender Demo](link-to-screenshot-or-gif-if-you-have-one)
+![Recommender Demo](assets/demo.mp4)
 
 ---
 
