@@ -1,7 +1,7 @@
 // src/firebase/config.ts
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-const env = import.meta.env
+const env = typeof process !== 'undefined'?process.env:import.meta.env
 // Your Firebase configuration
 const firebaseConfig = {
     apiKey: env.VITE_FIREBASE_API_KEY,
