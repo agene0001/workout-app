@@ -5,3 +5,4 @@ node_modules
 service-account-key.json
 backup.sql
 dist
+*uv.lock
