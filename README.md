@@ -22,7 +22,7 @@ Although integration with services like Amazon Fresh or Instacart is not yet fin
 
 ## Visuals
 
-![Recommender Demo](assets/demo.mp4)
+![Recommender Demo](assets/demo.gif)
 
 ---
 
