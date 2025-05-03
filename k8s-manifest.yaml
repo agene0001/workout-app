@@ -215,8 +215,8 @@ spec:
   type: ClusterIP
   ports:
     - protocol: TCP
-      port: 3000
-      targetPort: 8080
+      port: 80
+      targetPort: 3000
 
 ---
 # MODIFIED: PostgreSQL Deployment (was mysql-db)

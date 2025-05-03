@@ -120,7 +120,7 @@ COPY --from=builder /app/package.json /app/package-lock.json ./
 RUN npm ci --omit=dev
 # Copy the built server code
 COPY --from=builder /app/build ./build
-EXPOSE 8080
+EXPOSE 3000
 # Command to run the actual Node.js server
 CMD [ "node", "build/index.js" ]
 
