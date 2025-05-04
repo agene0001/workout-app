@@ -54,7 +54,7 @@ export default defineConfig(({ command, mode }) => {
 
     // Production preview configuration
     preview: {
-      allowedHosts: ['gainztrackers.com'],
+      allowedHosts: ['gainztrackers.com','www.gainztrackers.com'],
       host: hostIP,
       port: port,
       proxy: {

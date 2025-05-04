@@ -30,7 +30,7 @@ spec:
           # --- IMPORTANT: Update this image path ---
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/backend-quarkus:latest # Replace with your Quarkus image
 #          image: peppap1g/backend-quarkus:latest # Keep your image name, Kubernetes will look for it locally now
-          imagePullPolicy: IfNotPresent # Or Never
+          imagePullPolicy: Always # Or Never
 
           ports:
             - containerPort: 8081 # Same port as before
@@ -40,7 +40,7 @@ spec:
               memory: "256Mi"
             limits:
               cpu: "200m" # Slightly increase CPU limit if needed
-              memory: "512Mi" # Increase memory limit (e.g., to 2 Gigabytes)
+              memory: "1Gi" # Increase memory limit (e.g., to 2 Gigabytes)
 
           env:
             # MODIFIED: Point to PostgreSQL service name
@@ -99,13 +99,13 @@ spec:
         - name: flask-backend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/flask-backend:latest
 #          image: peppap1g/flask-backend:latest # Keep your image name, Kubernetes will look for it locally now
-          imagePullPolicy: IfNotPresent # Or Never
+          imagePullPolicy: Always # Or Never
 
           ports:
             - containerPort: 8082
           resources:
             requests:
-              cpu: "50m"   # Increase CPU request slightly
+              cpu: "100m"   # Increase CPU request slightly
               memory: "512Mi" # Increase memory request significantly (e.g., 512 MiB)
 
             limits:
@@ -157,7 +157,7 @@ spec:
         - name: svelte-frontend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
 #          image: peppap1g/svelte-frontend:latest # Keep your image name, Kubernetes will look for it locally now
-          imagePullPolicy: IfNotPresent # Or Never
+          imagePullPolicy: Always # Or Never
 
 #          imagePullPolicy: Always
           resources:
