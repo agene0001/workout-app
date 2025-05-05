@@ -36,14 +36,16 @@ spec:
             - containerPort: 8081 # Same port as before
           resources: # Kept resources, adjust if needed for Quarkus
             requests:
-              cpu: "50m"
+              cpu: "100m"
               memory: "256Mi"
             limits:
               cpu: "200m" # Slightly increase CPU limit if needed
-              memory: "1Gi" # Increase memory limit (e.g., to 2 Gigabytes)
+              memory: "4Gi" # Increase memory limit (e.g., to 2 Gigabytes)
 
           env:
             # MODIFIED: Point to PostgreSQL service name
+#            - name: QUARKUS_JVM_ARGS
+#              value: "-Xmx1700m" # Set max heap to 750 MiB
             - name: DB_HOST
               value: postgres-db # Use the PostgreSQL Service name
             # MODIFIED: Quarkus standard JDBC URL property
@@ -105,7 +107,7 @@ spec:
             - containerPort: 8082
           resources:
             requests:
-              cpu: "100m"   # Increase CPU request slightly
+              cpu: "50m"   # Increase CPU request slightly
               memory: "512Mi" # Increase memory request significantly (e.g., 512 MiB)
 
             limits:
@@ -115,7 +117,7 @@ spec:
           env:
             - name: NODE_ENV
               value: production
-            - name: API_KEY
+            - name: INSTACART_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: instacart-creds # Name of the Secret created above
@@ -217,7 +219,7 @@ spec:
           imagePullPolicy: Always
           resources: # Kept resources, adjust if needed for PostgreSQL
             requests:
-              cpu: "50m"
+              cpu: "25m"
               memory: "256Mi"
             limits:
               cpu: "150m"
@@ -269,6 +271,25 @@ spec:
     - protocol: TCP
       port: 5432 # PostgreSQL default port
       targetPort: 5432 # PostgreSQL container port
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: workout-app-cert # MUST match the name in the Ingress annotation
+spec:
+  domains:
+    - gainztrackers.com      # Domain for the cert
+    - www.gainztrackers.com  # Also include www if needed
+---
+apiVersion: networking.gke.io/v1beta1 # Use v1beta1 for FrontendConfig generally
+kind: FrontendConfig
+metadata:
+  name: https-redirect-config # Choose a descriptive name
+  namespace: default          # Must be the same namespace as your Ingress
+spec:
+  redirectToHttps:
+    enabled: true             # Enable the redirect
+    responseCodeName: MOVED_PERMANENTLY_DEFAULT # Send a 301 redirect (permanent)
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -276,6 +297,7 @@ kind: Ingress
 metadata:
   name: workout-app-ingress
   annotations:
+    networking.gke.io/v1beta1.FrontendConfig: https-redirect-config # Name MUST match FrontendConfig above
     kubernetes.io/ingress.global-static-ip-name: workout-app-static-ip
     networking.gke.io/managed-certificates: workout-app-cert
 spec:

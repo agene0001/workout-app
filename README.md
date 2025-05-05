@@ -11,7 +11,7 @@
 
 **Gainz Tracker** is a full-stack workout and nutrition app aimed at helping users pursue an active lifestyle and meet dietary goals. Initially conceived as a Jiu-Jitsu/Judo technique archive, the project evolved into a personalized nutrition assistant with integrated recipe recommendations, meal planning, and grocery export features.
 
-Although integration with services like Amazon Fresh or Instacart is not yet finalized, the project demonstrates a strong foundation in machine learning, full-stack development, and modern UI design. On the frontend, our application is fully built with Svelte, offering a fast and responsive user experience. We are now focusing on mobile development to bring this experience to iOS and Android users in the near future.
+Although integration with services like Amazon Fresh or Walmart API is not yet finalized, the project demonstrates a strong foundation in machine learning, full-stack development, and modern UI design. On the frontend, our application is fully built with Svelte, offering a fast and responsive user experience. We are now focusing on mobile development to bring this experience to iOS and Android users in the near future.
 
 ---
 
@@ -22,7 +22,7 @@ Although integration with services like Amazon Fresh or Instacart is not yet fin
 - ⌨️ **Autocomplete Engine** based on Princeton’s Ternary Search Trees
 - 🔎 **Advanced Search** using Binary Search for fast query resolution
 - 🌠 **Animated UI** with background transitions built in Svelte/React
-- 📦 **Modular Architecture** with Spring Boot (Java), Flask (Python), and Svelte Frontend
+- 📦 **Modular Architecture** with Quarkus (Java), Flask (Python), and Svelte Frontend
 
 ---
 
@@ -51,7 +51,7 @@ git clone https://github.com/yourusername/gainz-tracker
 docker-compose up --build
 ```
 
-For manual installation instructions for each service, see `/main/backend-spring`, `/main/backend-python`, and `/main/frontend-svelte`.
+For manual installation instructions for each service, see `/main/backend-quarkus`, `/main/backend-python`, and `/main/frontend-svelte`.
 
 ---
 
@@ -98,7 +98,7 @@ java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -jar target/app.jar
 ```bash
 .
 ├── main/
-│   ├── backend-spring/     # Java Spring server
+│   ├── backend-quarkus/     # Java Spring server
 │   ├── backend-python/     # Python scrapers and NLP
 │   └── frontend-svelte/    # Svelte front-end
 ├── docker-compose.yml
