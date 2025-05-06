@@ -1,8 +1,5 @@
-package org.backend.utils;
+package org.backend.recipes.utils;
 
-import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.StdIn;
-import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.SuffixArrayX;
 
 import jakarta.enterprise.context.ApplicationScoped;

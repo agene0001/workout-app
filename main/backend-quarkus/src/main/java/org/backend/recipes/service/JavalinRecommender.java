@@ -1,4 +1,4 @@
-package org.backend.service;
+package org.backend.recipes.service;
 
 import io.quarkus.runtime.Startup;
 import jakarta.annotation.PostConstruct;
@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
-import org.backend.model.Recipe;
-import org.backend.repository.RecipeRepository;
+import org.backend.recipes.model.Recipe;
+import org.backend.recipes.repository.RecipeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

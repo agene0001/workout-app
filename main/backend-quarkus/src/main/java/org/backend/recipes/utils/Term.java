@@ -1,4 +1,4 @@
-package org.backend.utils;
+package org.backend.recipes.utils;
 
 import java.util.Comparator;
 import java.util.Objects;

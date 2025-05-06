@@ -1,25 +1,22 @@
-package org.backend.resource;
+package org.backend.recipes.resource;
 
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import org.backend.model.Recipe;
-import org.backend.service.JavalinRecommender;
-import org.backend.service.RecipeService;
-import org.backend.utils.Term;
-import io.javalin.Javalin;
+import org.backend.common.ApiPaths;
+import org.backend.common.ApiResource;
+import org.backend.recipes.model.Recipe;
+import org.backend.recipes.service.RecipeService;
+import org.backend.recipes.utils.Term;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Path("/api/v1/recipes")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Path(ApiPaths.RECIPES)
 @ApplicationScoped
-public class RecipeResource {
+public class RecipeResource extends ApiResource {
     private static final int DEFAULT_PAGE_SIZE = 6; // Define a default page size
 
     private final RecipeService recipeService;
@@ -31,8 +28,6 @@ public class RecipeResource {
 
     @GET
     @Path("/{k}")
-    @Produces(MediaType.APPLICATION_JSON)
-
     public List<Recipe> getSampleRecipes(@PathParam("k") int k) {
         try {
             long start = System.currentTimeMillis();
@@ -51,7 +46,6 @@ public class RecipeResource {
 
     @GET
     @Path("/recipe/{term}")
-    @Produces(MediaType.APPLICATION_JSON)
 
     public List<Recipe> getRecipe(@PathParam("term") String term) {
         System.out.println("getRecipe called with term: " + term);
@@ -62,7 +56,6 @@ public class RecipeResource {
 
     @POST
     @Path("/{string}")
-    @Produces(MediaType.APPLICATION_JSON)
     public Term[] autocompleteRecipe(@PathParam("string") String string) {
         if (string == null || string.isEmpty()) {
             return new Term[0];

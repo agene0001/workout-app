@@ -1,9 +1,9 @@
-package org.backend.utils;
+package org.backend.recipes.utils;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
-import org.backend.model.Recipe;
-import org.backend.repository.RecipeRepository;
+import org.backend.recipes.model.Recipe;
+import org.backend.recipes.repository.RecipeRepository;
 
 import java.util.List;
 

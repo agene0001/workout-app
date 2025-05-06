@@ -273,6 +273,7 @@
                         text={[
                         recipe.duration ? `Duration: ${recipe.duration}` : "",
                         recipe.rating ? `Rating: ${recipe.rating}` : "",
+                        recipe.servings ? `${recipe.servings}` : "",
                     ]}
                         recipe={recipe}
                         fadeInAnimation="fadeIn"

@@ -37,7 +37,7 @@ export default defineConfig(({ command, mode }) => {
       host: hostIP,
       port: port,
       proxy: {
-        '/api/v1/recipes': {
+        '/api/v1': {
           target: `${protocol}://${QUARKUS_SERVICE}:${JAVA_PORT}`,
           headers: { 'Cache-Control': 'no-store' },
           changeOrigin: true,
@@ -58,7 +58,7 @@ export default defineConfig(({ command, mode }) => {
       host: hostIP,
       port: port,
       proxy: {
-        '/api/v1/recipes': {
+        '/api/v1': {
           target: `${protocol}://${QUARKUS_SERVICE}:${JAVA_PORT}`,
           headers: { 'Cache-Control': 'no-store' },
           changeOrigin: true,

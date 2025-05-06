@@ -1,4 +1,4 @@
-package org.backend.model;
+package org.backend.recipes.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;

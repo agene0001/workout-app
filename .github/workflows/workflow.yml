@@ -82,6 +82,28 @@ jobs:
           kubectl create secret generic instacart-creds \
             --from-literal=api-key="$INSTACART_API_KEY" \
             --dry-run=client -o yaml | kubectl apply -f -
+      - name: Create Firebase Secret from JSON
+        run: |
+          echo '${{ secrets.FIREBASE_CONFIG_JSON }}' > firebase-config.json
+          
+          VITE_FIREBASE_API_KEY=$(jq -r '.VITE_FIREBASE_API_KEY' firebase-config.json)
+          VITE_FIREBASE_AUTH_DOMAIN=$(jq -r '.VITE_FIREBASE_AUTH_DOMAIN' firebase-config.json)
+          VITE_FIREBASE_PROJECT_ID=$(jq -r '.VITE_FIREBASE_PROJECT_ID' firebase-config.json)
+          VITE_FIREBASE_STORAGE_BUCKET=$(jq -r '.VITE_FIREBASE_STORAGE_BUCKET' firebase-config.json)
+          VITE_FIREBASE_MESSAGING_SENDER_ID=$(jq -r '.VITE_FIREBASE_MESSAGING_SENDER_ID' firebase-config.json)
+          VITE_FIREBASE_APP_ID=$(jq -r '.VITE_FIREBASE_APP_ID' firebase-config.json)
+          VITE_FIREBASE_MEASUREMENT_ID=$(jq -r '.VITE_FIREBASE_MEASUREMENT_ID' firebase-config.json)
+          
+          kubectl create secret generic firebase-secrets \
+          --from-literal=VITE_FIREBASE_API_KEY="$VITE_FIREBASE_API_KEY" \
+          --from-literal=VITE_FIREBASE_AUTH_DOMAIN="$VITE_FIREBASE_AUTH_DOMAIN" \
+          --from-literal=VITE_FIREBASE_PROJECT_ID="$VITE_FIREBASE_PROJECT_ID" \
+          --from-literal=VITE_FIREBASE_STORAGE_BUCKET="$VITE_FIREBASE_STORAGE_BUCKET" \
+          --from-literal=VITE_FIREBASE_MESSAGING_SENDER_ID="$VITE_FIREBASE_MESSAGING_SENDER_ID" \
+          --from-literal=VITE_FIREBASE_APP_ID="$VITE_FIREBASE_APP_ID" \
+          --from-literal=VITE_FIREBASE_MEASUREMENT_ID="$VITE_FIREBASE_MEASUREMENT_ID" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
 
       - name: Deploy to GKE
         run: |

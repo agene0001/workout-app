@@ -1,11 +1,11 @@
-package org.backend.repository;
+package org.backend.recipes.repository;
 
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import org.backend.model.Recipe;
+import org.backend.recipes.model.Recipe;
 
 @ApplicationScoped
 public class RecipeRepository implements PanacheRepository<Recipe> {

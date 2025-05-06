@@ -98,7 +98,7 @@ java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -jar target/app.jar
 ```bash
 .
 ├── main/
-│   ├── backend-quarkus/     # Java Spring server
+│   ├── backend-quarkus/     # Java quarkus server
 │   ├── backend-python/     # Python scrapers and NLP
 │   └── frontend-svelte/    # Svelte front-end
 ├── docker-compose.yml

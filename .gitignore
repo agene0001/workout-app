@@ -1,4 +1,5 @@
 .env
+firebase-secrets.yaml
 .venv
 node_modules
 service-account-key.json

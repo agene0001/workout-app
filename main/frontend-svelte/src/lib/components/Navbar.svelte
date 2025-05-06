@@ -378,9 +378,9 @@
                             <li class="text-lg px-4 py-2 mx-1 cursor-pointer transition-all duration-200 ease-in-out transform text-[#00dd87] hover:text-secondary">
                                 <a class={name.toLowerCase() === "about-us" ? "text-info font-bold" : ""} href="/About-Us">About Us</a>
                             </li>
-<!--                            <li class="text-lg px-4 py-2 mx-1 cursor-pointer transition-all duration-200 ease-in-out transform text-[#00dd87] hover:text-secondary">-->
-<!--                                <a class={name.toLowerCase() === "blog" ? "text-info font-bold" : ""} href="/Blog">Blog</a>-->
-<!--                            </li>-->
+                            <li class="text-lg px-4 py-2 mx-1 cursor-pointer transition-all duration-200 ease-in-out transform text-[#00dd87] hover:text-secondary">
+                                <a class={name.toLowerCase() === "blog" ? "text-info font-bold" : ""} href="/Blog">Blog</a>
+                            </li>
                         </ul>
                     </div>
 

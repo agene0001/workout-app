@@ -154,14 +154,12 @@ spec:
         app: svelte-frontend
     spec:
       imagePullSecrets:
-        - name: my-registry-secret
+        - name: firebase-secrets
       containers:
         - name: svelte-frontend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
 #          image: peppap1g/svelte-frontend:latest # Keep your image name, Kubernetes will look for it locally now
           imagePullPolicy: Always # Or Never
-
-#          imagePullPolicy: Always
           resources:
             requests:
               cpu: "50m"

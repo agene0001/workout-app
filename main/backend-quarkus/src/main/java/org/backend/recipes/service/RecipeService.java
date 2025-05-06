@@ -1,20 +1,17 @@
-package org.backend.service;
+package org.backend.recipes.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.backend.model.Category;
-import org.backend.model.Recipe;
-import org.backend.repository.CategoryRepository;
-import org.backend.repository.RecipeRepository;
-import org.backend.utils.Autocomplete;
-import org.backend.utils.Term;
+import org.backend.recipes.model.Category;
+import org.backend.recipes.model.Recipe;
+import org.backend.recipes.repository.CategoryRepository;
+import org.backend.recipes.repository.RecipeRepository;
+import org.backend.recipes.utils.Autocomplete;
+import org.backend.recipes.utils.Term;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import io.javalin.Javalin;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
