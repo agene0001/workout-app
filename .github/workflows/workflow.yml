@@ -79,33 +79,35 @@ jobs:
             echo "Cleaning up old images for $FULL_IMAGE_PATH..."
 
             # Get the digest of the image currently tagged 'latest'
-            # Use --allow-non-fatal-errors to prevent script from failing if image doesn't exist yet
+            # Removed --allow-non-fatal-errors as it's not supported here
             LATEST_DIGEST=$(gcloud container images list-tags "$FULL_IMAGE_PATH" \
               --filter='tag:latest' \
               --format='get(digest)' \
-              --limit=1 \
-              --allow-non-fatal-errors)
+              --limit=1) # Removed --allow-non-fatal-errors
 
             if [ -z "$LATEST_DIGEST" ]; then
-              echo "No image found with 'latest' tag for $FULL_IMAGE_PATH. Skipping cleanup."
+              echo "No image found with 'latest' tag for $FULL_IMAGE_PATH (or image path invalid). Skipping cleanup."
               echo "---"
               continue # Move to the next image if no 'latest' found
             fi
 
             echo "Digest of 'latest' image is: $LATEST_DIGEST"
 
-            # Get all image digests for this repository, excluding the 'latest' digest
-            # We list all and then filter in the loop
+            # Get all image digests for this repository
+            # Removed --allow-non-fatal-errors
             ALL_DIGESTS=$(gcloud container images list-tags "$FULL_IMAGE_PATH" \
               --format='get(digest)' \
-              --sort-by='~timestamp' \
-              --allow-non-fatal-errors) # Sort by timestamp descending
+              --sort-by='~timestamp') # Removed --allow-non-fatal-errors # Sort by timestamp descending
+
+            # Handle the case where only the latest image exists (ALL_DIGESTS might just contain LATEST_DIGEST)
+            # The loop below will handle this correctly by not deleting the LATEST_DIGEST
 
             if [ -z "$ALL_DIGESTS" ]; then
-               echo "No other images found for $FULL_IMAGE_PATH. Cleanup complete."
+               echo "No other images found for $FULL_IMAGE_PATH after getting latest digest. Cleanup complete."
                echo "---"
                continue
             fi
+
 
             # Iterate through all digests and delete if not the latest
             echo "All digests found:"
@@ -113,18 +115,25 @@ jobs:
             echo "Checking digests for deletion..."
 
             DELETE_COUNT=0
-            for digest in $ALL_DIGESTS; do
-              if [ "$digest" != "$LATEST_DIGEST" ]; then
+            # Split ALL_DIGESTS into an array to handle potential spaces/newlines correctly, although simple loop often works for digests
+            # Read digests line by line for robustness
+            while IFS= read -r digest; do
+              if [ -n "$digest" ] && [ "$digest" != "$LATEST_DIGEST" ]; then # Check if digest is not empty and not the latest
                 echo "Deleting old image: $FULL_IMAGE_PATH@$digest"
                 # Use || true to allow workflow to continue even if one deletion fails
                 gcloud container images delete "$FULL_IMAGE_PATH@$digest" \
                   --quiet \
                   --force-delete-tags || true
                 DELETE_COUNT=$((DELETE_COUNT + 1))
-              # else # Optional: Add this else block to explicitly show which one is kept
-              #   echo "Keeping latest image: $FULL_IMAGE_PATH@$digest"
+              # else # Optional: Add this else block to explicitly show which one is kept or skipped (if empty)
+              #   if [ -n "$digest" ]; then
+              #     echo "Keeping latest image: $FULL_IMAGE_PATH@$digest"
+              #   # else
+              #   #   echo "Skipping empty digest line"
+              #   fi
               fi
-            done
+            done <<< "$ALL_DIGESTS" # Feed the variable into the while loop
+
             echo "Deleted $DELETE_COUNT older image versions for $FULL_IMAGE_PATH."
             echo "Cleanup complete for $FULL_IMAGE_PATH."
             echo "---"
@@ -190,6 +199,16 @@ jobs:
           kubectl rollout status deployment/flask-backend
 #          kubectl rollout status deployment/postgres-db
 
+
       - name: Get service URLs
+        # Use always() in case previous steps failed, still try to get info
+        if: always()
         run: |
-          echo "Frontend service available at: $(kubectl get service svelte-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+          # Use --namespace if your services are not in the default namespace
+          FRONTEND_IP=$(kubectl get service svelte-frontend -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          if [ -z "$FRONTEND_IP" ]; then
+             echo "Frontend service IP not yet available or service not found."
+             echo "Check kubectl get service svelte-frontend for status."
+          else
+             echo "Frontend service available at: http://$FRONTEND_IP"
+          fi
