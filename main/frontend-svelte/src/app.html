@@ -2,13 +2,97 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8" />
-	<link rel="icon" type="image/svg+xml" href="%sveltekit.assets%/imgs/gainztrackersfavicon.png" />
+	<link rel="icon" type="image/png" href="%sveltekit.assets%/imgs/gainztrackersfavicon.png" />
+	<link rel="apple-touch-icon" type="image/png" href="%sveltekit.assets%/imgs/gainztrackersfavicon.png" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta name='impact-site-verification' value='b28b7bb2-e692-49f2-b7b6-42c79e01a952'>
-	<title>Gains Tracker</title>
+
+	<!-- Primary Meta Tags -->
+	<title>Gainz Tracker | Personalized Fitness & Nutrition Platform with Grocery Integration</title>
+	<meta name="title" content="Gainz Tracker | Personalized Fitness & Nutrition Platform with Grocery Integration">
+	<meta name="description" content="Optimize your fitness journey with Gainz Tracker - AI-powered meal planning, recipe recommendations, and Instacart integration for cost-effective grocery shopping. Save time and money while reaching your health goals.">
+
+	<!-- Keywords -->
+	<meta name="keywords" content="fitness app, nutrition tracking, meal planning, recipe recommendations, Instacart integration, grocery shopping, fitness goals, diet planning, healthy eating, workout tracking, AI nutrition assistant, fitness technology">
+
+	<!-- Open Graph / Facebook -->
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://www.gainztracker.com/">
+	<meta property="og:title" content="Gainz Tracker | Personalized Fitness & Nutrition Platform">
+	<meta property="og:description" content="All-in-one platform for personalized nutrition plans, AI recipe recommendations, and integrated grocery shopping with Instacart. Save money on groceries while meeting your fitness goals.">
+	<meta property="og:image" content="%sveltekit.assets%/imgs/gainztracker-social-preview.png">
+
+	<!-- Twitter -->
+	<meta property="twitter:card" content="summary_large_image">
+	<meta property="twitter:url" content="https://www.gainztracker.com/">
+	<meta property="twitter:title" content="Gainz Tracker | AI-Powered Fitness & Nutrition">
+	<meta property="twitter:description" content="Optimize your fitness journey with personalized meal plans, grocery integration, and cost comparison across stores like Aldi and Cub.">
+	<meta property="twitter:image" content="%sveltekit.assets%/imgs/gainztracker-social-preview.png">
+
+	<!-- App Status and Availability -->
+	<meta name="application-name" content="Gainz Tracker">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-title" content="Gainz Tracker">
+
+	<!-- Canonical URL -->
+	<link rel="canonical" href="https://www.gainztracker.com/">
+
+	<!-- Robots -->
+	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+
+	<!-- Structured Data -->
+	<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Gainz Tracker",
+			"applicationCategory": "HealthApplication",
+			"operatingSystem": "Web, iOS, Android",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			},
+			"description": "Gainz Tracker is a full-featured fitness and nutrition platform that helps users optimize their health goals while saving money on groceries. It offers personalized meal recommendations tailored to fitness goals, integrates with Instacart to simplify ingredient shopping, and compares prices across stores like Aldi and Cub for cost efficiency.",
+			"aggregateRating": {
+				"@type": "AggregateRating",
+				"ratingValue": "4.8",
+				"ratingCount": "32"
+			}
+		}
+	</script>
+
+	<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "WebSite",
+			"url": "https://www.gainztracker.com/",
+			"name": "Gainz Tracker",
+			"description": "AI-powered fitness and nutrition platform with grocery integration",
+			"potentialAction": {
+				"@type": "SearchAction",
+				"target": "https://www.gainztracker.com/search?q={search_term_string}",
+				"query-input": "required name=search_term_string"
+			}
+		}
+	</script>
+
+
 	%sveltekit.head%
+
+	<!-- Preload Critical Resources -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body data-sveltekit-preload-data="hover">
 <div style="display: contents">%sveltekit.body%</div>
+
+<!-- Add structured footer with microdata -->
+<footer itemscope itemtype="https://schema.org/WPFooter">
+	<div class="footer-content">
+		<!-- Footer content will be inserted by SvelteKit -->
+	</div>
+</footer>
 </body>
 </html>

@@ -46,13 +46,6 @@ jobs:
         run: |
           gcloud components install gke-gcloud-auth-plugin
 
-      - name: Clean up old images
-        run: |
-          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
-          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_QUARKUS --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_QUARKUS@{} --quiet --force-delete-tags
-          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK@{} --quiet --force-delete-tags
-#          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_DB --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_DB@{} --quiet --force-delete-tags
-
       - name: Configure Docker to use Google Cloud authentication
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
@@ -70,6 +63,78 @@ jobs:
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
 #          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
 #          docker tag ${IMAGE_DB}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
+
+      # NEW STEP: Clean up older images, keeping only the one tagged 'latest'
+      - name: Clean up older images
+        run: |
+          IMAGES_TO_CLEAN=(
+            "${IMAGE_FRONTEND}"
+            "${IMAGE_QUARKUS}"
+            "${IMAGE_FLASK}"
+            # "${IMAGE_DB}" # Uncomment if you uncomment the DB image elsewhere
+          )
+
+          for IMAGE_NAME in "${IMAGES_TO_CLEAN[@]}"; do
+            FULL_IMAGE_PATH="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}"
+            echo "Cleaning up old images for $FULL_IMAGE_PATH..."
+
+            # Get the digest of the image currently tagged 'latest'
+            # Use --allow-non-fatal-errors to prevent script from failing if image doesn't exist yet
+            LATEST_DIGEST=$(gcloud container images list-tags "$FULL_IMAGE_PATH" \
+              --filter='tag:latest' \
+              --format='get(digest)' \
+              --limit=1 \
+              --allow-non-fatal-errors)
+
+            if [ -z "$LATEST_DIGEST" ]; then
+              echo "No image found with 'latest' tag for $FULL_IMAGE_PATH. Skipping cleanup."
+              echo "---"
+              continue # Move to the next image if no 'latest' found
+            fi
+
+            echo "Digest of 'latest' image is: $LATEST_DIGEST"
+
+            # Get all image digests for this repository, excluding the 'latest' digest
+            # We list all and then filter in the loop
+            ALL_DIGESTS=$(gcloud container images list-tags "$FULL_IMAGE_PATH" \
+              --format='get(digest)' \
+              --sort-by='~timestamp' \
+              --allow-non-fatal-errors) # Sort by timestamp descending
+
+            if [ -z "$ALL_DIGESTS" ]; then
+               echo "No other images found for $FULL_IMAGE_PATH. Cleanup complete."
+               echo "---"
+               continue
+            fi
+
+            # Iterate through all digests and delete if not the latest
+            echo "All digests found:"
+            echo "$ALL_DIGESTS"
+            echo "Checking digests for deletion..."
+
+            DELETE_COUNT=0
+            for digest in $ALL_DIGESTS; do
+              if [ "$digest" != "$LATEST_DIGEST" ]; then
+                echo "Deleting old image: $FULL_IMAGE_PATH@$digest"
+                # Use || true to allow workflow to continue even if one deletion fails
+                gcloud container images delete "$FULL_IMAGE_PATH@$digest" \
+                  --quiet \
+                  --force-delete-tags || true
+                DELETE_COUNT=$((DELETE_COUNT + 1))
+              # else # Optional: Add this else block to explicitly show which one is kept
+              #   echo "Keeping latest image: $FULL_IMAGE_PATH@$digest"
+              fi
+            done
+            echo "Deleted $DELETE_COUNT older image versions for $FULL_IMAGE_PATH."
+            echo "Cleanup complete for $FULL_IMAGE_PATH."
+            echo "---"
+          done
+#      - name: Clean up old images
+#        run: |
+#          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
+#          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_QUARKUS --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_QUARKUS@{} --quiet --force-delete-tags
+#          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FLASK@{} --quiet --force-delete-tags
+#      #          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_DB --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_DB@{} --quiet --force-delete-tags
 
       - name: Create or Update Instacart Secret
         env:
