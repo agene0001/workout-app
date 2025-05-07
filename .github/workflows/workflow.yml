@@ -49,38 +49,45 @@ jobs:
       - name: Configure Docker to use Google Cloud authentication
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
-
       - name: Build images with Docker Compose
         run: |
-          docker compose build backend-quarkus flask-backend svelte-frontend
-      - name: Tag and push images
-        run: |
-          docker tag ${IMAGE_QUARKUS}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_QUARKUS}:latest
-          docker tag ${IMAGE_FLASK}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
-          docker tag ${IMAGE_FRONTEND}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
-          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_QUARKUS}:latest
-          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
-          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
-#          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
-#          docker tag ${IMAGE_DB}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
+          # Parse Firebase secret JSON into shell variables available for the build context
+          # The Dockerfile build process (via docker compose) should pick these up
+          FIREBASE_CONFIG_JSON='${{ secrets.FIREBASE_CONFIG_JSON }}'
 
+          # Use jq to parse the JSON and export each key-value pair
+          # Ensure jq is available, which it likely is on ubuntu-latest, but you could add a setup step if needed
+          export VITE_FIREBASE_API_KEY=$(echo "$FIREBASE_CONFIG_JSON" | jq -r '.VITE_FIREBASE_API_KEY')
+          export VITE_FIREBASE_AUTH_DOMAIN=$(echo "$FIREBASE_CONFIG_JSON" | jq -r '.VITE_FIREBASE_AUTH_DOMAIN')
+          export VITE_FIREBASE_PROJECT_ID=$(echo "$FIREBASE_CONFIG_JSON" | jq -r '.VITE_FIREBASE_PROJECT_ID')
+          export VITE_FIREBASE_STORAGE_BUCKET=$(echo "$FIREBASE_CONFIG_JSON" | jq -r '.VITE_FIREBASE_STORAGE_BUCKET')
+          export VITE_FIREBASE_MESSAGING_SENDER_ID=$(echo "$FIREBASE_CONFIG_JSON" | jq -r '.VITE_FIREBASE_MESSAGING_SENDER_ID')
+          export VITE_FIREBASE_APP_ID=$(echo "$FIREBASE_CONFIG_JSON" | jq -r '.VITE_FIREBASE_APP_ID')
+          export VITE_FIREBASE_MEASUREMENT_ID=$(echo "$FIREBASE_CONFIG_JSON" | jq -r '.VITE_FIREBASE_MEASUREMENT_ID')
+
+          # Now run docker compose build. These exported variables should be available
+          # in the environment where the Dockerfile's build commands execute.
+          docker compose build backend-quarkus flask-backend svelte-frontend
+#      - name: Build images with Docker Compose
+#        run: |
+#          docker compose build backend-quarkus flask-backend svelte-frontend
       # NEW STEP: Clean up older images, keeping only the one tagged 'latest'
       - name: Clean up older images
         run: |
           # Install jq if it's not already available on the runner image
           sudo apt-get update && sudo apt-get install -y jq
-          
+
           IMAGES_TO_CLEAN=(
             "${IMAGE_FRONTEND}"
             "${IMAGE_QUARKUS}"
             "${IMAGE_FLASK}"
             # "${IMAGE_DB}" # Uncomment if you uncomment the DB image elsewhere
           )
-          
+
           for IMAGE_NAME in "${IMAGES_TO_CLEAN[@]}"; do
             FULL_IMAGE_PATH="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}"
             echo "Cleaning up old images for $FULL_IMAGE_PATH..."
-          
+
             # List all image tags and digests in JSON format
             # Check if the list-tags command was successful before proceeding
             if ! IMAGE_INFO_JSON=$(gcloud container images list-tags "$FULL_IMAGE_PATH" --format='json'); then
@@ -88,35 +95,35 @@ jobs:
                 echo "---"
                 continue # Move to the next image
             fi
-          
+
             # Use jq to find the digest of the image tagged 'latest'.
             # The '? // empty' handles cases where tags might be null or missing.
             LATEST_DIGEST=$(echo "$IMAGE_INFO_JSON" | jq -r '.[] | select(.tags[]? // empty == "latest") | .digest' 2>/dev/null)
-          
+
             if [ -z "$LATEST_DIGEST" ]; then
               echo "No image found with 'latest' tag in the image list for $FULL_IMAGE_PATH. Skipping cleanup."
               echo "This might be the first push or the 'latest' tag is genuinely missing."
               echo "---"
               continue # Move to the next image if no 'latest' found
             fi
-          
+
             echo "Digest of 'latest' image is: $LATEST_DIGEST"
-          
+
             # Use jq to extract all unique digests from the JSON output
             ALL_DIGESTS=$(echo "$IMAGE_INFO_JSON" | jq -r '.[] | .digest' | sort -u)
-          
+
             if [ -z "$ALL_DIGESTS" ]; then
                echo "No digests found for $FULL_IMAGE_PATH (unexpected if latest was found). Cleanup complete."
                echo "---"
                continue
             fi
-          
-          
+
+
             # Iterate through all digests and delete if not the latest
             echo "All unique digests found:"
             echo "$ALL_DIGESTS"
             echo "Checking digests for deletion..."
-          
+
             DELETE_COUNT=0
             # Read digests line by line for robustness
             while IFS= read -r digest; do
@@ -134,11 +141,23 @@ jobs:
               #   echo "Skipping empty line in digest list"
               fi
             done <<< "$ALL_DIGESTS" # Feed the variable into the while loop
-          
+
             echo "Deleted $DELETE_COUNT older image versions for $FULL_IMAGE_PATH."
             echo "Cleanup complete for $FULL_IMAGE_PATH."
             echo "---"
           done
+      - name: Tag and push images
+        run: |
+          docker tag ${IMAGE_QUARKUS}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_QUARKUS}:latest
+          docker tag ${IMAGE_FLASK}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
+          docker tag ${IMAGE_FRONTEND}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_QUARKUS}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
+#          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
+#          docker tag ${IMAGE_DB}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
+
+
 #      - name: Clean up old images
 #        run: |
 #          gcloud container images list-tags $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND --format='get(digest)' --filter='tag:latest' | xargs -I {} gcloud container images delete $REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_FRONTEND@{} --quiet --force-delete-tags
@@ -157,27 +176,6 @@ jobs:
           kubectl create secret generic instacart-creds \
             --from-literal=api-key="$INSTACART_API_KEY" \
             --dry-run=client -o yaml | kubectl apply -f -
-      - name: Create Firebase Secret from JSON
-        run: |
-          echo '${{ secrets.FIREBASE_CONFIG_JSON }}' > firebase-config.json
-          
-          VITE_FIREBASE_API_KEY=$(jq -r '.VITE_FIREBASE_API_KEY' firebase-config.json)
-          VITE_FIREBASE_AUTH_DOMAIN=$(jq -r '.VITE_FIREBASE_AUTH_DOMAIN' firebase-config.json)
-          VITE_FIREBASE_PROJECT_ID=$(jq -r '.VITE_FIREBASE_PROJECT_ID' firebase-config.json)
-          VITE_FIREBASE_STORAGE_BUCKET=$(jq -r '.VITE_FIREBASE_STORAGE_BUCKET' firebase-config.json)
-          VITE_FIREBASE_MESSAGING_SENDER_ID=$(jq -r '.VITE_FIREBASE_MESSAGING_SENDER_ID' firebase-config.json)
-          VITE_FIREBASE_APP_ID=$(jq -r '.VITE_FIREBASE_APP_ID' firebase-config.json)
-          VITE_FIREBASE_MEASUREMENT_ID=$(jq -r '.VITE_FIREBASE_MEASUREMENT_ID' firebase-config.json)
-          
-          kubectl create secret generic firebase-secrets \
-          --from-literal=VITE_FIREBASE_API_KEY="$VITE_FIREBASE_API_KEY" \
-          --from-literal=VITE_FIREBASE_AUTH_DOMAIN="$VITE_FIREBASE_AUTH_DOMAIN" \
-          --from-literal=VITE_FIREBASE_PROJECT_ID="$VITE_FIREBASE_PROJECT_ID" \
-          --from-literal=VITE_FIREBASE_STORAGE_BUCKET="$VITE_FIREBASE_STORAGE_BUCKET" \
-          --from-literal=VITE_FIREBASE_MESSAGING_SENDER_ID="$VITE_FIREBASE_MESSAGING_SENDER_ID" \
-          --from-literal=VITE_FIREBASE_APP_ID="$VITE_FIREBASE_APP_ID" \
-          --from-literal=VITE_FIREBASE_MEASUREMENT_ID="$VITE_FIREBASE_MEASUREMENT_ID" \
-          --dry-run=client -o yaml | kubectl apply -f -
 
 
       - name: Deploy to GKE
