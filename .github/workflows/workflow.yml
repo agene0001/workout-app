@@ -67,73 +67,74 @@ jobs:
       # NEW STEP: Clean up older images, keeping only the one tagged 'latest'
       - name: Clean up older images
         run: |
+          # Install jq if it's not already available on the runner image
+          sudo apt-get update && sudo apt-get install -y jq
+          
           IMAGES_TO_CLEAN=(
             "${IMAGE_FRONTEND}"
             "${IMAGE_QUARKUS}"
             "${IMAGE_FLASK}"
             # "${IMAGE_DB}" # Uncomment if you uncomment the DB image elsewhere
           )
-
+          
           for IMAGE_NAME in "${IMAGES_TO_CLEAN[@]}"; do
             FULL_IMAGE_PATH="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}"
             echo "Cleaning up old images for $FULL_IMAGE_PATH..."
-
-            # Get the digest of the image currently tagged 'latest'
-            # Removed --allow-non-fatal-errors as it's not supported here
-            LATEST_DIGEST=$(gcloud container images list-tags "$FULL_IMAGE_PATH" \
-              --filter='tag:latest' \
-              --format='get(digest)' \
-              --limit=1) # Removed --allow-non-fatal-errors
-
+          
+            # List all image tags and digests in JSON format
+            # Check if the list-tags command was successful before proceeding
+            if ! IMAGE_INFO_JSON=$(gcloud container images list-tags "$FULL_IMAGE_PATH" --format='json'); then
+                echo "Failed to list image tags for $FULL_IMAGE_PATH. Skipping cleanup for this image."
+                echo "---"
+                continue # Move to the next image
+            fi
+          
+            # Use jq to find the digest of the image tagged 'latest'.
+            # The '? // empty' handles cases where tags might be null or missing.
+            LATEST_DIGEST=$(echo "$IMAGE_INFO_JSON" | jq -r '.[] | select(.tags[]? // empty == "latest") | .digest' 2>/dev/null)
+          
             if [ -z "$LATEST_DIGEST" ]; then
-              echo "No image found with 'latest' tag for $FULL_IMAGE_PATH (or image path invalid). Skipping cleanup."
+              echo "No image found with 'latest' tag in the image list for $FULL_IMAGE_PATH. Skipping cleanup."
+              echo "This might be the first push or the 'latest' tag is genuinely missing."
               echo "---"
               continue # Move to the next image if no 'latest' found
             fi
-
+          
             echo "Digest of 'latest' image is: $LATEST_DIGEST"
-
-            # Get all image digests for this repository
-            # Removed --allow-non-fatal-errors
-            ALL_DIGESTS=$(gcloud container images list-tags "$FULL_IMAGE_PATH" \
-              --format='get(digest)' \
-              --sort-by='~timestamp') # Removed --allow-non-fatal-errors # Sort by timestamp descending
-
-            # Handle the case where only the latest image exists (ALL_DIGESTS might just contain LATEST_DIGEST)
-            # The loop below will handle this correctly by not deleting the LATEST_DIGEST
-
+          
+            # Use jq to extract all unique digests from the JSON output
+            ALL_DIGESTS=$(echo "$IMAGE_INFO_JSON" | jq -r '.[] | .digest' | sort -u)
+          
             if [ -z "$ALL_DIGESTS" ]; then
-               echo "No other images found for $FULL_IMAGE_PATH after getting latest digest. Cleanup complete."
+               echo "No digests found for $FULL_IMAGE_PATH (unexpected if latest was found). Cleanup complete."
                echo "---"
                continue
             fi
-
-
+          
+          
             # Iterate through all digests and delete if not the latest
-            echo "All digests found:"
+            echo "All unique digests found:"
             echo "$ALL_DIGESTS"
             echo "Checking digests for deletion..."
-
+          
             DELETE_COUNT=0
-            # Split ALL_DIGESTS into an array to handle potential spaces/newlines correctly, although simple loop often works for digests
             # Read digests line by line for robustness
             while IFS= read -r digest; do
-              if [ -n "$digest" ] && [ "$digest" != "$LATEST_DIGEST" ]; then # Check if digest is not empty and not the latest
+              # Ensure digest is not empty and is not the latest digest
+              if [ -n "$digest" ] && [ "$digest" != "$LATEST_DIGEST" ]; then
                 echo "Deleting old image: $FULL_IMAGE_PATH@$digest"
                 # Use || true to allow workflow to continue even if one deletion fails
                 gcloud container images delete "$FULL_IMAGE_PATH@$digest" \
                   --quiet \
                   --force-delete-tags || true
                 DELETE_COUNT=$((DELETE_COUNT + 1))
-              # else # Optional: Add this else block to explicitly show which one is kept or skipped (if empty)
-              #   if [ -n "$digest" ]; then
-              #     echo "Keeping latest image: $FULL_IMAGE_PATH@$digest"
-              #   # else
-              #   #   echo "Skipping empty digest line"
-              #   fi
+              elif [ "$digest" = "$LATEST_DIGEST" ]; then
+                 echo "Keeping latest image: $FULL_IMAGE_PATH@$digest"
+              # else # Skip empty lines from the list
+              #   echo "Skipping empty line in digest list"
               fi
             done <<< "$ALL_DIGESTS" # Feed the variable into the while loop
-
+          
             echo "Deleted $DELETE_COUNT older image versions for $FULL_IMAGE_PATH."
             echo "Cleanup complete for $FULL_IMAGE_PATH."
             echo "---"
