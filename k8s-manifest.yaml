@@ -153,8 +153,8 @@ spec:
       labels:
         app: svelte-frontend
     spec:
-      imagePullSecrets:
-        - name: firebase-secrets
+#      imagePullSecrets:
+#        - name: firebase-secrets
       containers:
         - name: svelte-frontend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest

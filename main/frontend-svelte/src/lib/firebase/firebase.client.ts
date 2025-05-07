@@ -28,6 +28,7 @@ export function initializeFirebaseClient(): void {
     console.log("Attempting Firebase client initialization...");
 
     try {
+
         const appName = 'client-default'; // Use a consistent name
         const existingApp = getApps().find(app => app.name === appName);
 
