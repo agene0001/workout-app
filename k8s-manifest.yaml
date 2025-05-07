@@ -172,9 +172,9 @@ spec:
           env:
             - name: NODE_ENV
               value: production
-          envFrom:
-            - secretRef:
-                name: firebase-secrets # This MUST match the name of the secret created in the workflow
+#          envFrom:
+#            - secretRef:
+#                name: firebase-secrets # This MUST match the name of the secret created in the workflow
 
 #          command: ["npm", "run", "preview"]
       restartPolicy: Always
