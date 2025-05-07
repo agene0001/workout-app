@@ -153,8 +153,6 @@ spec:
       labels:
         app: svelte-frontend
     spec:
-#      imagePullSecrets:
-#        - name: firebase-secrets
       containers:
         - name: svelte-frontend
           image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
@@ -172,9 +170,6 @@ spec:
           env:
             - name: NODE_ENV
               value: production
-#          envFrom:
-#            - secretRef:
-#                name: firebase-secrets # This MUST match the name of the secret created in the workflow
 
 #          command: ["npm", "run", "preview"]
       restartPolicy: Always
