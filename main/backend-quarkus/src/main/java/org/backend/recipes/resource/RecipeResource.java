@@ -56,11 +56,15 @@ public class RecipeResource extends ApiResource {
 
     @POST
     @Path("/{string}")
-    public Term[] autocompleteRecipe(@PathParam("string") String string) {
+    public Term[] autocompleteRecipe(@PathParam("string") String string, @QueryParam("size") @DefaultValue("6") int size, @QueryParam("offset") @DefaultValue("0") int offset) {
         if (string == null || string.isEmpty()) {
             return new Term[0];
         }
-        return recipeService.autocompleteRecipe(string);
+        // Ensure pageSize isn't excessively large or negative, adjust if necessary
+        if (size <= 0) {
+            size = DEFAULT_PAGE_SIZE;
+        }
+        return recipeService.autocompleteRecipe(string, size, offset);
     }
 
 

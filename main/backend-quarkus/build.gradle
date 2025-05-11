@@ -22,11 +22,11 @@ dependencies {
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
     implementation 'io.quarkus:quarkus-rest-jackson'
-
+    implementation("io.quarkus:quarkus-reactive-routes")
 
     // Scala library dependency - REQUIRED for Spark
     implementation 'io.javalin:javalin:5.6.3'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+//    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 //
     // PostgreSQL driver required for Spark JDBC
     implementation 'org.postgresql:postgresql:42.7.2'
@@ -44,6 +44,9 @@ dependencies {
     implementation files("libs/algs4.jar")
     implementation 'io.quarkus:quarkus-jdbc-postgresql'
     implementation 'org.ow2.asm:asm:9.5'
+    implementation 'com.google.firebase:firebase-admin:9.4.1'
+//    implementation 'io.quarkus:quarkus-smallrye-jwt'
+    implementation 'io.quarkus:quarkus-elytron-security-properties-file'
 
 
 

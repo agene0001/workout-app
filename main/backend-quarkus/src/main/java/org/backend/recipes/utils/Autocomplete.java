@@ -79,7 +79,7 @@ public class Autocomplete {
 
 
     // --- MODIFIED allMatches ---
-    public Term[] allMatches(String prefix) {
+    public Term[] allMatches(String prefix,int size,int offset) {
         if (prefix == null) {
             throw new IllegalArgumentException("prefix cannot be null");
         }
@@ -144,7 +144,7 @@ public class Autocomplete {
         List<Term> sortedResults = new ArrayList<>(uniqueResults);
         sortedResults.sort(Term.byReverseWeightOrder()); // Sort final list
 
-        return sortedResults.toArray(new Term[0]);
+        return sortedResults.subList(offset*size, Math.min((offset * size)+size, sortedResults.size())).toArray(new Term[0]);
     }
 
     // numberOfMatches should probably still only count prefix matches for clarity

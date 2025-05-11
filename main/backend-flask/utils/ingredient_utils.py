@@ -1,7 +1,5 @@
 import re
 import spacy
-from spacy.matcher import Matcher
-from spacy.tokens import Doc # Import Doc
 
 # Load spacy model (ensure it's loaded only once if possible, e.g., via fixture or module scope)
 try:

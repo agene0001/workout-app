@@ -2,10 +2,10 @@
     import {onMount} from 'svelte';
     import InfoBlock from '$lib/components/InfoBlock.svelte';
     import axios from 'axios';
+    import RecipeAutocomplete from '$lib/components/RecipeAutocomplete.svelte';
 
     // State variables
     let querySearch = '';
-    let searchedRecipes = [];
     let recipes = [];
     let searchedRecipeArray = null; // Array of recipes with the same name
     let recommendedRecipes = [];
@@ -80,38 +80,60 @@
         getQuery(querySearch);
     }
 
-    // Search recipe function
-    async function searchRecipe() {
-        console.log("Query: " + querySearch);
+    // Updated Search recipe function
+    async function searchRecipe(termToSearch) {
+        console.log("searchRecipe in +page.svelte called with term:", termToSearch);
+
+        if (!termToSearch || termToSearch.trim() === '') {
+            console.warn("Search term provided to searchRecipe is empty. Clearing results.");
+            querySearch = ''; // Clear the page's querySearch state
+            searchedRecipeArray = null;
+            recommendedRecipes = [];
+            // searchedRecipes = []; // If you want to clear this too
+            return;
+        }
+
+        querySearch = termToSearch; // Update the page's state with the term being searched
+
+        console.log("Query being used for API call: " + querySearch);
 
         try {
             const res = await axios.get(`/api/v1/recipes/recipe/${encodeURIComponent(querySearch)}`);
             console.log("Recipe search response:", res.data);
 
-            // Store the array of recipes with the same name
             searchedRecipeArray = res.data;
 
             if (searchedRecipeArray && searchedRecipeArray.length > 0) {
-                // Use the first recipe for recommendations
                 const firstRecipe = searchedRecipeArray[0];
+                let ingredientsParam = '';
 
-                // Extract ingredients from the currently selected recipe
-                const ingredientsParam = Array.isArray(firstRecipe.ingredients)
-                    ? firstRecipe.ingredients.join(',')
-                    : firstRecipe.ingredients;
+                // Ensure ingredients exist and handle if it's an array or string
+                if (firstRecipe.ingredients) {
+                    ingredientsParam = Array.isArray(firstRecipe.ingredients)
+                        ? firstRecipe.ingredients.join(',')
+                        : String(firstRecipe.ingredients);
+                }
 
-                const recRes = await axios.get(
-                    `api/v1/recipes/recommendations?query=${encodeURIComponent(querySearch)}&ingredients=${ingredientsParam}`
-                );
-                console.log("Recommendation response:", recRes.data);
-                recommendedRecipes = recRes.data;
+                if (ingredientsParam) {
+                    const recRes = await axios.get(
+                        `/api/v1/recipes/recommendations?query=${encodeURIComponent(querySearch)}&ingredients=${encodeURIComponent(ingredientsParam)}`
+                    );
+                    console.log("Recommendation response:", recRes.data);
+                    recommendedRecipes = recRes.data;
+                } else {
+                    console.warn(`No ingredients found for recipe "${querySearch}" to fetch recommendations.`);
+                    recommendedRecipes = [];
+                }
+            } else {
+                recommendedRecipes = []; // Clear recommendations if no recipe was found
             }
         } catch (err) {
-            console.error("Error fetching recipe:", err);
+            console.error("Error fetching recipe or recommendations:", err);
             searchedRecipeArray = null;
             recommendedRecipes = [];
         }
     }
+
 
     // Clear function
     function clearSearch() {
@@ -135,7 +157,6 @@
     let selectedCategory = null;
     let categoryRecipes = [];
     let isLoadingCategory = false;
-    let activeTab = 'popular'; // 'popular' or 'recent'
     let isLoadingMore = false; // Loading state for "Show More"
     let currentPage = 0; // Track the current page for the selected category
     const pageSize = 6; // Number of recipes to fetch per page
@@ -191,59 +212,7 @@
         }
     }
 
-    // async function fetchRecipesByCategory(category) {
-    //     isLoadingCategory = true;
-    //     selectedCategory = category;
-    //
-    //     try {
-    //         // In a real implementation, this would call your API with the category
-    //         // For now, we'll simulate a delay and return dummy data
-    //         await new Promise(resolve => setTimeout(resolve, 500));
-    //
-    //         // This would be replaced with your actual API call
-    //         const response = await axios.get(`/api/v1/recipes/category/${encodeURIComponent(category.name.toLowerCase())}`);
-    //
-    //         // This is just a fallback in case the API call fails or returns no data
-    //         categoryRecipes = response.data || [
-    //             {
-    //                 name: `${category.name} Recipe 1`,
-    //                 duration: '30 mins',
-    //                 rating: '4.7',
-    //                 description: `A delicious ${category.name.toLowerCase()} recipe that's quick to make.`,
-    //                 image: '/api/placeholder/400/300'
-    //             },
-    //             {
-    //                 name: `${category.name} Recipe 2`,
-    //                 duration: '45 mins',
-    //                 rating: '4.5',
-    //                 description: `Perfect ${category.name.toLowerCase()} for any occasion.`,
-    //                 image: '/api/placeholder/400/300'
-    //             },
-    //             {
-    //                 name: `${category.name} Recipe 3`,
-    //                 duration: '25 mins',
-    //                 rating: '4.8',
-    //                 description: `Everyone's favorite ${category.name.toLowerCase()} recipe.`,
-    //                 image: '/api/placeholder/400/300'
-    //             }
-    //         ];
-    //     } catch (err) {
-    //         console.error(`Error fetching ${category.name} recipes:`, err);
-    //         categoryRecipes = [];
-    //     } finally {
-    //         isLoadingCategory = false;
-    //     }
-    // }
 
-    function changeTab(tab) {
-        activeTab = tab;
-        // In a real implementation, you might want to re-fetch or re-sort recipes based on the active tab
-    }
-    function toTitleCase(str) {
-        return str.replace(/\w\S*/g, function (txt) {
-            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-        });
-    }
     // For animation purposes
     function handleCategoryHover(event, isEntering) {
         const card = event.currentTarget;
@@ -307,64 +276,18 @@
             </div>
         {/if}
 
-        <div class='flex justify-center rounded-md'>
-            <div class='w-1/2 flex justify-between'>
-                <button
-                        class="w-1/2 text-lg border border-primary text-primary hover:bg-primary hover:text-black my-2 mx-1 py-2 px-4 rounded-md transition-all"
-                        type="submit"
-                        id='recipeSearch'
-                        on:click={searchRecipe}>
-                    Search
-                </button>
-                <button
-                        class="w-1/2 text-lg border border-primary text-primary hover:bg-primary hover:text-black my-2 mx-1 py-2 px-4 rounded-md transition-all"
-                        type="submit"
-                        id='clear'
-                        on:click={clearSearch}>
-                    Clear
-                </button>
-            </div>
-        </div>
 
         <div class='flex justify-center'>
-            <div class='w-1/2 mb-3'>
-                <input
-                        class="w-full p-2 border-4 border-[#00A76E] bg-amber-50 rounded focus:outline-none focus:ring focus:ring-[#C62368] focus:border-[#C62368]"
-                        id='navSearch'
-                        type="search"
-                        placeholder="Search"
-                        bind:value={querySearch}
-                        aria-label="Search"
-                />
-            </div>
+
+      <RecipeAutocomplete
+                    onSearchExecute={searchRecipe}
+                    onClearExecute={clearSearch}
+      />
+
         </div>
+
     </div>
 
-    {#if searchedRecipes.length > 0}
-        <div class='flex justify-center'>
-            <div class='w-1/2'>
-                <ul class="bg-white border-primary rounded-lg border border-gray-200 divide-y divide-gray-200">
-                    {#each searchedRecipes as val, ind}
-                        <li
-                                on:mouseout={(ele) => {
-                                ele.target.classList.remove('bg-gray-100')
-                            }}
-                                on:mouseenter={(ele) => {
-                                ele.target.classList.add('bg-gray-100')
-                            }}
-                                on:click={(ele) => {
-                                querySearch = ele.target.innerText
-
-                                searchRecipe()
-                            }}
-                                class='px-4 py-2 cursor-pointer'>
-                            {toTitleCase(val.query)}
-                        </li>
-                    {/each}
-                </ul>
-            </div>
-        </div>
-    {/if}
 
     {#if recommendedRecipes.length !== 0}
         <h2 class="text-primary text-2xl font-orbital font-bold py-6 text-center">Similar Recipes You Might Like</h2>
@@ -519,14 +442,6 @@
 
     .category-card:hover {
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    /* For recipe card text truncation */
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
     }
 </style>
 <div class="container2 spacer layer4"></div>

@@ -121,6 +121,12 @@
                     </svg>
                     <a href="https://github.com/agene0001/workout-app" target="_blank">Open Source</a>
                 </button>
+                <button class="bg-[#da552f] hover:bg-[#c7461e] text-white font-bold py-3 px-6 rounded-full transition-all flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 40 40">
+                        <path d="M23.402 18.737h-4.63v-4.63h4.63v4.63zm4.63-4.63h4.63v4.63h-4.63v-4.63zm0 9.26v4.63h-4.63v-4.63h4.63zm-4.63 0h-4.63v-4.63h4.63v4.63zm-4.63 0v4.63h-4.63v-4.63h4.63zm-4.63-4.63h-4.63v-4.63h4.63v4.63zM40 8.39v23.22c0 4.61-3.73 8.35-8.35 8.35H8.35c-4.61 0-8.35-3.73-8.35-8.35V8.39C0 3.77 3.73 0 8.35 0h23.22c4.61 0 8.35 3.73 8.35 8.39z"></path>
+                    </svg>
+                    <a href="https://www.producthunt.com/posts/gainztracker" target="_blank">Product Hunt</a>
+                </button>
             </div>
         </div>
     </div>

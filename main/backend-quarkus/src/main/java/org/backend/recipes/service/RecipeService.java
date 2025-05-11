@@ -57,9 +57,9 @@ public class RecipeService {
         }
     }
 
-    public Term[] autocompleteRecipe(String query) {
+    public Term[] autocompleteRecipe(String query,int size,int offset) {
         try {
-            return recipeAutocomplete.allMatches(query.toLowerCase());
+            return recipeAutocomplete.allMatches(query.toLowerCase(),size,offset);
         } catch (Exception e) {
             logger.error("Error during autocomplete: ", e);
             return new Term[0];

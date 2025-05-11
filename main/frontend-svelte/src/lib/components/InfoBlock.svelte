@@ -1,7 +1,9 @@
 <script>
-	import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
+	import { onMount, onDestroy , tick } from 'svelte';
 	import axios from 'axios';
 	import Portal from './Portal.svelte';
+	import {httpsCallable} from "firebase/functions";
+	import {getClientFunctions} from "$lib/firebase/firebase.client";
 	// Props
 
 	export let title = '';
@@ -25,7 +27,7 @@
 	// Element refs
 	let ref;
 
-	const dispatch = createEventDispatcher();
+	// const dispatch = createEventDispatcher();
 
 	// Get currently selected recipe variation
 	$: currentRecipe = recipeArray && recipeArray.length > 0
@@ -94,12 +96,15 @@
 		try {
 			console.log('Processing recipe:', currentRecipe);
 
+
 			const res = await axios.post('/recipes/process-recipe', {
 				ingredients: currentRecipe.ingredients,
 				instructions: currentRecipe.instructions,
 				title: currentRecipe.name,
 				image_url: currentRecipe.imgSrc
 			});
+
+
 
 			console.log('Instacart response:', res.data);
 			instacartData = res.data || null; // Ensure null if data is empty/falsy

@@ -159,7 +159,7 @@ public class JavalinRecommender implements Serializable {
     private void loadRecipeData() throws SQLException {
         LOG.info("Loading recipe data from database...");
 
-        String sql = "SELECT id, name, ingredients FROM recipes";
+        String sql = "SELECT id, name, ingredients FROM ( SELECT id, name, ingredients, ROW_NUMBER() OVER(PARTITION BY name ORDER BY id ASC) as rn FROM recipes) AS ranked_recipes WHERE rn = 1";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -243,119 +243,147 @@ public class JavalinRecommender implements Serializable {
      * Generate recipe vectors by averaging word vectors
      */
     private void generateRecipeVectors() {
-        LOG.info("Generating recipe vectors...");
+        LOG.info("Starting recipe vector generation...");
+        recipeDataMap.values().parallelStream().forEach(data -> {
+            // Assuming data.getName() and data.getIngredients() provide the text for vectorization
+            String textToVectorize = (data.getName() + " " + data.getIngredients()).toLowerCase();
+            textToVectorize = NON_ALPHA.matcher(textToVectorize).replaceAll("").trim(); // Ensure NON_ALPHA and WORD_TOKENIZER are accessible
+            String[] words = WORD_TOKENIZER.split(textToVectorize);
 
-        for (Map.Entry<Integer, RecipeData> entry : recipeDataMap.entrySet()) {
-            int id = entry.getKey();
-            RecipeData recipe = entry.getValue();
-
-            // Combine name and ingredients
-            String combinedText = (recipe.name + " " + recipe.ingredients).toLowerCase();
-            combinedText = NON_ALPHA.matcher(combinedText).replaceAll(" ");
-
-            // Split into words
-            List<String> words = Arrays.asList(WORD_TOKENIZER.split(combinedText));
-            words = words.stream()
-                    .filter(word -> word.length() > 2)
-                    .filter(word -> !isStopWord(word))
-                    .collect(Collectors.toList());
-
-            // Average word vectors
-            float[] recipeVector = new float[VECTOR_SIZE];
-
-            if (!words.isEmpty()) {
-                for (String word : words) {
-                    float[] wordVector = wordVectors.get(word);
-                    if (wordVector != null) {
-                        for (int i = 0; i < VECTOR_SIZE; i++) {
-                            recipeVector[i] += wordVector[i];
-                        }
-                    }
+            List<float[]> termVectors = new ArrayList<>();
+            for (String word : words) {
+                if (word.isEmpty() || isStopWord(word)) { // Added check for empty word
+                    continue;
                 }
-
-                // Normalize the resulting vector
-                normalizeVector(recipeVector);
-                recipeVectors.put(id, recipeVector);
+                float[] vec = wordVectors.get(word);
+                if (vec != null) {
+                    termVectors.add(vec);
+                }
             }
-        }
 
-        LOG.info("Generated {} recipe vectors", recipeVectors.size());
+            if (termVectors.isEmpty()) {
+                // LOG.warn("No valid word vectors found for recipe ID: {}. Skipping vector generation for this recipe.", data.getId());
+                // Optionally, store a zero vector or handle as appropriate
+                // recipeVectors.put(data.getId(), new float[VECTOR_SIZE]);
+                return;
+            }
+
+            float[] recipeVec = new float[VECTOR_SIZE];
+            for (float[] termVector : termVectors) {
+                for (int i = 0; i < VECTOR_SIZE; i++) {
+                    recipeVec[i] += termVector[i];
+                }
+            }
+
+            for (int i = 0; i < VECTOR_SIZE; i++) {
+                recipeVec[i] /= termVectors.size();
+            }
+
+            normalizeVector(recipeVec); // Assuming normalizeVector is thread-safe or operates on local data
+            recipeVectors.put(data.getId(), recipeVec); // recipeVectors is ConcurrentHashMap, so put is thread-safe
+        });
+        LOG.info("Finished recipe vector generation. Total vectors: {}", recipeVectors.size());
     }
 
     /**
      * Find k similar recipes to the given query
      * Returns List<Recipe> for direct integration with the service layer
      */
-    public List<Recipe> findKSimilar(String queryName, String queryIngredients, int k) {
-        LOG.info("Finding similar recipes for query: {}", queryName);
+    /**
+     * Creates and normalizes a vector from query name and ingredients.
+     *
+     * @param queryName        The name of the query recipe/food.
+     * @param queryIngredients The ingredients of the query.
+     * @return A normalized float vector for the query, or null if a vector cannot be generated.
+     */
+    private float[] createAndNormalizeQueryVector(String queryName, String queryIngredients) {
+        String queryText = (queryName + " " + queryIngredients).toLowerCase();
+        queryText = NON_ALPHA.matcher(queryText).replaceAll("").trim();
+        String[] queryWords = WORD_TOKENIZER.split(queryText);
 
-        // Preprocess query text
-        String combinedText = (queryName + " " + queryIngredients).toLowerCase();
-        combinedText = NON_ALPHA.matcher(combinedText).replaceAll(" ");
+        List<float[]> queryWordVecs = new ArrayList<>();
+        for (String word : queryWords) {
+            if (word.isEmpty() || isStopWord(word)) {
+                continue;
+            }
+            float[] vec = wordVectors.get(word);
+            if (vec != null) {
+                queryWordVecs.add(vec);
+            }
+        }
 
-        // Split into words
-        List<String> words = Arrays.asList(WORD_TOKENIZER.split(combinedText));
-        words = words.stream()
-                .filter(word -> word.length() > 2)
-                .filter(word -> !isStopWord(word))
-                .collect(Collectors.toList());
+        if (queryWordVecs.isEmpty()) {
+            LOG.warn("Could not generate a vector for the query (no valid words found): name='{}', ingredients='{}'", queryName, queryIngredients);
+            return null;
+        }
 
-        // Calculate query vector
         float[] queryVector = new float[VECTOR_SIZE];
+        for (float[] vec : queryWordVecs) {
+            for (int i = 0; i < VECTOR_SIZE; i++) {
+                queryVector[i] += vec[i];
+            }
+        }
+        for (int i = 0; i < VECTOR_SIZE; i++) {
+            queryVector[i] /= queryWordVecs.size();
+        }
+        normalizeVector(queryVector);
+        return queryVector;
+    }
 
-        if (words.isEmpty()) {
-            LOG.warn("Query contains no valid words for vector generation");
+    /**
+     * Find k similar recipes to the given query.
+     * This version uses parallel streams for calculating similarities.
+     * Returns List<Recipe> for direct integration with the service layer.
+     */
+    public List<Recipe> findKSimilar(String queryName, String queryIngredients, int k) {
+        if (!isInitialized.get()) {
+            LOG.warn("Recommender not initialized. Returning empty list for query: name='{}', ingredients='{}'", queryName, queryIngredients);
             return Collections.emptyList();
         }
 
-        for (String word : words) {
-            float[] wordVector = wordVectors.get(word);
-            if (wordVector != null) {
-                for (int i = 0; i < VECTOR_SIZE; i++) {
-                    queryVector[i] += wordVector[i];
-                }
-            }
+        float[] queryVector = createAndNormalizeQueryVector(queryName, queryIngredients);
+        if (queryVector == null) {
+            // createAndNormalizeQueryVector already logs the warning
+            return Collections.emptyList();
         }
 
-        // Normalize query vector
-        normalizeVector(queryVector);
-
-        PriorityQueue<RecipeSimilarity> topKHeap = new PriorityQueue<>(k, Comparator.comparingDouble(RecipeSimilarity::getSimilarity));
-
-        for (Map.Entry<Integer, float[]> entry : recipeVectors.entrySet()) {
-            int id = entry.getKey();
-            float[] vector = entry.getValue();
-
-            RecipeData recipe = recipeDataMap.get(id);
-            if (recipe.name.equalsIgnoreCase(queryName)) {
-                continue;
-            }
-
-            double similarity = cosineSimilarity(queryVector, vector); // Your existing method
-
-            if (topKHeap.size() < k) {
-                topKHeap.offer(new RecipeSimilarity(id, recipe.name, similarity));
-            } else if (similarity > topKHeap.peek().getSimilarity()) {
-                topKHeap.poll(); // Remove the smallest
-                topKHeap.offer(new RecipeSimilarity(id, recipe.name, similarity)); // Add the new larger one
-            }
+        if (recipeVectors.isEmpty()) {
+            LOG.warn("No recipe vectors available to compare against. Returning empty list.");
+            return Collections.emptyList();
         }
 
-        // Extract results from the heap (they will be in ascending order, so reverse)
-        List<Recipe> results = new LinkedList<>(); // Use LinkedList for efficient addFirst
-        while (!topKHeap.isEmpty()) {
-            RecipeSimilarity sim = topKHeap.poll();
-            Recipe recipe = new Recipe();
-            recipe.setId(sim.getId());
-            recipe.setName(sim.getName());
-            results.add(0, recipe); // Add to the beginning to reverse order
+        List<RecipeSimilarity> similarities = recipeVectors.entrySet().parallelStream()
+                .map(entry -> {
+                    int recipeId = entry.getKey();
+                    float[] vec = entry.getValue();
+                    double similarity = cosineSimilarity(queryVector, vec); // Assuming cosineSimilarity is thread-safe
+
+                    RecipeData data = recipeDataMap.get(recipeId); // recipeDataMap is ConcurrentHashMap
+                    String recipeName = (data != null) ? data.getName() : "Unknown Recipe ID: " + recipeId;
+                    return new RecipeSimilarity(recipeId, recipeName, similarity);
+                })
+                .sorted(Comparator.comparingDouble(RecipeSimilarity::getSimilarity).reversed())
+                .limit(k)
+                .toList();
+
+        if (similarities.isEmpty()) {
+            return Collections.emptyList();
         }
 
-        return results; // Now results are sorted descending by similarity
-
+        // Convert RecipeSimilarity objects to Recipe objects, by fetching from RecipeRepository
+        return similarities.stream()
+                .map(rs -> {
+                    Recipe recipe = recipeRepository.findById((long) rs.getId()); // Assuming this returns Recipe or null
+                    if (recipe == null) {
+                        LOG.warn("Recipe with ID {} (name: '{}') found in similarity search but not in repository. Skipping.", rs.getId(), rs.getName());
+                        return null; // This will be filtered out by the subsequent filter
+                    }
+                    return recipe;
+                })
+                .filter(Objects::nonNull) // This will remove any null recipes that were not found
+                .collect(Collectors.toList());
     }
-
-    // Helper class to store similarity scores
+  // Helper class to store similarity scores
     private static class RecipeSimilarity {
         private final int id;
         private final String name;

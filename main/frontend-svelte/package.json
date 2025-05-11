@@ -43,12 +43,27 @@
 		"vitest": "^3.0.0"
 	},
 	"dependencies": {
+		"@editorjs/checklist": "^1.6.0",
+		"@editorjs/code": "^2.9.3",
+		"@editorjs/delimiter": "^1.4.2",
+		"@editorjs/editorjs": "^2.30.8",
+		"@editorjs/embed": "^2.7.6",
+		"@editorjs/header": "^2.8.8",
+		"@editorjs/image": "^2.10.2",
+		"@editorjs/link": "^2.6.2",
+		"@editorjs/list": "^2.0.8",
+		"@editorjs/marker": "^1.4.0",
+		"@editorjs/paragraph": "^2.11.7",
+		"@editorjs/quote": "^2.7.6",
+		"@editorjs/table": "^2.4.4",
 		"@fingerprintjs/fingerprintjs": "^4.6.2",
 		"@sveltejs/adapter-node": "^5.2.12",
 		"@sveltejs/adapter-static": "^3.0.8",
 		"animejs": "^4.0.2",
 		"axios": "^1.9.0",
 		"dotenv": "^16.5.0",
-		"firebase": "^11.6.1"
+		"firebase": "^11.6.1",
+		"firebase-admin": "^13.3.0",
+		"firebase-functions": "^6.3.2"
 	}
 }
