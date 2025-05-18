@@ -1,395 +1,592 @@
 <script>
-	import {getContext, onMount} from 'svelte';
-	import { page } from '$app/stores';
-	import {goto} from "$app/navigation";
+    import {getContext, onMount} from 'svelte';
+    import {page} from '$app/stores';
+    import {goto} from '$app/navigation';
+    import NestedListItemRenderer from '$lib/components/NestedListItemRenderer.svelte'; // For nested lists
+    import BlockRenderer from '$lib/components/BlockRenderer.svelte'; // <<< --- IMPORT THE NEW COMPONENT
 
-	// Add export let post to receive the data from the load function
-	const { post } = $page.data;
+    const {post} = $page.data;
+    const isAdmin = getContext('isAdmin');
+    let parsedContent = {blocks: []}; // Initialize to avoid undefined errors
 
-	const isAdmin = getContext('isAdmin');
-	let parsedContent = [];
+    onMount(async () => {
+        if (typeof post.content === 'string') {
+            try {
+                const parsed = JSON.parse(post.content);
+                if (parsed && parsed.blocks) {
+                    parsedContent = parsed;
+                } else {
+                    parsedContent = {blocks: [{type: 'html', data: {html: post.content}}]};
+                }
+            } catch (e) {
+                console.error('Failed to parse post content, treating as HTML:', e);
+                parsedContent = {blocks: [{type: 'html', data: {html: post.content}}]};
+            }
+        } else if (post.content && post.content.blocks) {
+            parsedContent = post.content;
+        }
+    });
 
+    function formatDate(dateString) {
+        const options = {year: 'numeric', month: 'long', day: 'numeric'};
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    }
 
-	onMount(async () => {
+    function handleEditPost(id) {
+        goto(`/Blog/admin/post/${id}`);
+    }
 
-		// Parse the content if it's a string
-		if (typeof post.content === 'string') {
-			try {
-				parsedContent = JSON.parse(post.content);
-			} catch (e) {
-				console.error('Failed to parse post content:', e);
-				// If parsing fails, we'll treat it as HTML content
-			}
-		} else if (post.content && post.content.blocks) {
-			// If content is already an object with blocks
-			parsedContent = post.content;
-		}
+    function handleDeletePost(id, title) {
+        if (confirm(`Are you sure you want to delete "${title}"?`)) {
+            console.log('Delete post:', id);
+        }
+    }
 
-		console.log('Parsed content:', parsedContent);
-	});
+    function getTuneClasses(tunes) {
+        if (!tunes) return '';
+        let classes = [];
+        if (tunes.alignTune?.alignment) {
+            classes.push(`text-align-${tunes.alignTune.alignment}`);
+        }
+        if (tunes.indentTune?.level && tunes.indentTune.level > 0) {
+            classes.push(`editorjs-indent-level-${tunes.indentTune.level}`);
+        }
+        if (tunes.textVariantTune?.variant) {
+            classes.push(`text-variant-${tunes.textVariantTune.variant}`);
+        }
+        return classes.join(' ');
+    }
 
-	// Format date to readable format
-	function formatDate(dateString) {
-		const options = { year: 'numeric', month: 'long', day: 'numeric' };
-		return new Date(dateString).toLocaleDateString(undefined, options);
-	}
+    function getTuneId(tunes) {
+        return tunes?.anchorTune?.anchor || null;
+    }
 
-	// ...
+    // renderBlock function remains IDENTICAL to your original
+    function renderBlock(block) {
+        if (!block) return null;
+        const tunes = block.tunes || {};
+        const tuneClasses = getTuneClasses(tunes);
+        const tuneId = getTuneId(tunes);
 
-	function handleEditPost(id) {
-		goto(`/Blog/admin/post/${id}`); // Navigate to the new unified admin edit route
-	}
+        switch (block.type) {
+            case 'html':
+                return {
+                    tag: 'div',
+                    isHtmlContent: true,
+                    html: block.data.html
+                };
+            case 'header':
+                return {
+                    tag: `h${block.data.level}`,
+                    content: block.data.text,
+                    className: `block-header ${tuneClasses}`,
+                    id: tuneId
+                };
+            case 'paragraph':
+                return {tag: 'p', content: block.data.text, className: `block-paragraph ${tuneClasses}`, id: tuneId};
 
-	function handleDeletePost(id, title) {
-		// Implement delete functionality
-		if (confirm(`Are you sure you want to delete "${title}"?`)) {
-			// Delete post logic here
-		}
-	}
-
-	// Helper function to render blocks based on their type
-	// Helper function to render blocks based on their type
-	function renderBlock(block) {
-		if (!block) return null;
-
-		switch (block.type) {
-			case 'header':
-				return {
-					tag: `h${block.data.level}`,
-					content: block.data.text,
-					className: 'block-header'
-				};
-			case 'paragraph':
-				return {
-					tag: 'p',
-					content: block.data.text,
-					className: 'block-paragraph'
-				};
-			case 'list':
-				return {
-					tag: block.data.style === 'ordered' ? 'ol' : 'ul',
-					items: block.data.items,
-					className: `block-list ${block.data.style}-list`
-				};
-			case 'image':
-				return {
-					tag: 'figure',
-					content: '',
-					className: 'block-image',
-					children: [
-						{
-							tag: 'img',
-							src: block.data.file?.url,
-							alt: block.data.caption || 'Blog image',
-							className: 'block-image__img'
-						},
-						block.data.caption ? {
-							tag: 'figcaption',
-							content: block.data.caption,
-							className: 'block-image__caption'
-						} : null
-					].filter(Boolean)
-				};
-			case 'quote':
-				return {
-					tag: 'blockquote',
-					content: block.data.text,
-					className: 'block-quote',
-					children: block.data.caption ? {
-						tag: 'cite',
-						content: block.data.caption,
-						className: 'block-quote__caption'
-					} : null
-				};
-			case 'delimiter':
-				return {
-					tag: 'hr',
-					content: '',
-					className: 'block-delimiter'
-				};
-			case 'table':
-				return {
-					tag: 'table',
-					className: 'block-table',
-					isTable: true,
-					data: block.data
-				};
-			case 'code':
-				return {
-					tag: 'pre',
-					className: 'block-code',
-					children: {
-						tag: 'code',
-						content: block.data.code,
-						className: `language-${block.data.language || 'plaintext'}`
-					}
-				};
-			case 'embed':
-				return {
-					tag: 'div',
-					className: 'block-embed',
-					embed: true,
-					data: block.data
-				};
-				// Add more cases for other block types as needed
-			default:
-				return {
-					tag: 'div',
-					content: JSON.stringify(block.data),
-					className: `block-unknown block-${block.type}`
-				};
-		}
-	}
+            case 'nestedlist':
+                return {
+                    tag: block.data.style === 'ordered' ? 'ol' : 'ul',
+                    items: block.data.items,
+                    className: `block-list block-nested-list ${block.data.style}-list ${tuneClasses}`,
+                    id: tuneId,
+                    isAnyList: true,
+                    listStyle: block.data.style
+                };
+            case 'image':
+                return {
+                    tag: 'figure',
+                    content: '',
+                    className: `block-image ${tuneClasses}`,
+                    id: tuneId,
+                    children: [{
+                        tag: 'img',
+                        src: block.data.file?.url,
+                        alt: block.data.caption || 'Blog image',
+                        className: 'block-image__img'
+                    }, block.data.caption ? {
+                        tag: 'figcaption',
+                        content: block.data.caption,
+                        className: 'block-image__caption'
+                    } : null].filter(Boolean)
+                };
+            case 'quote':
+                return {
+                    tag: 'blockquote',
+                    content: block.data.text,
+                    className: `block-quote ${tuneClasses}`,
+                    id: tuneId,
+                    children: block.data.caption ? {
+                        tag: 'cite',
+                        content: block.data.caption,
+                        className: 'block-quote__caption'
+                    } : null
+                };
+            case 'delimiter':
+                return {tag: 'hr', content: '', className: `block-delimiter ${tuneClasses}`, id: tuneId};
+            case 'table':
+                return {
+                    tag: 'table',
+                    className: `block-table ${tuneClasses}`,
+                    id: tuneId,
+                    isTable: true,
+                    data: block.data
+                };
+            case 'code':
+                return {
+                    tag: 'pre',
+                    className: `block-code ${tuneClasses}`,
+                    id: tuneId,
+                    children: {
+                        tag: 'code',
+                        content: block.data.code,
+                        className: `language-${block.data.language || 'plaintext'}`
+                    }
+                };
+            case 'embed':
+                return {tag: 'div', className: `block-embed ${tuneClasses}`, id: tuneId, embed: true, data: block.data};
+            case 'list': // This case now handles ordered, unordered, AND checklists
+                if (block.data.style === 'checklist') {
+                    return {
+                        tag: 'ul', // Checklists are always ul
+                        items: block.data.items,
+                        className: `block-checklist ${tuneClasses}`, // Specific class for checklists
+                        id: tuneId,
+                        isChecklist: true, // Crucial flag!
+                        // listStyle is not strictly needed for checklists but doesn't hurt
+                    };
+                } else {
+                    // For 'ordered' or 'unordered' lists
+                    return {
+                        tag: block.data.style === 'ordered' ? 'ol' : 'ul',
+                        items: block.data.items,
+                        className: `block-list ${block.data.style}-list ${tuneClasses}`,
+                        id: tuneId,
+                        isAnyList: true, // Flag for regular lists
+                        listStyle: block.data.style
+                    };
+                }
+            case 'warning':
+                return {
+                    tag: 'div',
+                    className: `block-warning ${tuneClasses}`,
+                    id: tuneId,
+                    isWarning: true,
+                    data: block.data
+                };
+            case 'alert':
+                return {
+                    tag: 'div',
+                    content: block.data.message,
+                    className: `block-alert alert-${block.data.type || 'info'} ${tuneClasses}`,
+                    id: tuneId
+                };
+            case 'attaches':
+                return {
+                    tag: 'div',
+                    className: `block-attaches ${tuneClasses}`,
+                    id: tuneId,
+                    isAttachment: true,
+                    data: block.data
+                };
+            case 'coolDelimiter':
+                return {tag: 'hr', content: '', className: `block-delimiter-cool ${tuneClasses}`, id: tuneId};
+            case 'button':
+                return {
+                    tag: 'a',
+                    href: block.data.link,
+                    content: block.data.text,
+                    className: `block-button ${block.data.style || 'btn--default'} ${tuneClasses}`,
+                    id: tuneId,
+                    attributes: {
+                        target: block.data.link?.startsWith('http') ? '_blank' : '_self',
+                        rel: block.data.link?.startsWith('http') ? 'noopener noreferrer' : null
+                    },
+                    isButton: true
+                };
+            case 'toggle':
+                return {
+                    tag: 'details',
+                    summaryText: block.data.text,
+                    nestedBlocks: block.data.blocks || [],
+                    className: `block-toggle ${tuneClasses}`,
+                    id: tuneId,
+                    isToggle: true,
+                    isOpen: block.data.status === 'open'
+                };
+            case 'layout':
+                return {
+                    tag: 'div',
+                    className: `block-layout editorjs-columns_wrapper ${tuneClasses}`,
+                    id: tuneId,
+                    isLayout: true,
+                    columnsData: block.data.cols || []
+                };
+            default:
+                console.warn('Unknown block type:', block.type, block);
+                return {
+                    tag: 'div',
+                    content: `Unsupported block type: ${block.type}. Data: ${JSON.stringify(block.data)}`,
+                    className: `block-unknown block-${block.type} ${tuneClasses}`,
+                    id: tuneId
+                };
+        }
+    }
 </script>
 
 <div class="post-container">
-	<h1 class="post-title text-primary">{post.title}</h1>
-	<p class="post-meta">{formatDate(post.publishedAt)} • {post.readTime} min read</p>
+    <h1 class="post-title text-primary">{post.title}</h1>
+    <p class="post-meta">{formatDate(post.publishedAt)} • {post.readTime} min read</p>
+    {#if post.image && !post.image.startsWith("https://placehold.co/")}
 
-	<!-- Display post content as blocks -->
-	<div class="post-content text-primary">
-		{#if parsedContent && parsedContent.blocks && parsedContent.blocks.length > 0}
-			{#each parsedContent.blocks as block (block.id)}
-				{@const renderedBlock = renderBlock(block)}
+        <img src={post.image}/>
+        {/if}
+    <div class="post-content">
+        {#if parsedContent && parsedContent.blocks && parsedContent.blocks.length > 0}
+            {#each parsedContent.blocks as block (block.id || block.type + Math.random())}
+                {@const currentRenderedBlock = renderBlock(block)}
+                {#if currentRenderedBlock}
+                    <BlockRenderer
+                            renderedBlock={currentRenderedBlock}
+                            {renderBlock}
+                            {NestedListItemRenderer}
+                    />
+                {/if}
+            {/each}
+        {:else if typeof post.content === 'string'}
+            <div>{@html post.content}</div>
+        {/if}
+    </div>
 
-				{#if renderedBlock?.tag === 'ul' || renderedBlock?.tag === 'ol'}
-					<svelte:element this={renderedBlock.tag} class={renderedBlock.className}>
-						{#each renderedBlock.items as item}
-							<li>{@html item}</li>
-						{/each}
-					</svelte:element>
-
-				{:else if renderedBlock?.isTable}
-					<table class={renderedBlock.className}>
-						{#each renderedBlock.data.content as row}
-							<tr>
-								{#each row as cell}
-									<td>{@html cell}</td>
-								{/each}
-							</tr>
-						{/each}
-					</table>
-
-				{:else if renderedBlock?.children && Array.isArray(renderedBlock.children)}
-					<svelte:element this={renderedBlock.tag} class={renderedBlock.className}>
-						{#each renderedBlock.children as child}
-							{#if child}
-								<svelte:element this={child.tag}
-												class={child.className}
-												src={child.src}
-												alt={child.alt}>
-									{@html child.content || ''}
-								</svelte:element>
-							{/if}
-						{/each}
-					</svelte:element>
-
-				{:else if renderedBlock?.children && !Array.isArray(renderedBlock.children)}
-					<svelte:element this={renderedBlock.tag} class={renderedBlock.className}>
-						<svelte:element this={renderedBlock.children.tag} class={renderedBlock.children.className}>
-							{@html renderedBlock.children.content || ''}
-						</svelte:element>
-					</svelte:element>
-
-				{:else if renderedBlock?.embed}
-					<div class={renderedBlock.className}>
-						{#if renderedBlock.data.service === 'youtube'}
-							<iframe
-									width="100%"
-									height="400"
-									src={`https://www.youtube.com/embed/${renderedBlock.data.embed}`}
-									frameborder="0"
-									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-									allowfullscreen
-									title="Embedded YouTube video">
-							</iframe>
-						{:else if renderedBlock.data.service === 'vimeo'}
-							<iframe
-									width="100%"
-									height="400"
-									src={`https://player.vimeo.com/video/${renderedBlock.data.embed}`}
-									frameborder="0"
-									allow="autoplay; fullscreen; picture-in-picture"
-									allowfullscreen
-									title="Embedded Vimeo video">
-							</iframe>
-						{:else}
-							<div class="unsupported-embed">
-								<a href={renderedBlock.data.embed} target="_blank" rel="noopener noreferrer">
-									{renderedBlock.data.caption || 'View embedded content'}
-								</a>
-							</div>
-						{/if}
-					</div>
-
-				{:else}
-					<svelte:element this={renderedBlock?.tag}
-									class={renderedBlock?.className}
-									src={renderedBlock?.src}
-									alt={renderedBlock?.alt}>
-						{@html renderedBlock?.content || ''}
-					</svelte:element>
-				{/if}
-			{/each}
-		{:else if typeof post.content === 'string' && !parsedContent.blocks}
-			<!-- Fallback to render as HTML if parsing failed or it's pure HTML -->
-			{@html post.content}
-		{/if}
-	</div>
-
-	<!-- Admin Controls -->
-	{#if $isAdmin}
-		<div class="admin-controls">
-			<button on:click={() => handleEditPost(post.id)} class="edit-button">Edit</button>
-			<button on:click={() => handleDeletePost(post.id, post.title)} class="delete-button">Delete</button>
-		</div>
-	{/if}
-
-	<!-- Navigation back to the blog list -->
-	<a href="/Blog" class="back-to-list">Back to Blog</a>
+    {#if $isAdmin}
+        <div class="admin-controls">
+            <button on:click={() => handleEditPost(post.id)} class="edit-button">Edit</button>
+            <button on:click={() => handleDeletePost(post.id, post.title)} class="delete-button">Delete</button>
+        </div>
+    {/if}
+    <a href="/Blog" class="back-to-list">Back to Blog</a>
 </div>
-
 <style>
-	.post-container {
-		margin-top: 8rem;
-		max-width: 800px;
-		margin-left: auto;
-		margin-right: auto;
-		padding: 0 1rem;
-	}
+    /* Inherit fonts from app.css */
+    :root {
+        --font-orbital: 'orbital', sans-serif;
+        --font-orbital-bold: 'orbital', sans-serif;
+        --primary-text-color: #faebd7;
+        --secondary-color: #c62368;
+        --info-color: #3e92cc;
+        --warning-color: #f0ad4e;
+        --danger-color: #d9534f;
+        --success-color: #5cb85c;
+        --body-bg-color: #002233;
+        --block-bg-darker: #0a2a38;
+        --block-bg-dark: #0f3040;
+        --border-color-dark: #445259;
+        --text-color-light: #f8f9fa;
+        --text-color-dark: #212529;
+    }
 
-	.post-title {
-		font-size: 2.5rem;
-		font-weight: 700;
-		margin-bottom: 0.5rem;
-	}
+    .post-container {
+        margin-top: 8rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 2rem 1.5rem;
+    }
 
-	.post-meta {
-		color: #666;
-		margin-bottom: 2rem;
-	}
+    .post-title {
+        font-family: var(--font-orbital-bold);
+        font-weight: 700;
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+        color: var(--primary-text-color);
+    }
 
-	.post-content {
-		line-height: 1.6;
-	}
+    .post-meta {
+        font-family: var(--font-orbital);
+        color: #a0a0a0;
+        margin-bottom: 3rem;
+        font-size: 0.9rem;
+    }
 
-	.block-header {
-		margin-top: 2rem;
-		margin-bottom: 1rem;
-	}
+    .post-content {
+        line-height: 1.7;
+        font-size: 1.1rem;
+        color: var(--primary-text-color);
+        font-family: var(--font-orbital);
+    }
 
-	.block-paragraph {
-		margin-bottom: 1.5rem;
-	}
+    /* Anchor scrolling offset */
+    .post-content :global(div[id]),
+    .post-content :global(p[id]),
+    .post-content :global(h1[id]),
+    .post-content :global(h2[id]),
+    .post-content :global(h3[id]),
+    .post-content :global(h4[id]),
+    .post-content :global(h5[id]),
+    .post-content :global(h6[id]),
+    .post-content :global(ul[id]),
+    .post-content :global(ol[id]),
+    .post-content :global(blockquote[id]),
+    .post-content :global(figure[id]),
+    .post-content :global(pre[id]),
+    .post-content :global(table[id]),
+    .post-content :global(details[id]) {
+        scroll-margin-top: 70px;
+    }
 
-	.block-list {
-		margin-bottom: 1.5rem;
-		padding-left: 1.5rem;
-	}
+    /* General link styling */
+    .post-content :global(a) {
+        color: var(--info-color);
+        text-decoration: underline;
+        transition: color 0.2s ease;
+    }
+    .post-content :global(a:hover) {
+        color: var(--secondary-color);
+        text-decoration: none;
+    }
 
-	.block-list li {
-		margin-bottom: 0.5rem;
-	}
+    /* Text Alignment Tune Classes */
+    .post-content :global(.text-align-left) { text-align: left; }
+    .post-content :global(.text-align-center) { text-align: center; }
+    .post-content :global(.text-align-right) { text-align: right; }
+    .post-content :global(.text-align-justify) { text-align: justify; }
 
-	.admin-controls {
-		margin-top: 3rem;
-		display: flex;
-		gap: 1rem;
-	}
+    /* Indentation Tune Classes */
+    .post-content :global(.editorjs-indent-level-1) { margin-left: 2em !important; }
+    .post-content :global(.editorjs-indent-level-2) { margin-left: 4em !important; }
+    .post-content :global(.editorjs-indent-level-3) { margin-left: 6em !important; }
+    .post-content :global(.editorjs-indent-level-4) { margin-left: 8em !important; }
+    .post-content :global(.editorjs-indent-level-5) { margin-left: 10em !important; }
+    /* Add more as needed */
 
-	.edit-button, .delete-button {
-		padding: 0.5rem 1rem;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-	}
 
-	.edit-button {
-		background-color: #4a90e2;
-		color: white;
-	}
+    /* --- Header Block Styling --- */
+    .post-content :global(h1.block-header),
+    .post-content :global(h2.block-header),
+    .post-content :global(h3.block-header),
+    .post-content :global(h4.block-header),
+    .post-content :global(h5.block-header),
+    .post-content :global(h6.block-header) {
+        font-family: var(--font-orbital-bold);
+        font-weight: 700;
+        color: var(--primary-text-color);
+        line-height: 1.3;
+    }
+    .post-content :global(h1.block-header) { font-size: 2.4rem; margin: 2.5rem 0 1.25rem 0; }
+    .post-content :global(h2.block-header) { font-size: 2rem; margin: 2.2rem 0 1rem 0; }
+    .post-content :global(h3.block-header) { font-size: 1.7rem; margin: 2rem 0 0.9rem 0; }
+    .post-content :global(h4.block-header) { font-size: 1.4rem; margin: 1.8rem 0 0.8rem 0; }
+    .post-content :global(h5.block-header) { font-size: 1.2rem; margin: 1.6rem 0 0.7rem 0; }
+    .post-content :global(h6.block-header) { font-size: 1.1rem; margin: 1.5rem 0 0.6rem 0; text-transform: uppercase; letter-spacing: 0.05em; }
 
-	.delete-button {
-		background-color: #e25c5c;
-		color: white;
-	}
+    /* --- Paragraph Block Styling --- */
+    .post-content :global(p.block-paragraph) {
+        font-family: var(--font-orbital);
+        margin-bottom: 1.5rem;
+        color: var(--primary-text-color);
+    }
 
-	.back-to-list {
-		display: inline-block;
-		margin-top: 2rem;
-		color: #4a90e2;
-		text-decoration: none;
-	}
+    /* --- LIST STYLES (REVISED SECTION) --- */
 
-	.back-to-list:hover {
-		text-decoration: underline;
-	}
-	.block-quote__caption {
-		display: block;
-		margin-top: 1rem;
-		font-size: 0.9rem;
-		text-align: right;
-		font-style: normal;
-		color: #666;
-	}
+    /* Base styling for all list items (li) within any rendered list block */
+    .post-content :global(.block-list li),       /* Covers li in ol.block-list and ul.block-list (non-checklist) */
+    .post-content :global(.block-checklist li) { /* Covers li in ul.block-checklist */
+        margin-bottom: 0.75rem;
+        line-height: 1.7;
+        /* Default display that allows markers. Specific list types will override if needed. */
+        display: list-item;
+    }
 
-	.block-delimiter {
-		border: none;
-		height: 1px;
-		background-color: #e0e0e0;
-		margin: 2rem auto;
-		width: 30%;
-	}
+    /* Styling for standard ORDERED lists (ol.block-list) */
+    .post-content :global(ol.block-list) {
+        font-family: var(--font-orbital);
+        margin-bottom: 1.5rem;
+        padding-left: 2rem; /* Initial padding for the top-level list block */
+        color: var(--primary-text-color);
+        list-style-type: decimal; /* Ensures numbers for top-level ordered list */
+    }
+    .post-content :global(ol.block-list li) {
+        /* Inherits list-style-type from parent ol by default. display: list-item is from above. */
+    }
 
-	.block-table {
-		width: 100%;
-		border-collapse: collapse;
-		margin: 2rem 0;
-		overflow-x: auto;
-		display: block;
-	}
+    /* Styling for standard UNORDERED lists (ul.block-list that are NOT checklists) */
+    .post-content :global(ul.block-list:not(.block-checklist)) {
+        font-family: var(--font-orbital);
+        margin-bottom: 1.5rem;
+        padding-left: 2rem; /* Initial padding */
+        color: var(--primary-text-color);
+        list-style-type: disc; /* Ensures bullets for top-level unordered list */
+    }
+    .post-content :global(ul.block-list:not(.block-checklist) li) {
+        /* Inherits list-style-type from parent ul. display: list-item is from above. */
+    }
 
-	.block-table td {
-		border: 1px solid #e0e0e0;
-		padding: 0.75rem;
-	}
+    /* CHECKLIST Specific Styling */
+    .post-content :global(ul.block-checklist) { /* The main <ul> container for a checklist block */
+        font-family: var(--font-orbital);
+        margin-bottom: 1.5rem;
+        padding-left: 0.5rem; /* Less outer padding for checklists */
+        color: var(--primary-text-color);
+        list-style-type: none; /* Remove default bullets for the checklist container itself */
+    }
 
-	.block-table tr:nth-child(even) {
-		background-color: #f8f8f8;
-	}
+    /* Target <li> elements that are specifically checklist items.
+       Requires NestedListItemRenderer to add `class:is-checklist-item={isChecklistType}` to its root <li> */
+    .post-content :global(li.is-checklist-item) {
+        display: flex !important; /* Use !important if absolutely necessary to override generic li styles, but try to avoid. */
+        align-items: center;
+        list-style-type: none !important; /* Ensure no marker for checklist items */
+        margin-bottom: 0.5rem; /* Specific margin for checklist items */
+    }
+    .post-content :global(li.is-checklist-item input[type="checkbox"]) {
+        margin-right: 0.75rem;
+        width: 1.2em;
+        height: 1.2em;
+        cursor: default;
+        flex-shrink: 0; /* Prevent checkbox from shrinking */
+    }
+    .post-content :global(li.is-checklist-item.checked) { /* Targets <li class="is-checklist-item checked"> */
+        text-decoration: line-through;
+        color: #888;
+    }
+    .post-content :global(li.is-checklist-item.checked > input[type="checkbox"] ~ *) { /* Text next to checked checkbox */
+        /* You could add opacity or other styles to the text of a checked item if needed */
+    }
 
-	.block-code {
-		margin: 2rem 0;
-		background-color: #f5f5f5;
-		border-radius: 8px;
-		padding: 1.5rem;
-		overflow-x: auto;
-	}
 
-	.block-code code {
-		font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-		font-size: 0.9rem;
-		line-height: 1.5;
-	}
+    /* NESTED LISTS Styling (applies to ol/ul inside any li) */
+    /* This applies to ul/ol rendered by NestedListItemRenderer inside an <li> */
+    .post-content :global(li > ol.block-list), /* Nested OL within any LI */
+    .post-content :global(li > ul.block-list:not(.block-checklist)), /* Nested non-checklist UL */
+    .post-content :global(li > ul.block-checklist) { /* Nested checklist UL */
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        padding-left: 1.75em; /* Indentation for nested lists. Adjust as needed. */
+        /* Parent's list-style-type (decimal/disc) should cascade unless overridden by a more specific rule below */
+    }
 
-	.block-embed {
-		margin: 2rem 0;
-	}
+    /* Ensure nested ORDERED lists (even inside a checklist item) get their numbers */
+    .post-content :global(li > ol.block-list) { /* Targets <ol class="block-list"> nested in any <li> */
+        list-style-type: decimal; /* Explicitly set for clarity or override */
+    }
+    .post-content :global(li > ol.block-list li) {
+        display: list-item; /* Ensure markers appear for items in nested ordered lists */
+        list-style-type: upper-roman;
+    }
+    .post-content :global(li > ol.block-list li> ol.block-list li) {
+        display: list-item; /* Ensure markers appear for items in nested ordered lists */
+        list-style-type: lower-roman;
+    }
 
-	.unsupported-embed {
-		padding: 2rem;
-		text-align: center;
-		background-color: #f8f8f8;
-		border-radius: 8px;
-	}
+    /* Ensure nested UNORDERED (non-checklist) lists get their bullets */
+    .post-content :global(li > ul.block-list:not(.block-checklist)) {
+        list-style-type: disc; /* Explicitly set */
+    }
+    .post-content :global(li > ul.block-list:not(.block-checklist) li) {
+        display: list-item;
+        list-style-type: upper-alpha; /* Or specify (e.g., circle for second level) */
+    }
+    .post-content :global(li > ul.block-list:not(.block-checklist) li > ul.block-list:not(.block-checklist) li) {
+        display: list-item;
+        list-style-type: lower-alpha; /* Or specify (e.g., circle for second level) */
+    }
 
-	.unsupported-embed a {
-		color: #4a90e2;
-		text-decoration: none;
-		font-weight: 500;
-	}
+    /* Nested CHECKLISTS should inherit from `li.is-checklist-item` rules */
+    /* .post-content :global(li > ul.block-checklist) is already covered for padding. */
+    /* Its <li> children will be `li.is-checklist-item` and get styled by that rule. */
 
-	.unsupported-embed a:hover {
-		text-decoration: underline;
-	}
+    /* --- END OF REVISED LIST STYLES --- */
+
+
+    /* --- Image Block Styling --- */
+    .post-content :global(figure.block-image) { margin: 2.5rem auto; text-align: center; }
+    .post-content :global(figure.block-image.text-align-left) { margin-left:0; margin-right:auto; text-align: left; }
+    .post-content :global(figure.block-image.text-align-right) { margin-left:auto; margin-right:0; text-align: right; }
+    .post-content :global(figure.block-image img.block-image__img) { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .post-content :global(figure.block-image figcaption.block-image__caption) { font-family: var(--font-orbital); font-size: 0.9rem; color: #a0a0a0; text-align: center; margin-top: 0.75rem; font-style: italic; }
+
+    /* --- Quote Block Styling --- */
+    .post-content :global(blockquote.block-quote) { font-family: var(--font-orbital); border-left: 4px solid var(--info-color); padding: 1rem 1.5rem; margin: 2.5rem 0; background-color: rgba(62,146,204,0.1); border-radius: 4px; color: var(--primary-text-color); font-style: italic; }
+    .post-content :global(blockquote.block-quote p) { font-family: var(--font-orbital); color: var(--primary-text-color); font-style: italic; margin-bottom: 0.5rem; }
+    .post-content :global(blockquote.block-quote cite.block-quote__caption) { display: block; margin-top: 1rem; font-size: 0.9rem; text-align: right; font-style: normal; color: #a0a0a0; }
+
+    /* --- Delimiter Block Styling --- */
+    .post-content :global(hr.block-delimiter) { border: none; height: 1px; background-color: var(--border-color-dark); margin: 3rem auto; width: 50%; }
+    .post-content :global(hr.block-delimiter-cool) { border: none; height: 3px; background: linear-gradient(to right, var(--secondary-color), var(--info-color), var(--primary-text-color)); margin: 3.5rem auto; width: 70%; border-radius: 3px; }
+
+    /* --- Table Block Styling --- */
+    .post-content :global(table.block-table) { width: auto; max-width: 100%; display: inline-block; border-collapse: collapse; margin: 2.5rem auto; overflow-x: auto; font-family: var(--font-orbital); color: var(--primary-text-color); border: 1px solid var(--border-color-dark); border-radius: 6px; }
+    .post-content :global(div.text-align-center > table.block-table) { margin-left: auto; margin-right: auto; display: table; }
+    .post-content :global(table.block-table td),
+    .post-content :global(table.block-table th) { border: 1px solid var(--border-color-dark); padding: 0.75rem 1rem; text-align: left; }
+    .post-content :global(table.block-table th) { background-color: var(--block-bg-dark); font-weight: bold; }
+    .post-content :global(table.block-table tr:nth-child(odd) td) { background-color: var(--block-bg-darker); }
+    .post-content :global(table.block-table tr:nth-child(even) td) { background-color: var(--block-bg-dark); }
+
+    /* --- Code Block Styling --- */
+    .post-content :global(pre.block-code) { margin: 2.5rem 0; background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3c3c3c; border-radius: 8px; padding: 1.5rem; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .post-content :global(pre.block-code code) { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.95rem; line-height: 1.6; background: none; color: inherit; }
+
+    /* --- Embed Block Styling --- */
+    .post-content :global(div.block-embed) { margin: 2.5rem auto; }
+    .post-content :global(div.block-embed.text-align-left) { margin-left:0; margin-right:auto; }
+    .post-content :global(div.block-embed.text-align-right) { margin-left:auto; margin-right:0; }
+    .post-content :global(div.block-embed iframe) { border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: block; margin: 0 auto; }
+    .post-content :global(.unsupported-embed) { padding: 2rem; text-align: center; background-color: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 8px; color: var(--primary-text-color); }
+    .post-content :global(.unsupported-embed a) { color: var(--info-color); font-weight: 500; }
+
+    /* --- Warning Block Styling --- */
+    .post-content :global(div.block-warning) { padding: 1rem 1.5rem; margin: 2rem 0; border-left: 5px solid var(--warning-color); background-color: rgba(240,173,78,0.1); color: var(--primary-text-color); border-radius: 4px; }
+    .post-content :global(div.block-warning strong.block-warning__title) { display: block; font-weight: bold; margin-bottom: 0.5rem; color: var(--warning-color); }
+    .post-content :global(div.block-warning .block-warning__message) { line-height: 1.6; }
+
+    /* --- Alert Block Styling --- */
+    .post-content :global(div.block-alert) { padding: 1rem 1.5rem; margin: 2rem 0; border-left-width: 5px; border-left-style: solid; border-radius: 4px; color: var(--primary-text-color); }
+    .post-content :global(div.block-alert.alert-info) { border-color: var(--info-color); background-color: rgba(62,146,204,0.1); }
+    .post-content :global(div.block-alert.alert-success) { border-color: var(--success-color); background-color: rgba(92,184,92,0.1); }
+    .post-content :global(div.block-alert.alert-warning) { border-color: var(--warning-color); background-color: rgba(240,173,78,0.1); }
+    .post-content :global(div.block-alert.alert-danger) { border-color: var(--danger-color); background-color: rgba(217,83,79,0.1); }
+    .post-content :global(div.block-alert.alert-primary) { border-color: var(--info-color); background-color: rgba(62,146,204,0.15); }
+    .post-content :global(div.block-alert.alert-secondary) { border-color: var(--secondary-color); background-color: rgba(198,35,104,0.1); }
+
+    /* --- Attaches Block Styling --- */
+    .post-content :global(div.block-attaches) { margin: 2rem 0; padding: 1rem; border: 1px solid var(--border-color-dark); border-radius: 6px; background-color: var(--block-bg-dark); }
+    .post-content :global(div.block-attaches a) { display: block; text-decoration: none; color: var(--info-color); padding: 0.5rem 0; }
+    .post-content :global(div.block-attaches a:hover) { color: var(--secondary-color); }
+    .post-content :global(div.block-attaches strong) { font-weight: bold; }
+    .post-content :global(div.block-attaches em) { font-size: 0.9em; color: #a0a0a0; margin-left: 0.5rem; }
+
+    /* --- Button Block Styling --- */
+    .post-content :global(a.block-button) { display: inline-block; padding: 0.75rem 1.5rem; margin: 1rem 0; font-family: var(--font-orbital-bold); text-decoration: none; border-radius: 4px; text-align: center; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease; font-weight: bold; border: 2px solid transparent; }
+    .post-content :global(a.block-button.btn--default) { background-color: var(--info-color); color: var(--text-color-light); border-color: var(--info-color); }
+    .post-content :global(a.block-button.btn--default:hover) { background-color: #307db8; border-color: #307db8; }
+    .post-content :global(a.block-button.btn--secondary) { background-color: var(--secondary-color); color: var(--text-color-light); border-color: var(--secondary-color); }
+    .post-content :global(a.block-button.btn--secondary:hover) { background-color: #a51f58; border-color: #a51f58; }
+
+    /* --- Toggle Block Styling --- */
+    .post-content :global(details.block-toggle) { margin: 2rem 0; padding: 1rem; border: 1px solid var(--border-color-dark); border-radius: 6px; background-color: var(--block-bg-dark); }
+    .post-content :global(details.block-toggle summary) { cursor: pointer; font-weight: bold; font-family: var(--font-orbital-bold); color: var(--primary-text-color); padding: 0.5rem; margin: -0.5rem; outline: none; }
+    .post-content :global(details.block-toggle summary::marker),
+    .post-content :global(details.block-toggle summary::-webkit-details-marker) { color: var(--primary-text-color); }
+    .post-content :global(details.block-toggle div.toggle-content) { padding-top: 1rem; border-top: 1px solid var(--border-color-dark); margin-top: 1rem; }
+
+    /* --- TextVariantTune example --- */
+    .post-content :global(.text-variant-call-out) { background-color: var(--block-bg-darker); padding: 1em; border-left: 4px solid var(--info-color); margin: 1.5em 0; border-radius: 0 4px 4px 0; }
+
+    /* --- Layout Block (Columns) --- */
+    .post-content :global(div.block-layout.editorjs-columns_wrapper) { display:flex; margin: 10px 0; /* Removed side margin to rely on column gap */ flex-direction: row; gap: 1.5rem; /* Add gap between columns */ }
+    .post-content :global(div.block-layout .editorjs-columns_col) { flex: 1; min-width: 0; }
+
+
+    /* --- Admin Controls & Back Link --- */
+    .admin-controls { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color-dark); display: flex; gap: 1rem; justify-content: flex-end; }
+    .edit-button, .delete-button { font-family: var(--font-orbital); padding: 0.6rem 1.2rem; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s ease; font-weight: bold; }
+    .edit-button { background-color: var(--info-color); color: white; }
+    .edit-button:hover { background-color: #307db8; }
+    .delete-button { background-color: var(--secondary-color); color: white; }
+    .delete-button:hover { background-color: #a51f58; }
+    .back-to-list { display: inline-block; margin-top: 3rem; padding: 0.75rem 1.5rem; font-family: var(--font-orbital); border: 2px solid var(--info-color); color: var(--info-color); border-radius: 4px; text-decoration: none; font-weight: bold; transition: background-color 0.2s ease, color 0.2s ease; }
+    .back-to-list:hover { background-color: var(--info-color); color: var(--body-bg-color); text-decoration: none; }
 </style>

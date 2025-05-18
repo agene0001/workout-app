@@ -24,7 +24,7 @@ public class Post {
 
     private Map<String,Object> content; // Field type is Map
 
-    @Column()
+    @Column(columnDefinition = "text")
     private String excerpt;
 
     @Column(nullable = false)

@@ -5,7 +5,8 @@ import os
 from flask import Flask, request, jsonify, Blueprint
 from flask_cors import CORS
 
-from utils.ingredient_utils import extract_ingredients
+from utils.NERModel.ingredient_parser import extract_ingredients_ner
+# from utils.ingredient_utils import extract_ingredients
 
 # Load environment variables
 load_dotenv()
@@ -19,7 +20,7 @@ recipe_bp = Blueprint('recipes', __name__, url_prefix='/recipes')
 def process_recipe(ingredients_list, instructions, title, image_url=""):
     """Process recipe ingredients and instructions and send to Instacart API"""
     # Extract ingredients
-    parsed_ingredients = extract_ingredients(ingredients_list)
+    parsed_ingredients = extract_ingredients_ner(ingredients_list)
 
     # Build payload for POST request
     payload = {
@@ -32,7 +33,6 @@ def process_recipe(ingredients_list, instructions, title, image_url=""):
     print(payload)
     # Get API key from environment
     api_key = os.getenv("INSTACART_API_KEY")
-
     # Debug log (remove in production)
 
     headers = {
@@ -46,6 +46,7 @@ def process_recipe(ingredients_list, instructions, title, image_url=""):
         headers=headers,
         json=payload
     )
+
     try:
         data = response.json()
     except ValueError:
@@ -80,13 +81,14 @@ def process_recipe_api():
         if 'title' not in data: return jsonify({"error": "Missing title field"}), 400
         if 'ingredients' not in data: return jsonify({"error": "Missing ingredients field"}), 400
         if 'instructions' not in data: return jsonify({"error": "Missing instructions field"}), 400
-
+        print(data.get('ingredients'))
         title = data.get('title', 'Recipe')
         image_url = data.get('image_url', '')
 
         result = process_recipe(
             data['ingredients'], data['instructions'], title, image_url
         )
+
         # Return the actual status code from the processing result
         return jsonify(result), result.get("status_code", 200)
 

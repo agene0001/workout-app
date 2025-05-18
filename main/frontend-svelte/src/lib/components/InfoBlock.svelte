@@ -23,7 +23,7 @@
 	let currentRecipeId = null;
 	let fetchError = null;
 	let selectedRecipeIndex = 0; // Track which recipe variation is currently shown
-
+	let mainRecipeDataSourceId = null;
 	// Element refs
 	let ref;
 
@@ -42,6 +42,9 @@
 		if (!hasVariations) return;
 		selectedRecipeIndex = (selectedRecipeIndex + 1) % variationCount;
 		if(mounted && !expanded) toggleExpand();
+
+		instacartData = null;
+		fetchError = null;
 	}
 
 	function prevRecipeVariant() {
@@ -50,6 +53,8 @@
 				? variationCount - 1
 				: selectedRecipeIndex - 1;
 		if(mounted && !expanded) toggleExpand();
+		instacartData = null;
+		fetchError = null;
 	}
 	function toTitleCase(str) {
 		return str.replace(/\w\S*/g, function (txt) {
@@ -79,7 +84,33 @@
 		fetchError = null; // Also reset error on recipe change
 		currentRecipeId = currentRecipe.name;
 	}
+	$: {
+		let newPrimaryRecipe;
+		if (recipeArray && recipeArray.length > 0) {
+			newPrimaryRecipe = recipeArray[0];
+		} else if (recipe) {
+			newPrimaryRecipe = recipe;
+		} else {
+			newPrimaryRecipe = null;
+		}
 
+		const newPrimaryRecipeId = newPrimaryRecipe ? (newPrimaryRecipe.id || newPrimaryRecipe.name) : null;
+
+		if (newPrimaryRecipeId !== mainRecipeDataSourceId) {
+			console.log(`InfoBlock: Primary recipe data source changed. Old: ${mainRecipeDataSourceId}, New: ${newPrimaryRecipeId}. Resetting ALL relevant state.`);
+
+			// Reset all state related to the specific recipe content and Instacart
+			instacartData = null;
+			fetchError = null;
+			isLoading = false;
+			selectedRecipeIndex = 0; // CRITICAL: Reset index for the new recipeArray
+
+			// currentRecipe will update automatically due to selectedRecipeIndex and recipeArray changing
+			// currentRecipeForInstacartName will be updated by the block below.
+
+			mainRecipeDataSourceId = newPrimaryRecipeId; // Update the tracker
+		}
+	}
 	// Fetch Instacart data when expanded and we have a recipe
 	$: if (mounted && expanded && currentRecipe && !instacartData && !isLoading && !fetchError) {
 		// Use tick to ensure DOM updates related to 'expanded' are flushed
@@ -88,36 +119,32 @@
 	}
 
 	async function fetchInstacartData() {
-		if (!currentRecipe || isLoading) return; // Prevent multiple simultaneous fetches
-
+		if (!currentRecipe || isLoading) {
+			console.log("fetchInstacartData: Skipping fetch. currentRecipe:", currentRecipe, "isLoading:", isLoading);
+			return;
+		}
 		isLoading = true;
-		fetchError = null; // Reset error state
-
+		fetchError = null;
 		try {
-			console.log('Processing recipe:', currentRecipe);
-
-
+			console.log('fetchInstacartData: Processing recipe for Instacart:', currentRecipe.name, "Ingredients:", currentRecipe.ingredients);
 			const res = await axios.post('/recipes/process-recipe', {
 				ingredients: currentRecipe.ingredients,
 				instructions: currentRecipe.instructions,
-				title: currentRecipe.name,
+				title: currentRecipe.name, // Use name of the current variant
 				image_url: currentRecipe.imgSrc
 			});
-
-
-
 			console.log('Instacart response:', res.data);
-			instacartData = res.data || null; // Ensure null if data is empty/falsy
+			instacartData = res.data || null;
 		} catch (error) {
 			console.error('Error fetching Instacart data:', error);
-			let errorMessage = 'Failed to fetch recipe data';
-			if (error instanceof Error) {
-				errorMessage = error.message;
-			} else if (typeof error === 'string') {
-				errorMessage = error;
+			let eMessage = 'Failed to fetch recipe data';
+			if (error.response && error.response.data && error.response.data.error) {
+				eMessage = error.response.data.error;
+			} else if (error.message) {
+				eMessage = error.message;
 			}
-			fetchError = errorMessage;
-			instacartData = null; // Ensure null on error
+			fetchError = eMessage;
+			instacartData = null;
 		} finally {
 			isLoading = false;
 		}
@@ -257,7 +284,7 @@
 				{/if}
 
 				<h1 id="modal-title" class="font-orbital py-4 text-center text-5xl font-bold text-gray-800">
-					{title}
+					{toTitleCase(title)}
 				</h1>
 
 				<!-- Recipe variation controls -->

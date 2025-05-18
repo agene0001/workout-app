@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
 	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 	import { browser } from '$app/environment';
 	import { getIdToken } from 'firebase/auth';
+	import {deleteImageOnServer, uploadImage} from "$lib/utils/image.utils.js";
 
 	// Props for the component
 	export let initialData = { blocks: [] }; // Default to an empty structure
@@ -18,6 +19,7 @@
 
 	// Variables for dynamically imported Editor.js and its tools
 	let EditorJS;
+	let AlignmentTuneTool, TextColorTool, UndoTool,IndentTuneTool;
 	let Header,
 		ListTool,
 		Paragraph,
@@ -28,62 +30,63 @@
 		ImageTool,
 		LinkTool,
 		EmbedTool,
-		MarkerTool;
+		MarkerTool,
+			LayoutBlockTool;
 
-	async function handleImageDeletion(imageUrl) {
-		try {
-			// Extract filename. Assumes URL structure is /api/v1/blog/uploaded/files/filename.ext
-			const filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
-			if (!filename) {
-				console.warn('Could not extract filename from URL for deletion:', imageUrl);
-				return;
-			}
-
-			const { getClientAuth } = await import('$lib/firebase/firebase.client.js');
-			const auth = getClientAuth();
-
-			if (!auth.currentUser) {
-				console.error('User not authenticated for image deletion.');
-				dispatch('image-delete-error', {
-					filename,
-					message: 'User not authenticated for deletion.'
-				});
-				return;
-			}
-			const idToken = await getIdToken(auth.currentUser);
-
-			const response = await fetch(`/api/v1/blog/images/delete/${filename}`, {
-				method: 'DELETE',
-				headers: {
-					Authorization: `Bearer ${idToken}`
-				}
-			});
-
-			if (response.ok) {
-				console.log(`Image ${filename} deleted successfully from server.`);
-				dispatch('image-delete-success', { filename });
-			} else {
-				const errorText = await response.text();
-				console.error(
-					`Failed to delete image ${filename} from server:`,
-					response.status,
-					errorText
-				);
-				dispatch('image-delete-error', {
-					filename,
-					message: `Deletion failed: ${response.status} ${errorText}`
-				});
-			}
-		} catch (error) {
-			console.error('Error during image deletion request:', error);
-			// Attempt to get filename again for dispatch, though imageUrl might be more reliable if filename extraction failed
-			const fn = imageUrl.substring(imageUrl.lastIndexOf('/') + 1) || imageUrl;
-			dispatch('image-delete-error', {
-				filename: fn,
-				message: error.message || 'Unknown deletion error'
-			});
-		}
-	}
+	// async function handleImageDeletion(imageUrl) {
+	// 	try {
+	// 		// Extract filename. Assumes URL structure is /api/v1/blog/uploaded/files/filename.ext
+	// 		const filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+	// 		if (!filename) {
+	// 			console.warn('Could not extract filename from URL for deletion:', imageUrl);
+	// 			return;
+	// 		}
+	//
+	// 		const { getClientAuth } = await import('$lib/firebase/firebase.client.js');
+	// 		const auth = getClientAuth();
+	//
+	// 		if (!auth.currentUser) {
+	// 			console.error('User not authenticated for image deletion.');
+	// 			dispatch('image-delete-error', {
+	// 				filename,
+	// 				message: 'User not authenticated for deletion.'
+	// 			});
+	// 			return;
+	// 		}
+	// 		const idToken = await getIdToken(auth.currentUser);
+	//
+	// 		const response = await fetch(`/api/v1/blog/images/delete/${filename}`, {
+	// 			method: 'DELETE',
+	// 			headers: {
+	// 				Authorization: `Bearer ${idToken}`
+	// 			}
+	// 		});
+	//
+	// 		if (response.ok) {
+	// 			console.log(`Image ${filename} deleted successfully from server.`);
+	// 			dispatch('image-delete-success', { filename });
+	// 		} else {
+	// 			const errorText = await response.text();
+	// 			console.error(
+	// 				`Failed to delete image ${filename} from server:`,
+	// 				response.status,
+	// 				errorText
+	// 			);
+	// 			dispatch('image-delete-error', {
+	// 				filename,
+	// 				message: `Deletion failed: ${response.status} ${errorText}`
+	// 			});
+	// 		}
+	// 	} catch (error) {
+	// 		console.error('Error during image deletion request:', error);
+	// 		// Attempt to get filename again for dispatch, though imageUrl might be more reliable if filename extraction failed
+	// 		const fn = imageUrl.substring(imageUrl.lastIndexOf('/') + 1) || imageUrl;
+	// 		dispatch('image-delete-error', {
+	// 			filename: fn,
+	// 			message: error.message || 'Unknown deletion error'
+	// 		});
+	// 	}
+	// }
 
 	onMount(async () => {
 		if (browser) {
@@ -125,6 +128,31 @@
 
 				const MarkerToolModule = await import('@editorjs/marker');
 				MarkerTool = MarkerToolModule.default;
+
+				// --- IMPORT NEW TOOLS ---
+				const AlignmentTuneModule = await import('editorjs-text-alignment-blocktune');
+				AlignmentTuneTool = AlignmentTuneModule.default;
+
+				const IndentTuneModule= await import('$lib/custom-indent-tune/index.ts'); // Adjust path as needed
+				 IndentTuneTool= IndentTuneModule.default // Adjust path as needed
+
+
+				const TextColorPluginModule = await import('editorjs-color-picker'); // <--- Changed to direct relative path
+				// When dynamically importing a CJS module, the export is usually on the .default property
+				TextColorTool = TextColorPluginModule.default;
+				const LayoutBlockToolModule = await import('@peppap1g/editorjs-columns');
+				LayoutBlockTool = LayoutBlockToolModule.default;
+
+				// Optional: Add a check to ensure it loaded correctly
+				if (!TextColorTool || typeof TextColorTool !== 'function') {
+					console.error('Failed to load TextColorTool correctly. Loaded:', TextColorPluginModule);
+					// Handle the error appropriately, maybe dispatch an error event
+					throw new Error('TextColorTool plugin could not be loaded.');
+				}
+
+				const UndoModule = await import('editorjs-undo');
+				UndoTool = UndoModule.default;
+				// --- END IMPORT NEW TOOLS ---
 
 				// Wait a small delay to ensure DOM is ready
 				setTimeout(() => {
@@ -169,6 +197,12 @@
 				initialData && initialData.blocks && Array.isArray(initialData.blocks)
 					? initialData
 					: { blocks: [] };
+			const layoutColumnTools = {
+				header: Header,
+				// alert : Alert,
+				paragraph : Paragraph,
+				delimiter : Delimiter
+			}
 
 			// Create a new editor instance
 			editorInstance = new EditorJS({
@@ -183,11 +217,13 @@
 						config: {
 							levels: [1, 2, 3, 4, 5, 6],
 							defaultLevel: 2
-						}
+						},
+						tunes: ['alignTune',"indentTune"] // --- ADDED INDENT TUNE ---
 					},
 					paragraph: {
 						class: Paragraph,
-						inlineToolbar: true
+						inlineToolbar: true,
+						tunes: ['alignTune',"indentTune"] // --- ADDED INDENT TUNE ---
 					},
 					list: {
 						class: ListTool,
@@ -195,7 +231,8 @@
 					},
 					quote: {
 						class: Quote,
-						inlineToolbar: true
+						inlineToolbar: true,
+						tunes: ['alignTune',"indentTune"] // --- ALIGN TUNE (Optional for Quote) ---
 					},
 					delimiter: Delimiter,
 					table: {
@@ -204,81 +241,65 @@
 					},
 					code: CodeTool,
 					linkTool: LinkTool,
+					layout: {
+						class: LayoutBlockTool,
+						config: {
+							EditorJsLibrary: EditorJS, // Pass the EditorJS class
+							// Pass the tools that can be used inside columns
+							tools: layoutColumnTools,
+							// Optional: Default layout preset
+							// defaultLayout: '2-cols-equal',
+							// Optional: Available layout presets
+							// layouts: [
+							//    { name: '2 columns', icon: '<svg>...</svg>', layout: '2-cols-equal' },
+							//    { name: '3 columns', icon: '<svg>...</svg>', layout: '3-cols-equal' }
+							// ]
+						},
+						// You can add tunes to the layout block itself if needed
+						// tunes: ['alignTune']
+					},
+					// --- END LAYOUT TOOL CONFIGURATION ---
+
 					image: {
 						class: ImageTool,
 						config: {
+							// ... (your existing image uploader config)
 							uploader: {
-								uploadByFile: async (file) => {
+								uploadByFile: async (file: File) => {
+									// --- PASTE THE REFACTORED uploadByFile LOGIC HERE ---
+
+									// (The async function defined above)
+									// It will use the imported 'uploadImage' and the 'dispatch' from this component
 									dispatch('image-upload-start', { file });
 									try {
-										// Dynamically import Firebase auth functions here to ensure they are loaded
-
-										const { getClientAuth } = await import('$lib/firebase/firebase.client.js');
-										const auth = getClientAuth();
-
-										if (!auth.currentUser) {
-											console.error('User not authenticated for image upload.');
-											dispatch('image-upload-error', { file, message: 'User not authenticated.' });
-											return {
-												success: 0,
-												file: { url: null, message: 'User not authenticated.' }
-											};
-										}
-
-										const idToken = await getIdToken(auth.currentUser);
-
-										const formData = new FormData();
-										formData.append('image', file); // 'image' must match @RestForm("image") in Java
-
-										const response = await fetch('/api/v1/blog/images/upload', {
-											method: 'POST',
-											headers: {
-												Authorization: `Bearer ${idToken}`
-												// 'Content-Type': 'multipart/form-data' is NOT needed here;
-												// the browser sets it automatically with the correct boundary for FormData
-											},
-											body: formData
-										});
-
-										if (!response.ok) {
-											const errorText = await response.text();
-											console.error('Image upload failed:', response.status, errorText);
-											dispatch('image-upload-error', {
-												file,
-												message: `Upload failed: ${response.status} ${errorText}`
+										const uploadResult = await uploadImage(file);
+										if (uploadResult && uploadResult.url) {
+											dispatch('image-upload-success', {
+												file: { url: uploadResult.url, name: uploadResult.name },
+												isTemporary: false
 											});
 											return {
-												success: 0,
-												file: { url: null, message: `Upload failed: ${errorText}` }
+												success: 1,
+												file: { url: uploadResult.url }
 											};
+										} else {
+											const errorMessage = 'Image upload failed from Editor. Check console.';
+											dispatch('image-upload-error', { file, message: errorMessage });
+											return { success: 0, file: { url: null, message: errorMessage } };
 										}
-
-										const responseData = await response.json();
-										console.log(responseData);
-										// The backend returns a relative URL like "/api/v1/blog/uploaded/files/filename.jpg"
-										const imageUrl = responseData.url;
-										dispatch('image-upload-success', {
-											file: { url: imageUrl, name: responseData.name },
-											isTemporary: false
-										});
-										return { success: 1, file: { url: imageUrl } };
-									} catch (error) {
-										console.error('Error uploading image:', error);
-										dispatch('image-upload-error', {
-											file,
-											message: error.message || 'Unknown upload error'
-										});
-										return { success: 0, file: { url: null, message: error.message } };
+									} catch (error: any) {
+										console.error('Error in Editor.js uploadByFile:', error);
+										const errorMessage = error.message || 'Unknown upload error in Editor.js';
+										dispatch('image-upload-error', { file, message: errorMessage });
+										return { success: 0, file: { url: null, message: errorMessage } };
 									}
+									// --- END OF PASTED LOGIC ---
 								},
 								uploadByUrl: (url) => {
-									// For external URLs, we just return them directly.
-									// No backend upload is needed.
 									return Promise.resolve({
 										success: 1,
 										file: {
-											url: url,
-											// you can add other data here if needed, like name: url.substring(url.lastIndexOf('/') + 1)
+											url: url
 										}
 									});
 								}
@@ -286,11 +307,60 @@
 						}
 					},
 					embed: EmbedTool,
-					marker: MarkerTool
+					marker: MarkerTool,
+
+					// --- NEW TOOL CONFIGURATIONS ---
+					alignTune: {
+						// Name this whatever you used in the 'tunes' array above
+						class: AlignmentTuneTool
+						// config for alignment tune if any (e.g., default alignment)
+						// config: {
+						//   default: "left",
+						//   blocks: {
+						//     header: 'center', // specific default for header
+						//     list: 'left'
+						//   }
+						// }
+					},
+					indentTune: {
+						class: IndentTuneTool,
+						config: {
+							defaultIndentSize: 24, // Indent size in pixels
+							maxIndentLevel: 5 // Maximum indent level
+						}
+					},
+					textColor: {
+						class: TextColorTool,
+						config: {
+							colorCollections: [
+								'#EC7878',
+								'#9C27B0',
+								'#673AB7',
+								'#3F51B5',
+								'#0070FF',
+								'#03A9F4',
+								'#00BCD4',
+								'#4CAF50',
+								'#8BC34A',
+								'#CDDC39',
+								'#FFF'
+							],
+							defaultColor: '#FF1300',
+							type: 'text',
+							customPicker: true
+						}
+					}
+					// --- END NEW TOOL CONFIGURATIONS ---
 				},
+				tunes: ['indentTune', 'alignTune'],
 				data: dataToLoad,
 				onReady: () => {
 					console.log('Editor.js instance is ready!');
+					// --- INITIALIZE UNDO TOOL ---
+					if (UndoTool && editorInstance) {
+						new UndoTool({ editor: editorInstance });
+					}
+					// --- END INITIALIZE UNDO TOOL ---
 					dispatch('ready', { editor: editorInstance });
 				},
 				onChange: (api, event) => {
@@ -308,18 +378,21 @@
 							) {
 								const removedBlockAPI = currentEvent.detail.target;
 								if (removedBlockAPI.name === 'image') {
-									removedBlockAPI.save().then(savedData => {
-										let rawData = savedData.data;
-										if (rawData && rawData.file && rawData.file.url) {
-											const imageUrl = rawData.file.url;
-											// Path confirmed from StaticContentRoutes.java
-											if (imageUrl.startsWith('/api/v1/blog/uploaded/images/')) {
-												handleImageDeletion(imageUrl);
+									removedBlockAPI
+										.save()
+										.then((savedData) => {
+											let rawData = savedData.data;
+											if (rawData && rawData.file && rawData.file.url) {
+												const imageUrl = rawData.file.url;
+												// Path confirmed from StaticContentRoutes.java
+												if (imageUrl.startsWith('/api/v1/blog/uploaded/images/')) {
+													deleteImageOnServer(imageUrl);
+												}
 											}
-										}
-									}).catch(error => {
-										console.error('Error saving block data for deletion:', error);
-									});
+										})
+										.catch((error) => {
+											console.error('Error saving block data for deletion:', error);
+										});
 								}
 							}
 						}
@@ -477,9 +550,9 @@
 		padding-bottom: 150px !important; /* More space at the bottom */
 	}
 
-	:global(.ce-toolbar__content) {
-		max-width: calc(100% - 40px); /* Ensure toolbar fits within wrapper */
-	}
+	/*:global(.ce-toolbar__content) {*/
+	/*	max-width: calc(100% - 40px); !* Ensure toolbar fits within wrapper *!*/
+	/*}*/
 
 	:global(.ce-block__content) {
 		max-width: 850px; /* Wider content area */
@@ -488,6 +561,7 @@
 
 	:global(.ce-toolbar__actions) {
 		max-width: 100%; /* Allow actions to fill the container */
+
 	}
 
 	/* Improve paragraph and caption styling */
@@ -522,6 +596,7 @@
 	:global(.ce-toolbar__plus, .ce-toolbar__settings-btn) {
 		color: #444;
 		background: #f5f5f5;
+
 		border-radius: 6px;
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 		transition: all 0.2s ease;
@@ -580,4 +655,7 @@
 		background: #2a2a2a;
 		color: #e0e0e0;
 	}
+
+
+	/*!* --- End Toolbar Popover Fixes --- *!*/
 </style>

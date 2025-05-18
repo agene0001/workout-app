@@ -161,9 +161,9 @@ public class PostService {
             existingPost.setAuthorTitle(post.getAuthorTitle());
         }
 
-        if (post.getImageUrl() != null) {
+
             existingPost.setImageUrl(post.getImageUrl());
-        }
+
 
         if (post.isFeatured()) {
             existingPost.setFeatured(post.isFeatured()||existingPost.isFeatured());

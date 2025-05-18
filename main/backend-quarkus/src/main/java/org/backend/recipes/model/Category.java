@@ -1,5 +1,6 @@
 package org.backend.recipes.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -22,7 +23,8 @@ public class Category {
             joinColumns = @JoinColumn(name = "catid"),
             inverseJoinColumns = @JoinColumn(name = "recipeid")
     )
-    @JsonIgnoreProperties("categories")
+//    @JsonIgnoreProperties("categories")
+    @JsonIgnore
     private Set<Recipe> recipes = new HashSet<>();
 
     // Constructors

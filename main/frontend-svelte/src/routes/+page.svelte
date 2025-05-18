@@ -101,16 +101,17 @@
         };
     });
 </script>
-
+<!--<a href="https://www.producthunt.com/products/gainz-tracker/reviews?utm_source=badge-product_review&utm_medium=badge&utm_souce=badge-gainz&#0045;tracker" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/product_review.svg?product_id=1061496&theme=light" alt="Gainz&#0032;Tracker - Your&#0032;own&#0032;&#0040;FREE&#0041;&#0032;Personal&#0032;Shopper&#0032;and&#0032;Delivery | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>-->
 <div class="container1 peaks w-full" bind:this={heroRef}>
     <div class="pt-25 flex justify-center items-center w-full">
         <div class={`w-full text-center ${heroStart ? 'hero-start' : ''}`}>
             <h1 id="heroText" class="text-6xl font-orbital font-bold mx-auto text-[#00dd87]">
                 Unleashing Your Potential Through <span class="text-gradient-2">Fitness and Nutrition</span>
             </h1>
-            <p class="text-xl text-white mt-6 max-w-3xl mx-auto">
-                Your all-in-one platform for personalized nutrition plans, workout tracking, and a supportive fitness community -- Mobile app in Development <span class='text-gradient-2 '>(Try It Now! IT'S FREE)</span>
+            <p class="text-xl text-white mt-6 max-w-3xl mx-auto ">
+                Your all-in-one platform for personalized nutrition plans, workout tracking, and a supportive fitness community -- Mobile app in Development
             </p>
+            <p class='text-gradient-2 mt-2'>Get Started today!! IT'S FREE</p>
             <div class="mt-8 flex justify-center gap-4">
                 <button class="bg-[#00dd87] hover:bg-[#00bb74] text-black font-bold py-3 px-6 rounded-full transition-all">
                     <a href="/Nutrition">Get Started</a>
@@ -125,7 +126,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 40 40">
                         <path d="M23.402 18.737h-4.63v-4.63h4.63v4.63zm4.63-4.63h4.63v4.63h-4.63v-4.63zm0 9.26v4.63h-4.63v-4.63h4.63zm-4.63 0h-4.63v-4.63h4.63v4.63zm-4.63 0v4.63h-4.63v-4.63h4.63zm-4.63-4.63h-4.63v-4.63h4.63v4.63zM40 8.39v23.22c0 4.61-3.73 8.35-8.35 8.35H8.35c-4.61 0-8.35-3.73-8.35-8.35V8.39C0 3.77 3.73 0 8.35 0h23.22c4.61 0 8.35 3.73 8.35 8.39z"></path>
                     </svg>
-                    <a href="https://www.producthunt.com/posts/gainztracker" target="_blank">Product Hunt</a>
+                    <a href="https://www.producthunt.com/products/gainz-tracker?utm_source=badge-product_review&utm_medium=badge&utm_souce=badge-gainz&#0045;tracker" target="_blank">Product Hunt</a>
                 </button>
             </div>
         </div>

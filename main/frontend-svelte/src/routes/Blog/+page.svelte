@@ -8,6 +8,7 @@
 		checkIsUserAdmin
 	} from '$lib/firebase/firebase.client'; // Adjust path if needed
 	import { onAuthStateChanged, getIdTokenResult, getIdToken } from 'firebase/auth';
+	import {goto} from "$app/navigation";
 
 	// State variables
 	let blogPosts = [];
@@ -22,7 +23,6 @@
 	let auth = getClientAuth();
 	// User authentication state
 	const isAdmin = getContext('isAdmin');
-
 	// Pagination variables
 	$: filteredPosts = filterPosts(blogPosts, selectedCategory, searchQuery);
 	$: totalPages = Math.ceil(filteredPosts.length / postsPerPage);
@@ -72,7 +72,6 @@
 	// Fetch blog posts and categories on component mount
 	onMount(async () => {
 		// Firebase Auth State Listener
-		console.log($isAdmin)
 		// const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
 		// 	if (user) {
 		// 		currentUser.set(user);
@@ -104,7 +103,7 @@
 				// Remove featured post from main list to avoid duplication
 				blogPosts = blogPosts.filter((post) => post.id !== featuredPost.id);
 			}
-
+			console.log(featuredPost)
 			// Fetch categories
 			const categoriesRes = await axios.get('/api/v1/blog/categories');
 			categories = categoriesRes.data;
@@ -126,8 +125,7 @@
 
 
 	async function handleEditPost(postId) {
-		const isVerifiedAdmin = await checkIsUserAdmin();
-		if (!isVerifiedAdmin) {
+		if (!isAdmin) {
 			alert('You do not have permission to edit posts.');
 			return;
 		}
@@ -140,9 +138,8 @@
 		// Or, set a $state variable to open an edit modal:
 		// editingPostId = postId; isEditModalOpen = true;
 
-		alert(
-			`Admin action: Navigate to an edit page/modal for post ID: ${postId}.\n\nYou'll need to: \n1. Create a UI for editing.\n2. Implement an 'edit_blog_post' Firebase Cloud Function (similar to 'add_blog_post' but it updates an existing document).\n3. Call that Cloud Function upon saving changes.`
-		);
+		goto(`/Blog/admin/post/${postId}`); // Navigate to the new unified admin edit route
+
 
 		// To implement fully, you would:
 		// 1. Fetch the specific post's data.
@@ -226,20 +223,26 @@
 
 			<div class="fade-in-up mx-auto max-w-4xl overflow-hidden rounded-lg bg-gray-800 shadow-xl">
 				{#if featuredPost.image}
-					<div class="relative h-64 overflow-hidden bg-gray-700">
-						<!-- Image placeholder or actual image -->
-						<div class="absolute inset-0 bg-gradient-to-r from-[#00dd8733] to-transparent"></div>
-						<div class="absolute bottom-0 left-0 p-6">
-							<span class="rounded-full bg-[#00dd87] px-3 py-1 text-sm font-bold text-black">
-								{featuredPost.category}
-							</span>
-							<p class="mt-2 text-white">
-								{formatDate(featuredPost.publishedAt)} • {featuredPost.readTime} min read
-							</p>
+					<a href={`/Blog/${featuredPost.slug}`} class="block">
+						<div class="relative aspect-video w-full overflow-hidden bg-gray-700 md:h-80 lg:h-96">
+							<img
+									src={featuredPost.image}
+									alt={`Featured image for ${featuredPost.title}`}
+									class="h-full w-full object-cover transition-transform duration-300 ease-in-out hover:scale-105"
+									loading="lazy"
+							/>
+							<!-- Optional: Overlay for text protection or style -->
+							<div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+						</div>
+					</a>
+				{:else}
+					<!-- Optional: Fallback if no imageUrl, you can remove this if not needed -->
+					<div class="relative h-64 overflow-hidden bg-gray-700 md:h-80 lg:h-96">
+						<div class="flex h-full items-center justify-center">
+							<p class="text-gray-400">No image available</p>
 						</div>
 					</div>
 				{/if}
-
 				<div class="p-6">
 					<p class="mb-4 text-lg text-gray-300">
 						{featuredPost.excerpt}
@@ -247,6 +250,7 @@
 					<div class="mt-6 flex items-center">
 						<div class="h-10 w-10 rounded-full bg-gray-700">
 							<!-- Author image placeholder -->
+							<a href="/"><img src="/imgs/gainztrackersfavicon.png" alt="gainz tracker logo"/></a>
 						</div>
 						<div class="ml-3">
 							<p class="font-bold text-white">{featuredPost.author.name}</p>
@@ -369,7 +373,22 @@
 						class="fade-in-up transform overflow-hidden rounded-lg bg-gray-800 shadow-lg transition-transform hover:scale-105"
 					>
 						{#if post.image}
-							<div class="h-48 bg-gray-700"><!-- Placeholder for image --></div>
+							<a href={`/Blog/${post.slug}`} class="block">
+								<div class="aspect-video w-full overflow-hidden bg-gray-700">
+									<img
+											src={post.imageUrl}
+											alt={`Image for ${post.title}`}
+											class="h-full w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-110"
+											loading="lazy"
+									/>
+								</div>
+							</a>
+						{:else}
+							<a href={`/Blog/${post.slug}`} class="block">
+								<div class="flex h-48 items-center justify-center bg-gray-700">
+									<p class="text-gray-400 text-sm">No image</p>
+								</div>
+							</a>
 						{/if}
 						<div class="p-6">
 							<div class="mb-3 flex items-center justify-between">

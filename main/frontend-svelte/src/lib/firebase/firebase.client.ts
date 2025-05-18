@@ -1,12 +1,12 @@
 // src/lib/firebase/firebase.client.ts
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth, connectAuthEmulator } from "firebase/auth";
+import { getAuth, type Auth, connectAuthEmulator, onAuthStateChanged, type User } from "firebase/auth";
 import { getFirestore, type Firestore, connectFirestoreEmulator } from "firebase/firestore";
-import { getFunctions, type Functions, connectFunctionsEmulator } from "firebase/functions"; // Added Functions
+import { getFunctions, type Functions, connectFunctionsEmulator } from "firebase/functions";
+import { writable, type Writable } from "svelte/store";
 
 // Firebase configuration object, populated from environment variables.
-// VITE_ prefix is standard for Vite projects to expose env vars to the client.
 const firebaseConfigClient = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY!,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN!,
@@ -16,155 +16,237 @@ const firebaseConfigClient = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID!,
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID!
 };
-export async function checkIsUserAdmin() {
-    if (!isFirebaseClientInitialized()) {
-        console.warn('Admin check: Firebase client not initialized.');
-        return false;
-    }
-    const authInstance = getClientAuth(); // Or firebaseAuth;
-    if (!authInstance || !authInstance.currentUser) {
-        console.warn('Admin check: No user is currently logged in.');
-        return false;
-    }
-    try {
-        const idTokenResult = await authInstance.currentUser.getIdTokenResult(true);
-        return idTokenResult?.claims.admin === true;
-    } catch (error) {
-        console.error('Error checking admin status:', error);
-        alert('Could not verify admin privileges. Please try again.');
-        return false;
-    }
-}
+
 // Singleton instances for Firebase app and services.
 let clientApp: FirebaseApp | null = null;
 let clientAuth: Auth | null = null;
 let firestoreDb: Firestore | null = null;
-let clientFunctions: Functions | null = null; // Added Functions instance
-let isInitialized = false; // Flag to track initialization status.
+let clientFunctions: Functions | null = null;
+
+// Initialization promise
+let initializationPromise: Promise<boolean> | null = null;
+
+// Svelte stores for reactive state
+export const currentUser: Writable<User | null> = writable(null);
+export const isAdmin: Writable<boolean> = writable(false);
+export const isInitialized: Writable<boolean> = writable(false);
 
 // Default emulator host and ports.
-// Ensure these match your firebase.json emulator configuration.
-const EMULATOR_HOST = "localhost"; // Or "127.0.0.1"
+const EMULATOR_HOST = "localhost";
 const AUTH_EMULATOR_PORT = 9099;
 const FIRESTORE_EMULATOR_PORT = 8083;
-const FUNCTIONS_EMULATOR_PORT = 5001; // Added Functions emulator port
+const FUNCTIONS_EMULATOR_PORT = 5001;
+
+/**
+ * Updates the admin status in the isAdmin store
+ */
+async function updateAdminStatus(user: User | null): Promise<void> {
+    if (!user) {
+        isAdmin.set(false);
+        return;
+    }
+
+    try {
+        const idTokenResult = await user.getIdTokenResult(true);
+        const adminStatus = idTokenResult?.claims.admin === true;
+        isAdmin.set(adminStatus);
+    } catch (error) {
+        console.error('Error checking admin status:', error);
+        isAdmin.set(false);
+    }
+}
 
 /**
  * Initializes the Firebase client application and services.
- * If in a development environment (import.meta.env.DEV is true),
- * it will attempt to connect to the Firebase emulators.
+ * Returns a promise that resolves when initialization is complete.
  */
-export function initializeFirebaseClient(): void {
-    // Prevent re-initialization or running on the server.
-    if (isInitialized || typeof window === 'undefined') {
-        if (isInitialized) {
-            // console.log("Firebase client already initialized.");
-        }
-        return;
+export function initializeFirebaseClient(): Promise<boolean> {
+    // Return existing promise if initialization is in progress
+    if (initializationPromise) {
+        return initializationPromise;
+    }
+
+    // Skip if running on server
+    if (typeof window === 'undefined') {
+        return Promise.resolve(false);
     }
 
     console.log("Attempting Firebase client initialization...");
 
-    try {
-        const appName = 'workout-app'; // Consistent app name
-        const existingApp = getApps().find(app => app.name === appName);
+    initializationPromise = new Promise<boolean>((resolve) => {
+        try {
+            const appName = 'workout-app';
+            const existingApp = getApps().find(app => app.name === appName);
 
-        if (existingApp) {
-            clientApp = existingApp;
-        } else {
-            clientApp = initializeApp(firebaseConfigClient, appName);
-        }
-
-        if (clientApp) {
-            clientAuth = getAuth(clientApp);
-            firestoreDb = getFirestore(clientApp);
-            clientFunctions = getFunctions(clientApp); // Initialize Functions
-
-            if (import.meta.env.DEV) {
-                console.log("Development mode detected. Attempting to connect to Firebase emulators...");
-
-                if (clientAuth) {
-                    connectAuthEmulator(clientAuth, `http://${EMULATOR_HOST}:${AUTH_EMULATOR_PORT}`, { disableWarnings: false });
-                    console.log(`Auth connected to emulator at http://${EMULATOR_HOST}:${AUTH_EMULATOR_PORT}`);
-                } else {
-                    console.warn("Auth instance not available for emulator connection.");
-                }
-
-                if (firestoreDb) {
-                    connectFirestoreEmulator(firestoreDb, EMULATOR_HOST, FIRESTORE_EMULATOR_PORT);
-                    console.log(`Firestore connected to emulator at ${EMULATOR_HOST}:${FIRESTORE_EMULATOR_PORT}`);
-                } else {
-                    console.warn("Firestore instance not available for emulator connection.");
-                }
-
-                if (clientFunctions) { // Connect Functions emulator
-                    connectFunctionsEmulator(clientFunctions, EMULATOR_HOST, FUNCTIONS_EMULATOR_PORT);
-                    console.log(`Functions connected to emulator at ${EMULATOR_HOST}:${FUNCTIONS_EMULATOR_PORT}`);
-                } else {
-                    console.warn("Functions instance not available for emulator connection.");
-                }
+            if (existingApp) {
+                clientApp = existingApp;
             } else {
-                console.log("Production mode detected. Connecting to live Firebase services.");
+                clientApp = initializeApp(firebaseConfigClient, appName);
             }
 
-            isInitialized = true;
-            console.log("Firebase client initialization process completed successfully.");
-        } else {
-            console.error("Failed to obtain Firebase app instance during initialization.");
-            isInitialized = false;
+            if (clientApp) {
+                clientAuth = getAuth(clientApp);
+                firestoreDb = getFirestore(clientApp);
+                clientFunctions = getFunctions(clientApp);
+
+                if (import.meta.env.DEV) {
+                    console.log("Development mode detected. Connecting to Firebase emulators...");
+
+                    if (clientAuth) {
+                        connectAuthEmulator(clientAuth, `http://${EMULATOR_HOST}:${AUTH_EMULATOR_PORT}`, { disableWarnings: false });
+                        console.log(`Auth connected to emulator at http://${EMULATOR_HOST}:${AUTH_EMULATOR_PORT}`);
+                    }
+
+                    if (firestoreDb) {
+                        connectFirestoreEmulator(firestoreDb, EMULATOR_HOST, FIRESTORE_EMULATOR_PORT);
+                        console.log(`Firestore connected to emulator at ${EMULATOR_HOST}:${FIRESTORE_EMULATOR_PORT}`);
+                    }
+
+                    if (clientFunctions) {
+                        connectFunctionsEmulator(clientFunctions, EMULATOR_HOST, FUNCTIONS_EMULATOR_PORT);
+                        console.log(`Functions connected to emulator at ${EMULATOR_HOST}:${FUNCTIONS_EMULATOR_PORT}`);
+                    }
+                } else {
+                    console.log("Production mode detected. Connecting to live Firebase services.");
+                }
+
+                // Set up auth state listener
+                if (clientAuth) {
+                    onAuthStateChanged(clientAuth, (user) => {
+                        currentUser.set(user);
+                        updateAdminStatus(user);
+                    });
+                }
+
+                isInitialized.set(true);
+                console.log("Firebase client initialization process completed successfully.");
+                resolve(true);
+            } else {
+                console.error("Failed to obtain Firebase app instance during initialization.");
+                isInitialized.set(false);
+                resolve(false);
+            }
+        } catch (error) {
+            console.error("Firebase client initialization error:", error);
+            clientApp = null;
+            clientAuth = null;
+            firestoreDb = null;
+            clientFunctions = null;
+            isInitialized.set(false);
+            resolve(false);
+        }
+    });
+
+    return initializationPromise;
+}
+
+/**
+ * Returns a promise that resolves with the current user.
+ * If no user is logged in, resolves with null.
+ */
+export function getCurrentUser(): Promise<User | null> {
+    // First ensure Firebase is initialized
+    return initializeFirebaseClient().then(() => {
+        if (!clientAuth) {
+            return null;
         }
 
+        return clientAuth.currentUser;
+    });
+}
+
+/**
+ * Checks if the current user has admin privileges.
+ * Returns a promise that resolves with true if user is an admin, false otherwise.
+ */
+export async function checkIsUserAdmin(): Promise<boolean> {
+    try {
+        // First ensure Firebase is initialized
+        await initializeFirebaseClient();
+
+        if (!clientAuth || !clientAuth.currentUser) {
+            return false;
+        }
+
+        const user = clientAuth.currentUser;
+        const idTokenResult = await user.getIdTokenResult(true);
+        return idTokenResult?.claims.admin === true;
     } catch (error) {
-        console.error("Firebase client initialization error:", error);
-        clientApp = null;
-        clientAuth = null;
-        firestoreDb = null;
-        clientFunctions = null; // Reset functions instance on error
-        isInitialized = false;
+        console.error('Error checking admin status:', error);
+        return false;
+    }
+}
+
+/**
+ * Forces a refresh of the admin status.
+ * Useful to call after admin status might have changed.
+ */
+export async function refreshAdminStatus(): Promise<boolean> {
+    try {
+        await initializeFirebaseClient();
+
+        if (!clientAuth || !clientAuth.currentUser) {
+            isAdmin.set(false);
+            return false;
+        }
+
+        await updateAdminStatus(clientAuth.currentUser);
+
+        // Return the current value
+        let currentIsAdmin = false;
+        isAdmin.subscribe(value => {
+            currentIsAdmin = value;
+        })();
+
+        return currentIsAdmin;
+    } catch (error) {
+        console.error('Error refreshing admin status:', error);
+        return false;
     }
 }
 
 /**
  * Returns the initialized Firebase App instance.
- * @returns {FirebaseApp | null} The FirebaseApp instance or null if not initialized.
  */
-export function getClientApp(): FirebaseApp | null { return clientApp; }
+export function getClientApp(): FirebaseApp | null {
+    return clientApp;
+}
 
 /**
  * Returns the initialized Firebase Auth instance.
- * @returns {Auth | null} The Auth instance or null if not initialized.
  */
-export function getClientAuth(): Auth | null { return clientAuth; }
+export function getClientAuth(): Auth | null {
+    return clientAuth;
+}
 
 /**
  * Returns the initialized Firebase Firestore instance.
- * @returns {Firestore | null} The Firestore instance or null if not initialized.
  */
-export function getDb(): Firestore | null { return firestoreDb; }
+export function getDb(): Firestore | null {
+    return firestoreDb;
+}
 
 /**
  * Returns the initialized Firebase Functions instance.
- * @returns {Functions | null} The Functions instance or null if not initialized.
  */
-export function getClientFunctions(): Functions | null { return clientFunctions; }
-
+export function getClientFunctions(): Functions | null {
+    return clientFunctions;
+}
 
 /**
  * Checks if the Firebase client has been successfully initialized.
- * @returns {boolean} True if initialized, false otherwise.
  */
-export function isFirebaseClientInitialized(): boolean { return isInitialized; }
+export function isFirebaseClientInitialized(): boolean {
+    return clientApp !== null && clientAuth !== null;
+}
 
 // Auto-initialize in browser environment
 if (typeof window !== 'undefined') {
     initializeFirebaseClient();
 }
 
-// Export instances directly for convenience, ensuring they are only accessed after initialization.
-// Consumers should ideally check isFirebaseClientInitialized() or use a store that depends on it.
-// However, for direct imports like in authStore.js, these can be helpful.
-// Note: These will be null until initializeFirebaseClient completes.
-export const app: FirebaseApp | null = getClientApp();
-export const auth: Auth | null = getClientAuth();
-export const db: Firestore | null = getDb();
-export const functions: Functions | null = getClientFunctions();
+// Export instances directly for convenience
+export const app: FirebaseApp | null = clientApp;
+export const auth: Auth | null = clientAuth;
+export const db: Firestore | null = firestoreDb;
+export const functions: Functions | null = clientFunctions;

@@ -33,7 +33,7 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 public class BlogResource extends ApiResource {
 
     private static final Logger LOG = Logger.getLogger(BlogResource.class);
-
+    private static final String MANAGED_IMAGE_PATH_PREFIX = ApiPaths.BLOG + "/uploaded/images/";
     @Inject
     PostService postService;
 
@@ -299,9 +299,8 @@ public class BlogResource extends ApiResource {
         }
         String authorId = userPrincipal.getName();
         LOG.infof("User Principal in createPost: %s", authorId);
-        LOG.infof(
-            "Is user in admin role (SecurityContext): %s",
-            securityContext.isUserInRole("admin")
+        LOG.infof("Is user in admin role (SecurityContext): %s",
+                Optional.of(securityContext.isUserInRole("admin"))
         );
 
         // Fetch author details from Firebase Auth or your user service
@@ -329,7 +328,7 @@ public class BlogResource extends ApiResource {
                 authorName, // Pass fetched or default authorName
                 authorTitle, // Pass fetched or default authorTitle
                 postRequest.getImageUrl(),
-                postRequest.isFeatured(),
+                    postRequest.isFeatured(),
                 postRequest.getReadTime()
             );
             return Response.status(Response.Status.CREATED)
@@ -438,58 +437,148 @@ public class BlogResource extends ApiResource {
         }
     }
 
+
     @DELETE
     @Path("/posts/{id}")
-    // @RolesAllowed("admin") // This would be for SmallRye JWT.
     public Response deletePost(
-        @Context SecurityContext securityContext,
-        @PathParam("id") UUID id
+            @Context SecurityContext securityContext,
+            @PathParam("id") UUID id
     ) {
         if (securityContext.getUserPrincipal() == null) {
             LOG.warn("User not authenticated for deletePost.");
             return Response.status(Response.Status.UNAUTHORIZED)
-                .entity(Map.of("message", "User not authenticated."))
-                .build();
+                    .entity(Map.of("message", "User not authenticated."))
+                    .build();
         }
         if (!securityContext.isUserInRole("admin")) {
             LOG.warnf(
-                "User %s does not have admin privileges for deletePost.",
-                securityContext.getUserPrincipal().getName()
+                    "User %s does not have admin privileges for deletePost.",
+                    securityContext.getUserPrincipal().getName()
             );
             return Response.status(Response.Status.FORBIDDEN)
-                .entity(
-                    Map.of("message", "User does not have admin privileges.")
-                )
-                .build();
-        }
-        String adminUid = securityContext.getUserPrincipal().getName();
-
-        try {
-            boolean deleted = postService.deletePost(id); // Pass adminUid if service needs it for logic
-            if (deleted) {
-                return Response.noContent().build();
-            } else {
-                return Response.status(Response.Status.NOT_FOUND)
                     .entity(
-                        Map.of("message", "Post not found or delete failed.")
+                            Map.of("message", "User does not have admin privileges.")
                     )
                     .build();
+        }
+        // String adminUid = securityContext.getUserPrincipal().getName(); // Not used directly in this simplified version
+
+        try {
+            // 1. Fetch the post to get its imageUrl and content
+            Optional<Post> postOptional = postService.getPostById(id);
+            if (postOptional.isEmpty()) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity(Map.of("message", "Post not found."))
+                        .build();
+            }
+            Post postToDelete = postOptional.get();
+
+            // 2. Attempt to delete the featured image if it's a managed one
+            if (postToDelete.getImageUrl() != null && postToDelete.getImageUrl().startsWith(MANAGED_IMAGE_PATH_PREFIX)) {
+                String featuredImageFilename = extractFilenameFromUrl(postToDelete.getImageUrl());
+                if (featuredImageFilename != null) {
+                    LOG.infof("Attempting to delete featured image: %s for post %s", featuredImageFilename, id);
+                    deleteSingleImageFile(featuredImageFilename); // Re-uses logic, ignoring response for this sub-task
+                }
+            }
+
+            // 3. Attempt to delete images from the post's content
+            if (postToDelete.getContent() != null) {
+                try {
+                    // The content is already Map<String, Object> in your Post model
+                    Map<String, Object> contentMap = postToDelete.getContent();
+                    if (contentMap.containsKey("blocks") && contentMap.get("blocks") instanceof List) {
+                        @SuppressWarnings("unchecked") // Safe cast after instanceof check
+                        List<Map<String, Object>> blocks = (List<Map<String, Object>>) contentMap.get("blocks");
+                        for (Map<String, Object> block : blocks) {
+                            if ("image".equals(block.get("type"))) {
+                                Map<String, Object> data = (Map<String, Object>) block.get("data");
+                                if (data != null && data.get("file") instanceof Map) {
+                                    Map<String, Object> fileData = (Map<String, Object>) data.get("file");
+                                    if (fileData != null && fileData.get("url") instanceof String) {
+                                        String contentImageUrl = (String) fileData.get("url");
+                                        if (contentImageUrl.startsWith(MANAGED_IMAGE_PATH_PREFIX)) {
+                                            String contentImageFilename = extractFilenameFromUrl(contentImageUrl);
+                                            if (contentImageFilename != null) {
+                                                LOG.infof("Attempting to delete content image: %s for post %s", contentImageFilename, id);
+                                                deleteSingleImageFile(contentImageFilename); // Re-uses logic
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // Log this error but don't let it stop the post deletion itself
+                    LOG.errorf(e, "Error processing content for image deletion for post %s. Post will still be deleted.", id);
+                }
+            }
+
+            // 4. Delete the post from the database
+            boolean deleted = postService.deletePost(id);
+            if (deleted) {
+                LOG.infof("Successfully deleted post %s from database.", id);
+                return Response.noContent().build(); // 204 No Content is standard for successful DELETE
+            } else {
+                // This case should ideally not be reached if postOptional was present
+                LOG.warnf("Post %s was found but database deletion reported failure.", id);
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity(
+                                Map.of("message", "Post found but failed to delete from database.")
+                        )
+                        .build();
             }
         } catch (Exception e) {
             LOG.errorv(
-                e,
-                "Error deleting post {0} in resource: {1}",
-                id,
-                e.getMessage()
+                    e,
+                    "General error deleting post {0} in resource: {1}",
+                    id,
+                    e.getMessage()
             );
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(
-                    Map.of(
-                        "message",
-                        "An internal error occurred: " + e.getMessage()
+                    .entity(
+                            Map.of(
+                                    "message",
+                                    "An internal error occurred while deleting the post: " + e.getMessage()
+                            )
                     )
-                )
-                .build();
+                    .build();
+        }
+    }
+
+    // Helper method to extract filename from a managed URL
+    private String extractFilenameFromUrl(String imageUrl) {
+        if (imageUrl != null && imageUrl.startsWith(MANAGED_IMAGE_PATH_PREFIX)) {
+            return imageUrl.substring(MANAGED_IMAGE_PATH_PREFIX.length());
+        }
+        return null;
+    }
+
+    // Helper method to delete a single image file (simplified, adapt from your existing deleteImage)
+    // This is a non-HTTP version, just for internal file system operations.
+    private void deleteSingleImageFile(String filename) {
+        if (filename == null || filename.trim().isEmpty() || filename.contains("..")) {
+            LOG.warnf("Attempt to delete invalid filename (internal call): %s", filename);
+            return;
+        }
+        try {
+            java.nio.file.Path uploadPathDir = Paths.get(uploadDir);
+            java.nio.file.Path filePath = uploadPathDir.resolve(filename).normalize();
+
+            if (!filePath.toAbsolutePath().startsWith(uploadPathDir.toAbsolutePath())) {
+                LOG.warnf("Attempt to delete file outside of upload directory (internal call): %s", filePath);
+                return;
+            }
+
+            boolean deleted = Files.deleteIfExists(filePath);
+            if (deleted) {
+                LOG.infof("Successfully deleted image file (internal call): %s", filePath);
+            } else {
+                LOG.warnf("Image file not found for deletion (internal call): %s", filePath);
+            }
+        } catch (IOException e) {
+            LOG.errorf(e, "Failed to delete image file (internal call) %s", filename);
         }
     }
 
@@ -601,12 +690,46 @@ public class BlogResource extends ApiResource {
                 : Instant.now().toString()
         );
         enrichedPost.put("featured", post.isFeatured());
-        enrichedPost.put(
-            "image",
-            post.getImageUrl() != null
-                ? post.getImageUrl()
-                : "https://placehold.co/600x400/gray/white?text=Blog+Image"
-        );
+        String imageUrl = post.getImageUrl();
+        String placeholderBase = "https://placehold.co/";
+
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            // --- Customizable Parameters ---
+            String dimensions = "600x400";       // Desired dimensions
+            String color = "2D3748";            // A dark slate gray (hex without #)
+            // Or a more vibrant color like "4A90E2" (a nice blue)
+            // Or a subtle light gray like "F7FAFC"
+
+            // Construct the placeholder URL for a solid color
+            // The text parameter is effectively hidden by making text color same as background
+            // or by providing an empty string/single space.
+            // For placehold.co, simply omitting the text parameter or using text=" "
+            // with different text/bg colors usually results in minimal/no text.
+            // To be absolutely sure, make text color same as background.
+            imageUrl = String.format("%s%s/%s/%s?text=%s",
+                    placeholderBase,
+                    dimensions,
+                    color,  // Background color
+                    color,  // Text color (same as background to hide text)
+                    "+"     // A single space or + for URL encoding
+            );
+
+            // Even simpler, if placehold.co defaults to no text when text param is minimal:
+            // imageUrl = String.format("%s%s/%s",
+            //                          placeholderBase,
+            //                          dimensions,
+            //                          color // Just background color
+            //                         );
+            // Test the above simpler URL, it might just work to produce a solid color block.
+            // According to placehold.co docs, you can omit text color and text.
+            // So, https://placehold.co/600x400/2D3748 should give you a solid dark slate gray block.
+
+            // RECOMMENDED placehold.co URL for a solid color:
+//            imageUrl = String.format("%s%s/%s", placeholderBase, dimensions, color);
+
+        }
+
+        enrichedPost.put("image", imageUrl);
 
         Map<String, String> author = new HashMap<>();
         author.put(

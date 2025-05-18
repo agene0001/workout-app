@@ -6,7 +6,10 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import org.backend.common.ApiPaths;
 import org.backend.common.ApiResource;
+import org.backend.recipes.model.Category;
 import org.backend.recipes.model.Recipe;
+import org.backend.recipes.repository.CategoryRepository;
+import org.backend.recipes.repository.RecipeRepository;
 import org.backend.recipes.service.RecipeService;
 import org.backend.recipes.utils.Term;
 
@@ -20,10 +23,14 @@ public class RecipeResource extends ApiResource {
     private static final int DEFAULT_PAGE_SIZE = 6; // Define a default page size
 
     private final RecipeService recipeService;
+    private final RecipeRepository recipeRepository;
+    private final CategoryRepository categoryRepository;
 
     @Inject
-    public RecipeResource(RecipeService recipeService) {
+    public RecipeResource(RecipeService recipeService, RecipeRepository recipeRepository, CategoryRepository categoryRepository) {
         this.recipeService = recipeService;
+        this.recipeRepository = recipeRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @GET
@@ -87,6 +94,13 @@ public class RecipeResource extends ApiResource {
         // method to accept and use these page and pageSize parameters to limit the results.
         // The example below assumes the service method is updated.
         return recipeService.getRecipesByCategoryName(category, page, pageSize);
+    }
+    @GET
+    @Path("/categories")
+    public List<Category> getRecipesByCategory() { // Add pageSize parameter
+
+
+        return categoryRepository.listAll();
     }
 
 

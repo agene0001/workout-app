@@ -28,6 +28,7 @@ RUN ./gradlew --no-daemon dependencies
 # Copy the rest of the source
 COPY --chown=gradle:gradle main/backend-quarkus/src ./src
 COPY --chown=gradle:gradle main/backend-quarkus/libs ./libs
+COPY --chown=gradle:gradle main/backend-quarkus/uploaded-images ./uploaded-images
 
 # Build the Quarkus "legacy jar" layout (quarkus-app/)
 RUN ./gradlew --no-daemon -i clean build -x test
