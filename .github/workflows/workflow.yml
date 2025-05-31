@@ -83,8 +83,8 @@ jobs:
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_QUARKUS}:latest
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
+                          docker tag ${IMAGE_DB}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
                 docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
-                docker tag ${IMAGE_DB}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
 
 #      - name: Build images with Docker Compose
 #        run: |
