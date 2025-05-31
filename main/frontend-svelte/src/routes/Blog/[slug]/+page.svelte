@@ -19,8 +19,8 @@
     const post = $derived(page.data.post);
     // isAdmin from context (assuming this is set up in a layout and doesn't change per post page)
     // If isAdmin could change reactively and needs to be a rune, it'd need to be a $state from a store or prop.
-    const isAdmin = getContext<boolean>('isAdmin'); // Assuming boolean type
-    console.log(data)
+    const isAdmin = getContext('isAdmin');
+    console.log(isAdmin)
     // Derived state for parsedContent. This will recompute whenever `post` changes.
     let parsedContent = $derived(() => {
         console.log(post)
@@ -344,7 +344,7 @@
         {/if}
 
 
-        {#if isAdmin} <!-- Use the const isAdmin directly -->
+        {#if $isAdmin } <!-- Use the const isAdmin directly -->
             <div class="admin-controls">
                 <button on:click={() => handleEditPost(post.id)} class="edit-button">Edit</button>
                 <button on:click={() => handleDeletePost(post.id, post.title)} class="delete-button">Delete</button>

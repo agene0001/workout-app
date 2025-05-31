@@ -3,7 +3,7 @@ services:
 #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/backend-quarkus:latest
 #        image: peppap1g/backend-quarkus:latest
     image: backend-quarkus:latest
-#    pull_policy: always
+    pull_policy: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -27,11 +27,19 @@ services:
 #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
     #    image: peppap1g/svelte-frontend:latest
     image: svelte-frontend:latest
-#    pull_policy: always
+    pull_policy: always
     build:
       context: .
       dockerfile: Dockerfile
       target: frontend-final
+      args: # Pass build arguments from the .env file or host environment
+        - VITE_FIREBASE_API_KEY
+        - VITE_FIREBASE_AUTH_DOMAIN
+        - VITE_FIREBASE_PROJECT_ID
+        - VITE_FIREBASE_STORAGE_BUCKET
+        - VITE_FIREBASE_MESSAGING_SENDER_ID
+        - VITE_FIREBASE_APP_ID
+        - VITE_FIREBASE_MEASUREMENT_ID
     container_name: svelte-frontend
     platform: linux/amd64
     depends_on:
@@ -48,7 +56,7 @@ services:
 #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/flask-backend:latest
 #        image: peppap1g/flask-backend:latest
     image: flask-backend:latest
-#    pull_policy: always
+    pull_policy: always
     build:
       context: .
       dockerfile: Dockerfile

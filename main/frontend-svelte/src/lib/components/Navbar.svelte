@@ -516,18 +516,7 @@
                        </button>
                     </li>
                 </ul>
-                <a href="/shopping-list"
-                   class="relative text-green-400 hover:text-green-200 p-2 mr-1"
-                   aria-label="View shopping cart">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    {#if cartItemCount > 0}
-                            <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[0.6rem] font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2">
-                                {cartItemCount}
-                            </span>
-                    {/if}
-                </a>
+
                 <div class="mt-4 pt-4 border-t border-zinc-700 flex flex-col items-center gap-3 px-4 pb-4">
                     {#if user}
                         <div class="flex flex-col items-center gap-3 w-full max-w-xs">

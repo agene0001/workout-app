@@ -368,7 +368,7 @@ console.log(payload);
             isLoading = true; // Prevent other actions
             await cleanupOrphanedUploadsOnCancel();
             isLoading = false;
-            goto(isNewPost ? '/Blog' : (post?.slug ? `/Blog/post/${post.slug}` : '/Blog'));
+            goto(isNewPost ? '/Blog' : (post?.slug ? `/Blog/${post.slug}` : '/Blog'));
         }
     }
 

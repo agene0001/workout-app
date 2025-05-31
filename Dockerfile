@@ -72,7 +72,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
 RUN pip install -U pip setuptools wheel
 RUN pip install -U spacy
-RUN python -m spacy download en_core_web_sm
+RUN python -m spacy download en_core_web_md
 # Copy requirements and install dependencies
 #COPY main/python/requirements.txt .
 #RUN pip install --upgrade pip && pip install -r requirements.txt

@@ -218,14 +218,14 @@ jobs:
           kubectl rollout restart deployment/svelte-frontend
           kubectl rollout restart deployment/backend-quarkus
           kubectl rollout restart deployment/flask-backend
-#          kubectl rollout restart deployment/postgres-db
-
+          kubectl rollout restart deployment/postgres-db
+#
       - name: Wait for deployments to stabilize
         run: |
           kubectl rollout status deployment/svelte-frontend
           kubectl rollout status deployment/backend-quarkus
           kubectl rollout status deployment/flask-backend
-#          kubectl rollout status deployment/postgres-db
+          kubectl rollout status deployment/postgres-db
 
 
       - name: Get service URLs
