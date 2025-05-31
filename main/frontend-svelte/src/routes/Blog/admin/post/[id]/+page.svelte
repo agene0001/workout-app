@@ -3,7 +3,7 @@
     import { page } from '$app/stores';
     import { browser } from '$app/environment';
     import { goto } from '$app/navigation';
-    import Editor from '$lib/components/Editor.svelte';
+    import Editor from '$lib/components/blog/Editor.svelte';
     import { getIdToken } from "firebase/auth";
     import { getClientAuth } from "$lib/firebase/firebase.client.js";
     import { deleteImageOnServer } from "$lib/utils/image.utils";
@@ -293,6 +293,8 @@
                 authorName: authorName.trim(),
                 authorTitle: authorTitle.trim(),
             };
+console.log("saving post");
+console.log(payload);
 
             let method = 'POST';
             let url = `/api/v1/blog/posts`;

@@ -2,8 +2,7 @@
 	import { onMount, onDestroy , tick } from 'svelte';
 	import axios from 'axios';
 	import Portal from './Portal.svelte';
-	import {httpsCallable} from "firebase/functions";
-	import {getClientFunctions} from "$lib/firebase/firebase.client";
+	import {cart} from "$lib/stores/cartStore.js";
 	// Props
 
 	export let title = '';
@@ -28,7 +27,8 @@
 	let ref;
 
 	// const dispatch = createEventDispatcher();
-
+	let recipeServingsToAdd = 1; // How many times to make this recipe
+	let addedToCartMessage = "";
 	// Get currently selected recipe variation
 	$: currentRecipe = recipeArray && recipeArray.length > 0
 			? recipeArray[selectedRecipeIndex]
@@ -117,7 +117,16 @@
 		// before potentially long-running fetch, although likely not strictly necessary here.
 		tick().then(fetchInstacartData);
 	}
-
+	// --- ADD TO CART FUNCTIONALITY ---
+	function handleAddToCart() {
+		if (!currentRecipe) return;
+		cart.addRecipe(currentRecipe, recipeServingsToAdd);
+		addedToCartMessage = `${recipeServingsToAdd} × "${toTitleCase(currentRecipe.name)}" added to cart!`;
+		// Optional: dispatch a global event for a toast notification
+		// dispatch('itemAdded', { message: addedToCartMessage });
+		setTimeout(() => addedToCartMessage = "", 3000); // Clear message after 3s
+	}
+	// --- END ADD TO CART ---
 	async function fetchInstacartData() {
 		if (!currentRecipe || isLoading) {
 			console.log("fetchInstacartData: Skipping fetch. currentRecipe:", currentRecipe, "isLoading:", isLoading);
@@ -127,12 +136,15 @@
 		fetchError = null;
 		try {
 			console.log('fetchInstacartData: Processing recipe for Instacart:', currentRecipe.name, "Ingredients:", currentRecipe.ingredients);
+
 			const res = await axios.post('/recipes/process-recipe', {
-				ingredients: currentRecipe.ingredients,
+				ingredients: currentRecipe.ingredients, // Array of RAW ingredient strings
 				instructions: currentRecipe.instructions,
-				title: currentRecipe.name, // Use name of the current variant
-				image_url: currentRecipe.imgSrc
+				title: currentRecipe.name,
+				image_url: currentRecipe.imgSrc,
+				link_type: 'recipe' // <--- ENSURE THIS IS SENT
 			});
+
 			console.log('Instacart response:', res.data);
 			instacartData = res.data || null;
 		} catch (error) {
@@ -185,7 +197,6 @@
 		e.stopPropagation();
 	}
 </script>
-
 <!-- Regular view (Card) -->
 <div
 		bind:this={ref}
@@ -212,7 +223,6 @@
 			</div>
 		</div>
 	{/if}
-
 	{#if title}
 		<h1 class="{headingClass} mb-2 text-center">{toTitleCase(title)}</h1>
 	{/if}
@@ -241,7 +251,6 @@
 		<p class="mb-4 text-grey-900 font-orbital-regular">{@html paragraph}</p>
 	{/each}
 </div>
-
 <!-- Modal view using Portal component -->
 {#if mounted && expanded}
 	<Portal>
@@ -268,7 +277,6 @@
 				>
 					× <!-- Use × for a standard 'x' -->
 				</button>
-
 				{#if currentRecipe?.imgSrc}
 					<div class="mt-4 flex justify-center">
 						<!-- Added mt-4 for spacing from potential top elements -->
@@ -297,8 +305,8 @@
 							Previous variant
 						</button>
 						<span class="flex items-center">
-							{selectedRecipeIndex + 1} of {variationCount}
-						</span>
+						{selectedRecipeIndex + 1} of {variationCount}
+					</span>
 						<button
 								class="px-3 py-1 bg-black text-white rounded-md hover:bg-gray-700 transition-colors"
 								on:click={nextRecipeVariant}
@@ -318,7 +326,31 @@
 					</p>
 				{/each}
 
-
+				<div class="mt-6 border-t pt-4 space-y-3">
+					<h3 class="text-xl font-semibold text-center  mb-2">Add to Shopping Cart</h3>
+					<div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+						<div class="flex items-center gap-2">
+							<label for="recipeServings-{currentRecipe?.name || title || 'default'}" class="text-sm whitespace-nowrap">Make recipe:</label>
+							<input
+									type="number"
+									id="recipeServings-{currentRecipe?.name || title || 'default'}"
+							bind:value={recipeServingsToAdd}
+							min="1"
+							class="w-16 p-1.5 border border-gray-300 rounded-md text-center text-sm focus:ring-green-500 focus:border-green-500"
+							/>
+							<span class="text-sm ">time(s)</span>
+						</div>
+						<button
+								on:click={handleAddToCart}
+								class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium w-full sm:w-auto transition-colors"
+						>
+							🛒 Add Recipe to Cart
+						</button>
+					</div>
+					{#if addedToCartMessage}
+						<p class="text-green-600 text-sm text-center mt-2 animate-fade-in-out-quick">{addedToCartMessage}</p>
+					{/if}
+				</div>
 
 				<!-- Instacart Section -->
 				<div class="mt-4 flex justify-center">
@@ -349,7 +381,6 @@
 		</div>
 	</Portal>
 {/if}
-
 <style>
 	/* Animation for paragraph text */
 	.paraAnimate {

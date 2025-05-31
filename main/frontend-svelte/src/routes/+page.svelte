@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { animate } from 'animejs';
-    import InfoBlock from '$lib/components/InfoBlock.svelte';
+    import InfoBlock from '$lib/components/recipes/InfoBlock.svelte';
 
     let heroStart = false;
     let heroSecond = false;

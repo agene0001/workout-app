@@ -29,7 +29,7 @@ public class Comment {
     @Column(nullable = false)
     private String authorId;
 
-    @Lob
+    @Column(nullable = false)
     private String content;
 
     @Column(nullable = false)
@@ -89,6 +89,19 @@ public class Comment {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public String toString() {
+        return "Comment{" +
+                "id=" + id +
+                ", post=" + post +
+                ", parent=" + parent +
+                ", replies=" + replies +
+                ", authorId='" + authorId + '\'' +
+                ", content='" + content + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
     }
 
     // Getters, Setters, and possibly helper methods

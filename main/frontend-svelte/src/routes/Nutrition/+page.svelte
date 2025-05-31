@@ -1,8 +1,8 @@
 <script lang="ts">
     import {onMount} from 'svelte';
-    import InfoBlock from '$lib/components/InfoBlock.svelte';
+    import InfoBlock from '$lib/components/recipes/InfoBlock.svelte';
     import axios from 'axios';
-    import RecipeAutocomplete from '$lib/components/RecipeAutocomplete.svelte';
+    import RecipeAutocomplete from '$lib/components/recipes/RecipeAutocomplete.svelte';
     import Fuse from "fuse.js";
     import {browser} from '$app/environment';
     // State variables
@@ -13,7 +13,9 @@
     let allCategories: { id: string, name: string, slug: string }[] = []; // To store all categories from CSV
     let topLevelCategories: {
         name: string, icon: string, color: string, actualCategoryNames?: string[]
-    }[] = [// Define some "parent" or "entry-point" categories manually for the initial view
+    }[] =
+        [
+            // Define some "parent" or "entry-point" categories manually for the initial view
         // `actualCategoryNames` will map to names in your CSV for fetching
         {
             name: 'Main Proteins',
@@ -60,6 +62,7 @@
     let currentTopLevelCategory: string | null = null; // Name of the selected top-level category
     // Helper function to assign an appropriate icon to each category
     // Helper function to get a consistent color for each category
+
     function getCategoryColor(categoryName) {
         // Create a simple hash from the category name to get consistent colors
         const colors = ['#FF6347', // Red-orange

@@ -133,7 +133,7 @@
 				const AlignmentTuneModule = await import('editorjs-text-alignment-blocktune');
 				AlignmentTuneTool = AlignmentTuneModule.default;
 
-				const IndentTuneModule= await import('$lib/custom-indent-tune/index.ts'); // Adjust path as needed
+				const IndentTuneModule= await import('$lib/custom-indent-tune'); // Adjust path as needed
 				 IndentTuneTool= IndentTuneModule.default // Adjust path as needed
 
 

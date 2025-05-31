@@ -332,7 +332,7 @@ public class BlogResource extends ApiResource {
                 postRequest.getReadTime()
             );
             return Response.status(Response.Status.CREATED)
-                .entity(newPost)
+                .entity(enrichPostForFrontend(newPost))
                 .build();
         } catch (IllegalArgumentException e) {
             LOG.errorf(
@@ -594,43 +594,144 @@ public class BlogResource extends ApiResource {
         return Response.ok(enrichedComments).build();
     }
 
-    // ADD comment to a post - SECURED (assuming only logged-in users can comment)
     @POST
     @Path("/posts/{postId}/comments")
     public Response addComment(
-        @PathParam("postId") UUID postId,
-        Map<String, String> commentData
+            @PathParam("postId") UUID postId,
+            Comment commentPayload // Use a DTO for clarity
     ) {
-        if (
-            securityContext == null ||
-            securityContext.getUserPrincipal() == null
-        ) {
+        if (securityContext == null || securityContext.getUserPrincipal() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity(Map.of("message", "User not authenticated.")).build();
+        }
+        String authorId = securityContext.getUserPrincipal().getName();
+
+        if (commentPayload.getContent() == null || commentPayload.getContent().trim().isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("message", "Content is required.")).build();
+        }
+
+        // Attempt to parse parentCommentId if present
+        UUID parentId = null;
+        if (commentPayload.getParent() != null) {
+            try {
+                parentId = UUID.fromString(commentPayload.getParent().getId().toString());
+            } catch (IllegalArgumentException e) {
+                LOG.warnf("Invalid UUID format for parentCommentId: %s", commentPayload.getParent());
+                return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("message", "Invalid parentCommentId format.")).build();
+            }
+        }
+        if(parentId != null) {
+            LOG.info(parentId.toString());
+        }
+        LOG.info(commentPayload.toString());
+        try {
+            Comment newComment = commentService.addComment(
+                    postId,
+                    commentPayload.getContent(),
+                    authorId,
+                    parentId // Pass the parsed parentId (can be null)
+            );
+            return Response.status(Response.Status.CREATED)
+                    .entity(enrichCommentForFrontend(newComment)) // enrichComment will now potentially have parent info
+                    .build();
+        } catch (IllegalArgumentException e) {
+            LOG.warnf("Error adding comment: %s", e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("message", e.getMessage())).build();
+        } catch (Exception e) {
+            LOG.error("Unexpected error adding comment", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(Map.of("message", "Could not add comment.")).build();
+        }
+    }
+    @PUT
+    @Path("/posts/{postId}/comments/{commentId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response updateComment(
+            @Context SecurityContext securityContext,
+            @PathParam("postId") UUID postId, // postId might be used for context or further validation if needed
+            @PathParam("commentId") UUID commentId,
+            Comment request) {
+
+        if (securityContext == null || securityContext.getUserPrincipal() == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                .entity("User not authenticated.")
-                .build();
+                    .entity(Map.of("message", "User not authenticated.")).build();
         }
-        // No admin check here, just authenticated user
-        String authorId = securityContext.getUserPrincipal().getName(); // UID from verified token
+        String requestingUserId = securityContext.getUserPrincipal().getName();
 
-        String content = commentData.get("content");
-        // The authorId from commentData is ignored; use the one from the token
-
-        if (content == null) {
+        if (request.getContent() == null || request.getContent().trim().isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                .entity("Content is required")
-                .build();
+                    .entity(Map.of("message", "Content cannot be empty.")).build();
         }
 
-        Comment newComment = commentService.addComment(
-            postId,
-            content,
-            authorId
-        );
-        return Response.status(Response.Status.CREATED)
-            .entity(enrichCommentForFrontend(newComment))
-            .build();
+        try {
+            // You'll need a method in CommentService like:
+            // Comment updateComment(UUID commentId, String newContent, String authorId)
+            // This service method should handle checking if the comment exists and if the authorId matches.
+            Comment updatedComment = commentService.updateComment(commentId, request.getContent(), requestingUserId);
+            if (updatedComment == null) { // Should be handled by exceptions in service preferably
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity(Map.of("message", "Comment not found or user not authorized.")).build();
+            }
+            return Response.ok(enrichCommentForFrontend(updatedComment)).build();
+        } catch (NotFoundException e) { // Assuming your service throws this
+            LOG.warnf("UpdateComment: Comment not found %s. Error: %s", commentId, e.getMessage());
+            return Response.status(Response.Status.NOT_FOUND).entity(Map.of("message", e.getMessage())).build();
+        } catch (ForbiddenException e) { // Assuming your service throws this for auth failure
+            LOG.warnf("UpdateComment: User %s forbidden to update comment %s. Error: %s", requestingUserId, commentId, e.getMessage());
+            return Response.status(Response.Status.FORBIDDEN).entity(Map.of("message", e.getMessage())).build();
+        } catch (IllegalArgumentException e) {
+            LOG.warnf("UpdateComment: Invalid argument for comment %s. Error: %s", commentId, e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("message", e.getMessage())).build();
+        } catch (Exception e) {
+            LOG.errorf(e, "Error updating comment %s", commentId);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("message", "Could not update comment due to a server error.")).build();
+        }
     }
 
+    @DELETE
+    @Path("/posts/{postId}/comments/{commentId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteComment(
+            @Context SecurityContext securityContext,
+            @PathParam("postId") UUID postId, // postId for context
+            @PathParam("commentId") UUID commentId) {
+
+        if (securityContext == null || securityContext.getUserPrincipal() == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("message", "User not authenticated.")).build();
+        }
+        String requestingUserId = securityContext.getUserPrincipal().getName();
+        // You could also check for an "admin" role here if admins should be able to delete any comment.
+        // boolean isAdmin = securityContext.isUserInRole("admin");
+
+        try {
+            // You'll need a method in CommentService like:
+            // boolean deleteComment(UUID commentId, String authorId /*, boolean isAdmin */)
+            // This service method should handle checking existence, ownership, and deleting.
+            boolean deleted = commentService.deleteComment(commentId, requestingUserId /*, isAdmin */);
+            if (deleted) {
+                return Response.noContent().build(); // 204 No Content for successful deletion
+            } else {
+                // This path might be taken if service returns false instead of throwing NotFound/Forbidden
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity(Map.of("message", "Comment not found or user not authorized to delete.")).build();
+            }
+        } catch (NotFoundException e) {
+            LOG.warnf("DeleteComment: Comment not found %s. Error: %s", commentId, e.getMessage());
+            return Response.status(Response.Status.NOT_FOUND).entity(Map.of("message", e.getMessage())).build();
+        } catch (ForbiddenException e) {
+            LOG.warnf("DeleteComment: User %s forbidden to delete comment %s. Error: %s", requestingUserId, commentId, e.getMessage());
+            return Response.status(Response.Status.FORBIDDEN).entity(Map.of("message", e.getMessage())).build();
+        } catch (IllegalStateException e) { // e.g., if comment has replies and deletion is restricted
+            LOG.warnf("DeleteComment: Cannot delete comment %s. Error: %s", commentId, e.getMessage());
+            return Response.status(Response.Status.CONFLICT).entity(Map.of("message", e.getMessage())).build();
+        }
+        catch (Exception e) {
+            LOG.errorf(e, "Error deleting comment %s", commentId);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("message", "Could not delete comment due to a server error.")).build();
+        }
+    }
     // Helper method to enrich Post objects
 
     // Helper method to enrich Post objects
@@ -695,37 +796,16 @@ public class BlogResource extends ApiResource {
 
         if (imageUrl == null || imageUrl.trim().isEmpty()) {
             // --- Customizable Parameters ---
-            String dimensions = "600x400";       // Desired dimensions
+//            String dimensions = "600x400";       // Desired dimensions
             String color = "2D3748";            // A dark slate gray (hex without #)
             // Or a more vibrant color like "4A90E2" (a nice blue)
             // Or a subtle light gray like "F7FAFC"
 
-            // Construct the placeholder URL for a solid color
-            // The text parameter is effectively hidden by making text color same as background
-            // or by providing an empty string/single space.
-            // For placehold.co, simply omitting the text parameter or using text=" "
-            // with different text/bg colors usually results in minimal/no text.
-            // To be absolutely sure, make text color same as background.
-            imageUrl = String.format("%s%s/%s/%s?text=%s",
-                    placeholderBase,
-                    dimensions,
-                    color,  // Background color
-                    color,  // Text color (same as background to hide text)
-                    "+"     // A single space or + for URL encoding
-            );
 
-            // Even simpler, if placehold.co defaults to no text when text param is minimal:
-            // imageUrl = String.format("%s%s/%s",
-            //                          placeholderBase,
-            //                          dimensions,
-            //                          color // Just background color
-            //                         );
-            // Test the above simpler URL, it might just work to produce a solid color block.
-            // According to placehold.co docs, you can omit text color and text.
-            // So, https://placehold.co/600x400/2D3748 should give you a solid dark slate gray block.
+
 
             // RECOMMENDED placehold.co URL for a solid color:
-//            imageUrl = String.format("%s%s/%s", placeholderBase, dimensions, color);
+            imageUrl = String.format("%s/%s", placeholderBase, color);
 
         }
 

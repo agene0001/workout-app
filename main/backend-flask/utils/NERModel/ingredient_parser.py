@@ -40,7 +40,7 @@ def parse_fraction(s):
 
 # --- Configuration ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-MODEL_PATH = PROJECT_ROOT / "models" / "ingredient_ner_model"
+MODEL_PATH = PROJECT_ROOT / "models" / "ingredient_ner_model_patience_stop" / "model_final"
 NLP_CUSTOM = None # Global variable to hold the loaded model
 
 def load_model(model_path=MODEL_PATH):
@@ -75,24 +75,37 @@ import spacy # Assuming spacy and re are needed by other parts of your file
 # def parse_fraction(s):
 #     # ... your implementation ...
 #     return float_value_or_None
-
+#  UNIT CAN HAVE mediumtolarge,medium-sized, ounces/4, cups/500, fluid ounces/,-ounce. MUST PARSE
 def format_extracted_entities(doc, original_text):
-    parsed_item = {}
+    # Initialize parsed_item with new fields for alternative quantity and unit
+    parsed_item = {
+        "quantity": "",
+        "alternative_quantity": "", # NEW FIELD
+        "unit": "",
+        "alternative_unit": "",   # NEW FIELD
+        "name": "",
+        "alternative_name": "",   # Existing, for alternative names
+        "preparation": [],        # Keeping as list for now
+        "comment": [],            # Keeping as list for now
+        "display_text": original_text.strip()
+    }
 
     temp_name_parts = []
     temp_quantity_text = None
     temp_unit_text = None
-
-    last_core_entity_end_char = 0 # This variable determines the end of the display_text
+    primary_unit_candidate = None
+    last_core_entity_end_char = 0
 
     parenthetical_qty = None
     parenthetical_unit = None
-    is_juice_pattern = False
-    juice_subject_parts = [] # To store "lemons" if "Juice" is first
-    # core_entity_texts_in_order is not used in your original function for display_text construction
-    # so we can ignore it for this minimal change.
+    # is_juice_pattern = False # Not used in provided function
+    # juice_subject_parts = [] # Not used in provided function
 
-    for ent in doc.ents:
+    # Ensure entities are sorted by start character to process them in order
+    # This helps with logic that might depend on the order of appearance.
+    sorted_ents = sorted(doc.ents, key=lambda ent: ent.start_char)
+
+    for ent in sorted_ents: # Iterate through sorted entities
         paren_phrases_spans = [(m.start(), m.end()) for m in re.finditer(r'\([^)]*\)', original_text)]
         is_part_of_paren_phrase = any(p_start <= ent.start_char and ent.end_char <= p_end for p_start, p_end in paren_phrases_spans)
 
@@ -101,22 +114,33 @@ def format_extracted_entities(doc, original_text):
                 temp_quantity_text = ent.text
             elif is_part_of_paren_phrase and parenthetical_qty is None:
                 parenthetical_qty = ent.text
-            # elif temp_quantity_text is None and parenthetical_qty is not None: # This line was redundant with the next one
-            #     temp_quantity_text = parenthetical_qty
-
-            # CRITICAL: QTY entities should always extend the last_core_entity_end_char
-            # Your original code only did this for non-parenthetical.
-            # Let's assume all QTY, UNIT, NAME, ALT_NAME can potentially extend it.
             last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char)
 
-
         elif ent.label_ == "UNIT":
-            if not is_part_of_paren_phrase and temp_unit_text is None:
-                temp_unit_text = ent.text
-            elif is_part_of_paren_phrase and parenthetical_unit is None:
-                parenthetical_unit = ent.text
-            # elif temp_unit_text is None and parenthetical_unit is not None: # Redundant
-            #     temp_unit_text = parenthetical_unit
+            raw_unit_text = ent.text.lower().strip().rstrip('.') # Normalize: lowercase, strip, remove trailing dot
+            parsed_unit_candidate = raw_unit_text # What we'll try to match against allowed units
+
+            # 1. Handle compound units with slashes or specific patterns first
+            if "/" in raw_unit_text:
+                # e.g., "ounces/4", "cups/500", "fluid ounces/..."
+                # The part before the slash is usually the primary unit
+                parsed_unit_candidate = raw_unit_text.split('/', 1)[0].strip()
+                # You might want to store the part after "/" if it's meaningful, e.g., in an alt_qty or comment
+                # print(f"DEBUG: Split unit '{raw_unit_text}' into primary '{parsed_unit_candidate}'")
+            elif raw_unit_text == "-ounce": # Handle "-ounce" specifically, often part of e.g., "16-ounce can"
+                parsed_unit_candidate = "ounce" # Normalize to "ounce"
+            elif raw_unit_text.endswith("-sized"): # e.g., "medium-sized"
+                parsed_unit_candidate = raw_unit_text # Keep as "medium-sized" if that's an allowed unit
+            elif raw_unit_text == "mediumtolarge": # Handle specific combined terms
+                parsed_unit_candidate = "medium-large" # Normalize to a more standard form or keep as is if allowed
+
+            # 2. Assign to primary_unit_candidate or parenthetical_unit_candidate
+            if not is_part_of_paren_phrase:
+                if primary_unit_candidate is None:
+                    primary_unit_candidate = parsed_unit_candidate
+            elif is_part_of_paren_phrase:
+                if parenthetical_unit_candidate is None:
+                    parenthetical_unit_candidate = parsed_unit_candidate
 
             last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char)
 
@@ -124,95 +148,94 @@ def format_extracted_entities(doc, original_text):
             temp_name_parts.append(ent.text)
             last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char)
 
-        # ------------------------------------------------------------------ #
-        # MINIMAL CHANGE: Add ALT_NAME handling HERE                       #
-        # ------------------------------------------------------------------ #
-        elif ent.label_ == "ALT_NAME":
-            # The text of ALT_NAME is not directly stored in a temp variable here
-            # because it's only used to extend the display_text via its end character.
+        elif ent.label_ == "ALT_NAME": # This is for alternative *ingredient names*
+            # Store the first encountered ALT_NAME directly
+            if not parsed_item["alternative_name"]:
+                parsed_item["alternative_name"] = ent.text
             last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char)
-        # ------------------------------------------------------------------ #
 
-        # Your original code did not have explicit handling for COMMENT or PREP
-        # in terms of updating last_core_entity_end_char.
-        # So, we'll keep it that way for a minimal change. The display_text
-        # will be defined by the last QTY, UNIT, NAME, or ALT_NAME.
+        # --- ADDED/MODIFIED SECTION for ALT_QTY and ALT_UNIT ---
+        elif ent.label_ == "ALT_QTY":
+            if not parsed_item["alternative_quantity"]: # Take the first one found
+                parsed_item["alternative_quantity"] = ent.text
+            last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char) # Ensure it contributes to display_text
 
-    # ---- Logic to decide which QTY/UNIT to use (remains the same) ----
+        elif ent.label_ == "ALT_UNIT":
+            if not parsed_item["alternative_unit"]: # Take the first one found
+                parsed_item["alternative_unit"] = ent.text
+            last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char) # Ensure it contributes to display_text
+        # --- END OF ADDED/MODIFIED SECTION ---
+
+        elif ent.label_ == "PREP": # Added for completeness if you intend to use it
+            parsed_item["preparation"].append(ent.text)
+            last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char) # PREP can be part of display text
+
+        elif ent.label_ == "COMMENT": # Added for completeness
+            parsed_item["comment"].append(ent.text)
+            last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char) # COMMENT can be part of display text
+
+
+    # Prioritize non-parenthetical QTY/UNIT, then parenthetical if primary is missing
     if temp_quantity_text is None and parenthetical_qty is not None:
         temp_quantity_text = parenthetical_qty
-    if temp_unit_text is None and parenthetical_unit is not None:
-        temp_unit_text = parenthetical_unit
+    if temp_unit_text is None and parenthetical_unit is not None: # temp_unit_text would have been lowercased already if set
+        temp_unit_text = parenthetical_unit # parenthetical_unit was also lowercased if set
 
-    # Reconstruct display_text (logic remains mostly the same, relies on last_core_entity_end_char)
-    # The loop `for ent in doc.ents: if ent.label_ in ["QTY", "UNIT", "NAME"]:`
-    # that you had later for `has_core_entities` was a bit redundant if the first loop
-    # already sets `last_core_entity_end_char` based on these (and now ALT_NAME).
-
-    if last_core_entity_end_char > 0: # If any QTY, UNIT, NAME, or ALT_NAME was found
+    # Construct display_text
+    # last_core_entity_end_char is now updated by QTY, UNIT, NAME, ALT_NAME, ALT_QTY, ALT_UNIT, PREP, COMMENT
+    if last_core_entity_end_char > 0:
         display_text_candidate = original_text[:last_core_entity_end_char].strip()
         parsed_item["display_text"] = display_text_candidate.rstrip(',').strip()
     else:
-        # No QTY, UNIT, NAME, or ALT_NAME entities found that set last_core_entity_end_char.
-        # This would happen for "salt" or if NER fails.
         parsed_item["display_text"] = original_text.strip()
 
 
-    # Process quantity (using temp_quantity_text which should be the prioritized one)
     if temp_quantity_text:
-        # Ensure parse_fraction is defined
         parsed_q = parse_fraction(temp_quantity_text)
         if parsed_q is not None:
-            if parsed_q == int(parsed_q):
-                parsed_item["quantity"] = str(int(parsed_q))
-            else:
-                parsed_item["quantity"] = f"{parsed_q:.3f}".rstrip('0').rstrip('.')
+            parsed_item["quantity"] = str(int(parsed_q)) if parsed_q == int(parsed_q) else f"{parsed_q:.3f}".rstrip('0').rstrip('.')
         else:
             parsed_item["quantity"] = temp_quantity_text
-    else:
-        parsed_item["quantity"] = ""
+    # else: parsed_item["quantity"] = "" # Already initialized
 
-    if temp_unit_text:
-        parsed_item["unit"] = temp_unit_text.lower()
+    if temp_unit_text: # Already lowercased during assignment
+        parsed_item["unit"] = temp_unit_text.strip().rstrip('.') # Ensure stripped and no trailing dot
+    # else: parsed_item["unit"] = "" # Already initialized
 
-    name_str = " ".join(temp_name_parts).strip()
+
+    name_str = " ".join(temp_name_parts).strip() # This only contains text from NAME entities
     if name_str:
         parsed_item["name"] = name_str
-    else:
-        if not doc.ents and len(original_text.split()) <= 3 :
-            parsed_item["name"] = original_text.strip()
-            # If display_text wasn't set by last_core_entity_end_char, ensure it's set
-            if not parsed_item.get("display_text") or last_core_entity_end_char == 0:
-                parsed_item["display_text"] = original_text.strip()
-        else:
-            parsed_item["name"] = ""
+    elif not doc.ents and len(original_text.split()) <= 3 :
+        parsed_item["name"] = original_text.strip()
+        if not parsed_item.get("display_text") or last_core_entity_end_char == 0:
+            parsed_item["display_text"] = original_text.strip()
+    # else: parsed_item["name"] = "" # Already initialized
 
-    # Fallback for display_text if still not set (should be rare now)
+    # Fallback for display_text if it somehow got emptied or was never set properly
     if not parsed_item.get("display_text"):
         parsed_item["display_text"] = original_text.strip()
 
+    # Join preparation and comment lists
+    parsed_item["preparation"] = ", ".join(p for p in parsed_item["preparation"] if p)
+    parsed_item["comment"] = ". ".join(c for c in parsed_item["comment"] if c)
 
-    # Ensure 'quantity' and 'name' keys exist
-    if "quantity" not in parsed_item: parsed_item["quantity"] = ""
-    if "name" not in parsed_item: parsed_item["name"] = ""
 
-
-    # Final check for validity (remains the same)
+    # Final check for validity
     is_valid_ingredient = False
     if parsed_item.get("name"):
         is_valid_ingredient = True
-    elif parsed_item.get("quantity") and parsed_item.get("unit"):
+    elif parsed_item.get("quantity") and parsed_item.get("unit"): # Unit must be populated
         is_valid_ingredient = True
 
     if not is_valid_ingredient:
         if not doc.ents and len(parsed_item.get("display_text","").split()) <=2:
-            parsed_item["name"] = parsed_item.get("display_text","")
-            is_valid_ingredient = True
+            if not parsed_item["name"]: # Check again
+                parsed_item["name"] = parsed_item.get("display_text","")
+            is_valid_ingredient = True # if it's a short unparsed string, treat it as a valid name
 
-    if not is_valid_ingredient:
-        return None
+    return parsed_item if is_valid_ingredient else None
 
-    return parsed_item
 def parse_single_ingredient_line(ingredient_line):
     """
     Parses a single ingredient line using the custom NER model.
@@ -255,11 +278,11 @@ def extract_ingredients_ner(ingredients_list_raw):
         # (Slightly simplified for brevity here, copy your full logic)
         if "salt and pepper" in line_input.lower(): # Example, make more robust
             processed_lines.append(line_input) # Treat as one
-        elif " and " in line_input and not re.search(r'\([^)]*and[^)]*\)', line_input): # From your old code
-            parts = line_input.split(" and ")
-            for part in parts:
-                if part.strip():
-                    processed_lines.append(part.strip())
+        # elif " and " in line_input and not re.search(r'\([^)]*and[^)]*\)', line_input): # From your old code
+        #     parts = line_input.split(" and ")
+        #     for part in parts:
+        #         if part.strip():
+        #             processed_lines.append(part.strip())
         else:
             processed_lines.append(line_input.strip())
 

@@ -3,7 +3,7 @@ services:
 #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/backend-quarkus:latest
 #        image: peppap1g/backend-quarkus:latest
     image: backend-quarkus:latest
-    pull_policy: always
+#    pull_policy: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -27,7 +27,7 @@ services:
 #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/svelte-frontend:latest
     #    image: peppap1g/svelte-frontend:latest
     image: svelte-frontend:latest
-    pull_policy: always
+#    pull_policy: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -48,7 +48,7 @@ services:
 #    image: us-central1-docker.pkg.dev/workout-app-441723/workout-app/flask-backend:latest
 #        image: peppap1g/flask-backend:latest
     image: flask-backend:latest
-    pull_policy: always
+#    pull_policy: always
     build:
       context: .
       dockerfile: Dockerfile

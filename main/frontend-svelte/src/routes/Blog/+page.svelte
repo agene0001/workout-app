@@ -7,7 +7,7 @@
 		getClientAuth,
 		checkIsUserAdmin
 	} from '$lib/firebase/firebase.client'; // Adjust path if needed
-	import { onAuthStateChanged, getIdTokenResult, getIdToken } from 'firebase/auth';
+	import { getIdToken } from 'firebase/auth';
 	import {goto} from "$app/navigation";
 
 	// State variables
@@ -71,24 +71,6 @@
 
 	// Fetch blog posts and categories on component mount
 	onMount(async () => {
-		// Firebase Auth State Listener
-		// const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-		// 	if (user) {
-		// 		currentUser.set(user);
-		// 		try {
-		// 			const idTokenResult = await getIdTokenResult(user);
-		// 			// Check for the admin custom claim
-		// 			// This matches the claim set in your Python Cloud Function: { admin: true }
-		// 			isAdmin.set(idTokenResult.claims.admin === true);
-		// 		} catch (err) {
-		// 			console.error('Error getting ID token result:', err);
-		// 			isAdmin.set(false);
-		// 		}
-		// 	} else {
-		// 		currentUser.set(null);
-		// 		isAdmin.set(false);
-		// 	}
-		// });
 
 		try {
 			isLoading = true;
@@ -129,24 +111,8 @@
 			alert('You do not have permission to edit posts.');
 			return;
 		}
-
-		// This function would typically navigate to an edit page or open a modal
-		// pre-filled with the data of the post to be edited.
-		// Example (if using SvelteKit):
-		// import { goto } from '$app/navigation';
-		// goto(`/admin/edit-post/${postId}`);
-		// Or, set a $state variable to open an edit modal:
-		// editingPostId = postId; isEditModalOpen = true;
-
 		goto(`/Blog/admin/post/${postId}`); // Navigate to the new unified admin edit route
 
-
-		// To implement fully, you would:
-		// 1. Fetch the specific post's data.
-		// 2. Populate an editing form/modal with this data.
-		// 3. Create an 'edit_blog_post' Cloud Function that accepts 'postId' and the updated data.
-		// 4. On form submission, call your 'edit_blog_post' Cloud Function.
-		// 5. On success, update your local 'blogPosts' $state or re-fetch all posts.
 	}
 
 	async function handleDeletePost(postId, postTitle) {
@@ -216,12 +182,12 @@
 		<div class="container mx-auto px-4">
 			<div class="mb-8 text-center">
 				<span class="font-orbital text-lg text-[#00dd87]">Featured Post</span>
-				<h2 class="font-orbital mt-2 text-4xl font-bold text-white">
+				<h2 class="font-orbital mt-2 text-4xl font-bold text-white ">
 					{featuredPost.title}
 				</h2>
 			</div>
 
-			<div class="fade-in-up mx-auto max-w-4xl overflow-hidden rounded-lg bg-gray-800 shadow-xl">
+			<div class="fade-in-up mx-auto max-w-4xl overflow-hidden rounded-lg bg-gray-800 shadow-xl ">
 				{#if featuredPost.image}
 					<a href={`/Blog/${featuredPost.slug}`} class="block">
 						<div class="relative aspect-video w-full overflow-hidden bg-gray-700 md:h-80 lg:h-96">
@@ -370,9 +336,9 @@
 			<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 				{#each currentPosts as post (post.id)}
 					<div
-						class="fade-in-up transform overflow-hidden rounded-lg bg-gray-800 shadow-lg transition-transform hover:scale-105"
+						class="fade-in-up transform overflow-hidden rounded-lg bg-gray-800 shadow-lg transition-transform hover:scale-105 bg-gradient-to-t from-black/50 via-transparent to-transparent"
 					>
-						{#if post.image}
+						{#if post.imageUrl}
 							<a href={`/Blog/${post.slug}`} class="block">
 								<div class="aspect-video w-full overflow-hidden bg-gray-700">
 									<img
@@ -386,7 +352,6 @@
 						{:else}
 							<a href={`/Blog/${post.slug}`} class="block">
 								<div class="flex h-48 items-center justify-center bg-gray-700">
-									<p class="text-gray-400 text-sm">No image</p>
 								</div>
 							</a>
 						{/if}

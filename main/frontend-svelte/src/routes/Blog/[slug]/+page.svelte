@@ -1,47 +1,98 @@
-<script>
-    import {getContext, onMount} from 'svelte';
-    import {page} from '$app/stores';
-    import {goto} from '$app/navigation';
-    import NestedListItemRenderer from '$lib/components/NestedListItemRenderer.svelte'; // For nested lists
-    import BlockRenderer from '$lib/components/BlockRenderer.svelte'; // <<< --- IMPORT THE NEW COMPONENT
+<script lang="ts">
+    import { getContext, onMount } from 'svelte'; // afterUpdate is less common with runes, $effect handles DOM updates
+    import { goto } from '$app/navigation';
 
-    const {post} = $page.data;
-    const isAdmin = getContext('isAdmin');
-    let parsedContent = {blocks: []}; // Initialize to avoid undefined errors
+    import { page } from '$app/state'; // <<< CORRECT IMPORT
+    // Import your components as before
+    import NestedListItemRenderer from '$lib/components/blog/NestedListItemRenderer.svelte';
+    import BlockRenderer from '$lib/components/blog/BlockRenderer.svelte';
+    import ReadingProgressBar from '$lib/components/blog/ReadingProgressBar.svelte';
+    import TableOfContents from '$lib/components/blog/TableOfContents.svelte';
+    import RelatedPosts from '$lib/components/blog/RelatedPosts.svelte';
+    import CommentsSection from '$lib/components/blog/CommentsSection.svelte';
 
-    onMount(async () => {
-        if (typeof post.content === 'string') {
-            try {
-                const parsed = JSON.parse(post.content);
-                if (parsed && parsed.blocks) {
-                    parsedContent = parsed;
-                } else {
-                    parsedContent = {blocks: [{type: 'html', data: {html: post.content}}]};
+    // --- Svelte 5 State and Derived Values ---
+
+    // The `post` data from the load function, derived from the $page store
+    // This is the primary reactive source for this page's content.
+    let { data } = $props();
+    const post = $derived(page.data.post);
+    // isAdmin from context (assuming this is set up in a layout and doesn't change per post page)
+    // If isAdmin could change reactively and needs to be a rune, it'd need to be a $state from a store or prop.
+    const isAdmin = getContext<boolean>('isAdmin'); // Assuming boolean type
+    console.log(data)
+    // Derived state for parsedContent. This will recompute whenever `post` changes.
+    let parsedContent = $derived(() => {
+        console.log(post)
+        if (post && post.content) {
+            console.log("S5: Post data changed, re-parsing content for slug:", post.slug);
+            console.log(post)
+            if (typeof post.content === 'string') {
+                try {
+                    const parsed = JSON.parse(post.content);
+                    if (parsed && parsed.blocks) {
+                        return parsed;
+                    } else {
+                        console.warn('S5: Parsed string content is not valid EditorJS block structure, treating as HTML.');
+                        return { blocks: [{ type: 'html', data: { html: post.content } }] };
+                    }
+                } catch (e) {
+                    console.error('S5: Failed to parse post.content string, treating as raw HTML:', e);
+                    return { blocks: [{ type: 'html', data: { html: post.content } }] };
                 }
-            } catch (e) {
-                console.error('Failed to parse post content, treating as HTML:', e);
-                parsedContent = {blocks: [{type: 'html', data: {html: post.content}}]};
+            } else if (post.content && typeof post.content === 'object' && post.content.blocks) {
+                return post.content; // Already in EditorJS format
+            } else {
+                console.warn('S5: Post content is in an unexpected format.');
+                return { blocks: [] };
             }
-        } else if (post.content && post.content.blocks) {
-            parsedContent = post.content;
+        } else if (post) {
+            console.warn('S5: Post data loaded, but post.content is missing or empty for slug:', post.slug);
+            return { blocks: [] };
+        } else {
+            console.log('S5: Post data is not available.');
+            return { blocks: [] };
         }
     });
+    console.log(parsedContent())
+    // --- Lifecycle ---
+    onMount(() => {
+        console.log("S5: Blog post page component mounted. Initial post slug (if available):", post?.slug);
+        // Any one-time setup for the component instance.
+        // If you had logic in onMount that depended on `post` being available,
+        // an $effect might be more appropriate if `post` could be initially undefined from $page.data
+        // post = data.post
+    });
 
-    function formatDate(dateString) {
-        const options = {year: 'numeric', month: 'long', day: 'numeric'};
+    // $effect can be used for side effects that need to run when specific state changes.
+    // For example, if you needed to interact with the DOM after `parsedContent` changes:
+    // $effect(() => {
+    //     if (parsedContent && typeof window !== 'undefined') {
+    //         console.log("S5: parsedContent updated, potentially update DOM for TOC scroll etc.");
+    //         // Example: document.title = post.title; (though SvelteKit <svelte:head> is better for title)
+    //     }
+    // });
+
+    // --- Functions ---
+    // These functions are fine as they are, they don't rely on Svelte 4's specific reactivity model.
+    function formatDate(dateString: string | undefined): string {
+        if (!dateString) return 'Date not available';
+        const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString(undefined, options);
     }
 
-    function handleEditPost(id) {
+    function handleEditPost(id: string) {
         goto(`/Blog/admin/post/${id}`);
     }
 
-    function handleDeletePost(id, title) {
+    function handleDeletePost(id: string, title: string) {
         if (confirm(`Are you sure you want to delete "${title}"?`)) {
-            console.log('Delete post:', id);
+            // Implement actual delete logic (e.g., API call)
+            console.log('S5: Delete post:', id);
         }
     }
 
+    // getTuneClasses, getTuneId, renderBlock remain the same
     function getTuneClasses(tunes) {
         if (!tunes) return '';
         let classes = [];
@@ -60,8 +111,6 @@
     function getTuneId(tunes) {
         return tunes?.anchorTune?.anchor || null;
     }
-
-    // renderBlock function remains IDENTICAL to your original
     function renderBlock(block) {
         if (!block) return null;
         const tunes = block.tunes || {};
@@ -146,24 +195,22 @@
                 };
             case 'embed':
                 return {tag: 'div', className: `block-embed ${tuneClasses}`, id: tuneId, embed: true, data: block.data};
-            case 'list': // This case now handles ordered, unordered, AND checklists
+            case 'list':
                 if (block.data.style === 'checklist') {
                     return {
-                        tag: 'ul', // Checklists are always ul
+                        tag: 'ul',
                         items: block.data.items,
-                        className: `block-checklist ${tuneClasses}`, // Specific class for checklists
+                        className: `block-checklist ${tuneClasses}`,
                         id: tuneId,
-                        isChecklist: true, // Crucial flag!
-                        // listStyle is not strictly needed for checklists but doesn't hurt
+                        isChecklist: true,
                     };
                 } else {
-                    // For 'ordered' or 'unordered' lists
                     return {
                         tag: block.data.style === 'ordered' ? 'ol' : 'ul',
                         items: block.data.items,
                         className: `block-list ${block.data.style}-list ${tuneClasses}`,
                         id: tuneId,
-                        isAnyList: true, // Flag for regular lists
+                        isAnyList: true,
                         listStyle: block.data.style
                     };
                 }
@@ -235,40 +282,131 @@
     }
 </script>
 
-<div class="post-container">
-    <h1 class="post-title text-primary">{post.title}</h1>
-    <p class="post-meta">{formatDate(post.publishedAt)} • {post.readTime} min read</p>
-    {#if post.image && !post.image.startsWith("https://placehold.co/")}
+<!--
+    The `key` directive is still crucial in Svelte 5 for re-creating component instances
+    when their identity changes (e.g., navigating from one post to another).
+    This ensures their internal state (like data fetched in onMount or an initial $effect run)
+    is reset and re-initialized for the new `postId`.
+-->
+{#if post }
+    <ReadingProgressBar key={`progress-${post.id}`} />
 
-        <img src={post.image}/>
+    <div class="post-container">
+        <h1 class="post-title text-primary">{post.title}</h1>
+        <p class="post-meta">{formatDate(post.publishedAt)} • {post.readTime} min read</p>
+
+        {#if post.image && !post.image.startsWith("https://placehold.co/")}
+            <img src={post.image} alt={post.title || 'Blog post image'} class="post-main-image"/>
         {/if}
-    <div class="post-content">
-        {#if parsedContent && parsedContent.blocks && parsedContent.blocks.length > 0}
-            {#each parsedContent.blocks as block (block.id || block.type + Math.random())}
-                {@const currentRenderedBlock = renderBlock(block)}
-                {#if currentRenderedBlock}
-                    <BlockRenderer
-                            renderedBlock={currentRenderedBlock}
-                            {renderBlock}
-                            {NestedListItemRenderer}
-                    />
-                {/if}
-            {/each}
-        {:else if typeof post.content === 'string'}
-            <div>{@html post.content}</div>
+
+        {#if parsedContent && parsedContent().blocks && parsedContent().blocks.length > 0}
+            <TableOfContents blocks={parsedContent().blocks} key={`toc-${post.id}`}/>
         {/if}
+
+        <div class="post-content post-content-for-progress">
+            {#if parsedContent() && parsedContent().blocks && parsedContent().blocks.length > 0}
+                {#each parsedContent().blocks as block, i (block.id || `${block.type}-${i}`)}
+                    {@const currentRenderedBlock = renderBlock(block)}
+                    {#if currentRenderedBlock}
+                        <BlockRenderer
+                                renderedBlock={currentRenderedBlock}
+                                {renderBlock}
+                        {NestedListItemRenderer}
+                        />
+                    {/if}
+                {/each}
+            {:else if typeof post.content === 'string' && post.content.trim() !== ''}
+                <div class="html-fallback-content">{@html post.content}</div>
+            {:else}
+                <p class="text-primary">This post currently has no content.</p>
+            {/if}
+        </div>
+
+        {#if post.conclusion_editorjs_content && post.conclusion_editorjs_content.blocks }
+            <div class="post-conclusion-section">
+                <h2 class="conclusion-title">Conclusion</h2>
+                {#each post.conclusion_editorjs_content.blocks as block, i (block.id || `conclusion-${block.type}-${i}`)}
+                    {@const currentRenderedBlock = renderBlock(block)}
+                    {#if currentRenderedBlock}
+                        <BlockRenderer
+                                renderedBlock={currentRenderedBlock}
+                                {renderBlock}
+                                {NestedListItemRenderer}
+                        />
+                    {/if}
+                {/each}
+            </div>
+        {:else if post.conclusion_html}
+            <div class="post-conclusion-section">
+                <h2 class="conclusion-title">Conclusion</h2>
+                <div class="conclusion-content">{@html post.conclusion_html}</div>
+            </div>
+        {/if}
+
+
+        {#if isAdmin} <!-- Use the const isAdmin directly -->
+            <div class="admin-controls">
+                <button on:click={() => handleEditPost(post.id)} class="edit-button">Edit</button>
+                <button on:click={() => handleDeletePost(post.id, post.title)} class="delete-button">Delete</button>
+            </div>
+        {/if}
+        <a href="/Blog" class="back-to-list">Back to Blog</a>
     </div>
 
-    {#if $isAdmin}
-        <div class="admin-controls">
-            <button on:click={() => handleEditPost(post.id)} class="edit-button">Edit</button>
-            <button on:click={() => handleDeletePost(post.id, post.title)} class="delete-button">Delete</button>
-        </div>
-    {/if}
-    <a href="/Blog" class="back-to-list">Back to Blog</a>
-</div>
+    <!--
+        Props for Svelte 5 components using $props() are passed normally.
+        The `key` is essential for re-instantiation.
+    -->
+    <RelatedPosts postId={post.id} count={3} />
+    <CommentsSection postId={post.id} postTitle={post.title} />
+
+{:else}
+    <div class="post-container">
+        <p class="text-primary">Loading post data or post not found...</p>
+    </div>
+{/if}
+
+<!-- Styles remain the same, but you'll add styles for the new sections as shown in their components or above for conclusion -->
 <style>
-    /* Inherit fonts from app.css */
+    /* ... your existing styles ... */
+    .post-main-image {
+        width: 100%;
+        max-height: 450px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+
+    .html-fallback-content {
+        /* Styles for when post.content is just a string */
+        line-height: 1.7;
+        font-size: 1.1rem;
+    }
+    .html-fallback-content :global(p) { margin-bottom: 1rem; }
+    .html-fallback-content :global(h1) { font-size: 2em; margin: 0.67em 0; }
+    /* Add more global styles for basic HTML tags if needed for fallback */
+
+
+    .post-conclusion-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 2px solid var(--secondary-color);
+    }
+    .conclusion-title {
+        font-family: var(--font-orbital-bold);
+        font-size: 2rem;
+        color: var(--primary-text-color);
+        margin-bottom: 1.5rem;
+    }
+    .conclusion-content {
+        line-height: 1.7;
+        font-size: 1.1rem;
+        color: var(--primary-text-color);
+        font-family: var(--font-orbital);
+    }
+    .conclusion-content :global(p) { margin-bottom: 1rem; }
+    /* Ensure the rest of your styles are here */
     :root {
         --font-orbital: 'orbital', sans-serif;
         --font-orbital-bold: 'orbital', sans-serif;
@@ -333,7 +471,7 @@
     .post-content :global(pre[id]),
     .post-content :global(table[id]),
     .post-content :global(details[id]) {
-        scroll-margin-top: 70px;
+        scroll-margin-top: 80px; /* Increased slightly for fixed progress bar */
     }
 
     /* General link styling */
