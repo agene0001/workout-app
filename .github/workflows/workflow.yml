@@ -83,8 +83,8 @@ jobs:
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_QUARKUS}:latest
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FLASK}:latest
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_FRONTEND}:latest
-      #          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
-      #          docker tag ${IMAGE_DB}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
+                docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
+                docker tag ${IMAGE_DB}:latest ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_DB}:latest
 
 #      - name: Build images with Docker Compose
 #        run: |
@@ -99,7 +99,7 @@ jobs:
             "${IMAGE_FRONTEND}"
             "${IMAGE_QUARKUS}"
             "${IMAGE_FLASK}"
-            # "${IMAGE_DB}" # Uncomment if you uncomment the DB image elsewhere
+             "${IMAGE_DB}" # Uncomment if you uncomment the DB image elsewhere
           )
 
           for IMAGE_NAME in "${IMAGES_TO_CLEAN[@]}"; do
@@ -218,14 +218,14 @@ jobs:
           kubectl rollout restart deployment/svelte-frontend
           kubectl rollout restart deployment/backend-quarkus
           kubectl rollout restart deployment/flask-backend
-#          kubectl rollout restart deployment/postgres-db
+          kubectl rollout restart deployment/postgres-db
 
       - name: Wait for deployments to stabilize
         run: |
           kubectl rollout status deployment/svelte-frontend
           kubectl rollout status deployment/backend-quarkus
           kubectl rollout status deployment/flask-backend
-#          kubectl rollout status deployment/postgres-db
+          kubectl rollout status deployment/postgres-db
 
 
       - name: Get service URLs
