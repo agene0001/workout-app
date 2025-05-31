@@ -66,34 +66,49 @@ CMD ["java", "-jar", "./quarkus-run.jar"]
 #COPY main/Frontend/ ./
 #RUN npm run build
 
-FROM  python:3.12 as api-builder
+FROM python:3.12 AS api-builder
+
+# Copy uv from the official image
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-# Set working directory
+
 WORKDIR /app
-RUN pip install -U pip setuptools wheel
-RUN pip install -U spacy
-RUN python -m spacy download en_core_web_md
-# Copy requirements and install dependencies
-#COPY main/python/requirements.txt .
-#RUN pip install --upgrade pip && pip install -r requirements.txt
 
-RUN uv venv
+# Create the virtual environment first
+RUN uv venv .venv # Creates a venv named .venv in /app
 
-# Copy the entire python directory
+# Copy only the dependency definition file(s) first to leverage Docker caching
+# If using pyproject.toml:
+COPY main/backend-flask/pyproject.toml ./pyproject.toml
+# If using requirements.txt (and no pyproject.toml with dependencies):
+# COPY main/backend-flask/requirements.txt ./requirements.txt
+
+# Install dependencies INTO the virtual environment
+# This is the crucial step to bake dependencies into the image.
+# If using pyproject.toml:
+RUN . .venv/bin/activate && uv pip install --no-cache -e . # Install from pyproject.toml in current dir
+# If using requirements.txt:
+# RUN . .venv/bin/activate && uv pip install --no-cache -r requirements.txt
+
+# Now install spaCy and its model into the same venv
+# (uv will manage spacy if it's also in your pyproject.toml/requirements.txt, which is cleaner)
+# If spaCy is NOT in your project files, you can install it like this:
+RUN . .venv/bin/activate && uv pip install --no-cache spacy
+RUN . .venv/bin/activate && python -m spacy download en_core_web_md
+# If using Playwright:
+
+# Copy the rest of your application code
 COPY main/backend-flask/ .
 
-# Print directory structure for debugging
-RUN ls -la
-
 # Environment variables
-#ENV DOCKER=true
 ENV PORT=8082
+
 
 EXPOSE 8082
 
-# Run the application (removed the WORKDIR app command)
+# Run the application using the Python/gunicorn from the virtual environment
+# 'uv run' should automatically detect and use the .venv if present in the CWD or an ancestor.
+# If 'xtractServer:app' is a module within your copied code, this should work.
 CMD ["uv", "run", "gunicorn", "--workers", "4", "--bind", "0.0.0.0:8082", "xtractServer:app"]
-
 #WORKDIR app
 # Stage 4: Final image for Spring Boot service
 

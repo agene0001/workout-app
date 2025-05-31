@@ -40,7 +40,7 @@ spec:
               memory: "256Mi"
             limits:
               cpu: "200m" # Slightly increase CPU limit if needed
-              memory: "4Gi" # Increase memory limit (e.g., to 2 Gigabytes)
+              memory: "2Gi" # Increase memory limit (e.g., to 2 Gigabytes)
 
           env:
             # MODIFIED: Point to PostgreSQL service name
@@ -111,7 +111,7 @@ spec:
               memory: "512Mi" # Increase memory request significantly (e.g., 512 MiB)
 
             limits:
-              cpu: "200m"   # Increase CPU limit
+              cpu: "800m"   # Increase CPU limit
               memory: "1Gi" # Increase memory limit significantly (e.g., 1 GiB)
 
           env:
@@ -267,54 +267,3 @@ spec:
     - protocol: TCP
       port: 5432 # PostgreSQL default port
       targetPort: 5432 # PostgreSQL container port
----
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: workout-app-cert # MUST match the name in the Ingress annotation
-spec:
-  domains:
-    - gainztrackers.com      # Domain for the cert
-    - www.gainztrackers.com  # Also include www if needed
----
-apiVersion: networking.gke.io/v1beta1 # Use v1beta1 for FrontendConfig generally
-kind: FrontendConfig
-metadata:
-  name: https-redirect-config # Choose a descriptive name
-  namespace: default          # Must be the same namespace as your Ingress
-spec:
-  redirectToHttps:
-    enabled: true             # Enable the redirect
-    responseCodeName: MOVED_PERMANENTLY_DEFAULT # Send a 301 redirect (permanent)
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: workout-app-ingress
-  annotations:
-    networking.gke.io/v1beta1.FrontendConfig: https-redirect-config # Name MUST match FrontendConfig above
-    kubernetes.io/ingress.global-static-ip-name: workout-app-static-ip
-    networking.gke.io/managed-certificates: workout-app-cert
-spec:
-  rules:
-    - host: gainztrackers.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: svelte-frontend
-                port:
-                  number: 80
-    - host: www.gainztrackers.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: svelte-frontend
-                port:
-                  number: 80

@@ -210,6 +210,7 @@ jobs:
       - name: Deploy to GKE
         run: |
           kubectl apply -f k8s-manifest.yaml
+          kubectl apply -f k8s-networking.yaml
 
       - name: Force rollout restart
         if: success()
