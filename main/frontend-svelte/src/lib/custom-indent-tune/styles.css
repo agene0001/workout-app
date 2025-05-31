@@ -1,0 +1,75 @@
+/* IndentTune specific styles */
+.ce-indent-tune {
+    display: flex;
+    gap: 5px;
+}
+
+.ce-indent-tune__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.ce-indent-tune__button svg {
+    width: 16px;
+    height: 16px;
+    fill: #707684;
+}
+
+.ce-indent-tune__button:hover {
+    background-color: #eff2f5;
+}
+
+.ce-indent-tune__button:hover svg {
+    fill: #388ae5;
+}
+
+.ce-indent-tune__button--active {
+    background-color: #e1f2ff;
+}
+
+.ce-indent-tune__button--active svg {
+    fill: #388ae5;
+}
+
+.ce-indent-tune__button--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.ce-indent-tune__button--disabled:hover {
+    background-color: transparent;
+}
+
+.ce-indent-tune__button--disabled:hover svg {
+    fill: #707684;
+}
+
+/* Dark theme support */
+.dark .ce-indent-tune__button:hover {
+    background-color: #2d2d2d;
+}
+
+.dark .ce-indent-tune__button svg {
+    fill: #a0a0a0;
+}
+
+.dark .ce-indent-tune__button:hover svg {
+    fill: #66aaff;
+}
+
+.dark .ce-indent-tune__button--active {
+    background-color: #2a3a4a;
+}
+
+.dark .ce-indent-tune__button--active svg {
+    fill: #66aaff;
+}
