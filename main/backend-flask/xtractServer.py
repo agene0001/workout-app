@@ -160,8 +160,9 @@ def process_recipe_for_instacart(
     }
     instacart_env = os.getenv("NODE_ENV", "dev")
     api_url_base = "https://connect.instacart.com"
-    if instacart_env == "dev":
-        api_url_base = "https://connect.dev.instacart.tools"
+    # if instacart_env == "dev":
+    # add this once we get the api key to use
+    api_url_base = "https://connect.dev.instacart.tools"
     api_url = f"{api_url_base}/idp/v1/products/products_link"
 
     response_data = None
