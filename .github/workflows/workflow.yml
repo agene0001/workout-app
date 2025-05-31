@@ -12,7 +12,7 @@ env:
   IMAGE_FRONTEND: svelte-frontend
   IMAGE_QUARKUS: backend-quarkus
   IMAGE_FLASK: flask-backend
-#  IMAGE_DB: postgres-db
+  IMAGE_DB: postgres-db
   REGION: us-central1
   REPOSITORY: workout-app
 
