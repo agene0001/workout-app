@@ -23,6 +23,11 @@ spec:
         app: backend-quarkus # Updated label
     spec:
       serviceAccountName: backend-quarkus-ksa
+      securityContext:
+        fsGroup: 1001 # Set the file system group ID for the volume.
+          # This will ensure files on the mounted volume are writable by this group.
+        # Common non-root user ID for many base images.
+        # If 1001 doesn't work, try 1000 or check your Dockerfile for the actual UID.
       # If your image is private, add imagePullSecrets here
       imagePullSecrets:
          - name: my-registry-secret
