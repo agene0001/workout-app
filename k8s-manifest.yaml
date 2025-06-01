@@ -66,6 +66,11 @@ spec:
             # Optional: Quarkus usually defaults to 8080, but docker-compose specifies 8081
             - name: QUARKUS_HTTP_PORT # Standard Quarkus property for port
               value: "8081"
+      volumes: # <--- ADD THIS SECTION
+        - name: backend-quarkus-uploads-storage # Name of the volume
+          persistentVolumeClaim:
+            claimName: backend-quarkus-uploads-pvc # Refers to the PVC you defined above
+
       restartPolicy: Always
 ---
 # MODIFIED: Quarkus Backend Service (was spring-backend)
@@ -267,3 +272,16 @@ spec:
     - protocol: TCP
       port: 5432 # PostgreSQL default port
       targetPort: 5432 # PostgreSQL container port
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backend-quarkus-uploads-pvc # A descriptive name for your PVC
+spec:
+  accessModes:
+    - ReadWriteOnce # This means it can be mounted as read-write by a single node
+  resources:
+    requests:
+      storage: 5Gi # Request 5 Gigabytes of storage (adjust as needed)
+---
+# ... rest of your k8s-manifest.yaml (db-creds Secret, backend-quarkus Deployment, etc.)
