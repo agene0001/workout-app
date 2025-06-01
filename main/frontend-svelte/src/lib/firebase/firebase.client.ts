@@ -188,6 +188,7 @@ export async function checkIsUserAdmin(): Promise<boolean> {
  * Forces a refresh of the admin status.
  * Useful to call after admin status might have changed.
  */
+
 export async function refreshAdminStatus(): Promise<boolean> {
     try {
         await initializeFirebaseClient();
