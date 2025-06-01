@@ -22,6 +22,7 @@ spec:
       labels:
         app: backend-quarkus # Updated label
     spec:
+      serviceAccountName: backend-quarkus-ksa
       # If your image is private, add imagePullSecrets here
       imagePullSecrets:
          - name: my-registry-secret
@@ -37,15 +38,14 @@ spec:
           resources: # Kept resources, adjust if needed for Quarkus
             requests:
               cpu: "100m"
-              memory: "256Mi"
+              memory: "512Mi"
             limits:
-              cpu: "200m" # Slightly increase CPU limit if needed
+              cpu: "300m" # Slightly increase CPU limit if needed
               memory: "2Gi" # Increase memory limit (e.g., to 2 Gigabytes)
-
           env:
             # MODIFIED: Point to PostgreSQL service name
-#            - name: QUARKUS_JVM_ARGS
-#              value: "-Xmx1700m" # Set max heap to 750 MiB
+            - name: QUARKUS_JVM_ARGS
+              value: "-Xmx1700m" # Set max heap to 750 MiB
             - name: DB_HOST
               value: postgres-db # Use the PostgreSQL Service name
             # MODIFIED: Quarkus standard JDBC URL property
@@ -108,11 +108,11 @@ spec:
           resources:
             requests:
               cpu: "50m"   # Increase CPU request slightly
-              memory: "512Mi" # Increase memory request significantly (e.g., 512 MiB)
+              memory: "2Gi" # Increase memory request significantly (e.g., 512 MiB)
 
             limits:
-              cpu: "800m"   # Increase CPU limit
-              memory: "1Gi" # Increase memory limit significantly (e.g., 1 GiB)
+              cpu: "300m"   # Increase CPU limit
+              memory: "2.5Gi" # Increase memory limit significantly (e.g., 1 GiB)
 
           env:
             - name: NODE_ENV
@@ -219,7 +219,7 @@ spec:
               memory: "256Mi"
             limits:
               cpu: "150m"
-              memory: "1Gi"
+              memory: "512Mi"
           ports:
             - containerPort: 5432 # PostgreSQL default port
           env:
