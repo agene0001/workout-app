@@ -5,7 +5,9 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -56,6 +58,9 @@ public class Post {
 
     @Column(nullable = false)
     private Instant updatedAt;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<Comment> comments = new HashSet<>(); // Or List<Comment> if order matters
+
 
     // Constructors
     public Post() {
