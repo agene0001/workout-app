@@ -206,15 +206,15 @@ jobs:
 #          --from-literal=VITE_FIREBASE_MEASUREMENT_ID="$VITE_FIREBASE_MEASUREMENT_ID" \
 #          --dry-run=client -o yaml | kubectl apply -f -
 
-
-      - name: Deploy to GKE
-        run: |
-          kubectl apply -f k8s-manifest.yaml
       - name: Set Firebase Project ID for Backend Quarkus
         run: |
           echo "Setting FIREBASE_PROJECT_ID environment variable for backend-quarkus deployment..."
           kubectl set env deployment/backend-quarkus FIREBASE_PROJECT_ID="${{ env.PROJECT_ID }}" --overwrite
           echo "FIREBASE_PROJECT_ID set for backend-quarkus deployment."
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -f k8s-manifest.yaml
+
       - name: Force rollout restart
         if: success()
         run: |
