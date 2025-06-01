@@ -6,3 +6,4 @@ service-account-key.json
 backup.sql
 dist
 *uv.lock
+firebase-admin-scripts

@@ -272,19 +272,22 @@
     }
 
     // Auth handlers - Now guarded by isAppReady
+    // ... (your existing imports and component setup) ...
+
+    // Auth handlers - Now guarded by isAppReady
     async function handleSocialAuthAttempt(providerKey) {
-        // Guard this function call with isAppReady check
+        // Initial guards: Check app readiness and operation status
         if (!isAppReady || isOperationLoading) {
             console.warn(`${providerKey} attempt blocked: App not ready or operation loading.`);
             return;
         }
-        // currentAuth is guaranteed to be non-null if isAppReady is true
-        const auth = currentAuth;
 
+        const auth = currentAuth; // Auth instance from your store
         error = "";
         isOperationLoading = true;
 
-        // Check for usable fingerprint before proceeding
+        // Ensure fingerprint is available before attempting any auth flow
+        // This is a prerequisite for your fingerprint security logic.
         if (!fingerprint || fingerprint === 'error' || fingerprint === 'ssr') {
             const fpError = "Device fingerprint not available. Cannot complete sign-in.";
             console.error(fpError);
@@ -292,7 +295,6 @@
             isOperationLoading = false;
             return;
         }
-
 
         const socialProvider = providers[providerKey];
         if (!socialProvider) {
@@ -302,30 +304,45 @@
         }
 
         try {
-            // checkExistingFingerprint now uses currentDb (which is set if isAppReady is true)
-            console.log(`Checking fingerprint before ${providerKey} sign-in...`);
-            const existingUserId = await checkExistingFingerprint(fingerprint);
-            if (existingUserId) {
-                const fpExistsError = `This device seems linked to an existing account (User ID starting: ${existingUserId.substring(0, 6)}). Please log in or contact support.`;
-                console.warn(`${providerKey} sign-in blocked: Fingerprint ${fingerprint} linked to user ${existingUserId}`);
-                error = fpExistsError;
-                throw new Error(fpExistsError); // Throw to be caught below
+            // Step 1: Attempt social sign-in/sign-up. Firebase handles the core authentication.
+            const userCredential = await signInWithPopup(auth, socialProvider);
+            const user = userCredential.user;
+            const isNewUser = userCredential.additionalUserInfo?.isNewUser; // True if a new account was created
+
+            if (isNewUser) {
+                // Step 2: If it's a NEW user (social sign-up), perform the fingerprint check.
+                console.log(`New social signup detected for ${providerKey}. Performing fingerprint check...`);
+                const existingUserId = await checkExistingFingerprint(fingerprint);
+
+                if (existingUserId) {
+                    // IMPORTANT: If a new user was created but a fingerprint exists,
+                    // it means this device has been used for another account.
+                    // You must delete the newly created user to enforce your rule.
+                    console.warn(`Signup blocked: Fingerprint ${fingerprint} linked to user ${existingUserId}. Deleting newly created user ${user.uid}.`);
+                    await user.delete(); // Delete the new user created by signInWithPopup
+                    const fpExistsError = `This device seems linked to an existing account (User ID starting: ${existingUserId.substring(0, 6)}...). Please log in or contact support.`;
+                    error = fpExistsError;
+                    // Throw an error to stop the process and indicate failure
+                    throw new Error(fpExistsError);
+                }
+                console.log("Fingerprint check passed for new social signup.");
+            } else {
+                // Step 3: If it's an EXISTING user (social login), no blocking fingerprint check needed.
+                console.log(`Existing user logged in via ${providerKey}. Proceeding without signup fingerprint block.`);
             }
 
-            console.log("Fingerprint check passed.");
+            // Step 4: Associate/update fingerprint for the now successfully authenticated user (new or existing).
+            // This ensures the user's UID is linked to the device fingerprint or the link is updated.
+            await associateFingerprintWithUser(user.uid, fingerprint);
 
-            // Proceed with social sign in
-            const userCredential = await signInWithPopup(auth, socialProvider);
-            console.log(`${providerKey} sign-in successful:`, userCredential.user.uid);
-
-            // associateFingerprintWithUser now uses currentDb (which is set if isAppReady is true)
-            await associateFingerprintWithUser(userCredential.user.uid, fingerprint);
+            console.log(`${providerKey} sign-in/signup successful:`, user.uid);
 
             // Close modals on success
             isLoginModalOpen = false;
             isSignupModalOpen = false;
-        } catch (err) {
-            if (!error) {
+
+        } catch (err: any) {
+            if (!error) { // Only set a generic error if a specific one wasn't already set by a prior step
                 console.error(`${providerKey} auth error:`, err);
                 if (err.code === 'auth/account-exists-with-different-credential') {
                     error = "Account exists with this email but a different sign-in method.";
