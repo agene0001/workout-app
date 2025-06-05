@@ -109,7 +109,11 @@
             console.log("+layout onMount cleanup: firebaseReadyStore unsubscribed.");
         };
     });
+    import { afterNavigate } from '$app/navigation';
 
+    afterNavigate(() => {
+        window.gtag('config', 'AW-11461277117');
+    });
 
 </script>
 
