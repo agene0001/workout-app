@@ -99,7 +99,7 @@ jobs:
             "${IMAGE_FRONTEND}"
             "${IMAGE_QUARKUS}"
             "${IMAGE_FLASK}"
-#             "${IMAGE_DB}" # Uncomment if you uncomment the DB image elsewhere
+             #"${IMAGE_DB}" # Uncomment if you uncomment the DB image elsewhere
           )
 
           for IMAGE_NAME in "${IMAGES_TO_CLEAN[@]}"; do
