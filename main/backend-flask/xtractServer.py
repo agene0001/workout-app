@@ -11,6 +11,7 @@ from utils.NERModel.ingredient_parser import extract_ingredients_ner, parse_frac
 load_dotenv()
 recipe_bp = Blueprint('recipes', __name__, url_prefix='/recipes')
 
+instacart_env = os.getenv("NODE_ENV", "dev")
 def process_recipe_for_instacart(
         title: str,
         link_type: str,
@@ -133,12 +134,14 @@ def process_recipe_for_instacart(
 
     if not final_instacart_line_items:
         return {"status_code": 400, "response": {"error": "No valid line items to send to Instacart."}}
-
+    landing_page_config = {"partner_linkback_url":"https://gainztrackers.com/order-success",}
     # Construct Instacart payload
     payload = {
         "title": title,
         "link_type": link_type,
-        "line_items": final_instacart_line_items
+        "line_items": final_instacart_line_items,
+        'landing_page_configuration':landing_page_config
+
     }
     if image_url: payload["image_url"] = image_url
     if instructions: payload["instructions"] = instructions # Only for 'recipe' usually
@@ -158,11 +161,10 @@ def process_recipe_for_instacart(
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
-    instacart_env = os.getenv("NODE_ENV", "dev")
     api_url_base = "https://connect.instacart.com"
-    # if instacart_env == "dev":
+    if instacart_env == "dev":
     # add this once we get the api key to use
-    api_url_base = "https://connect.dev.instacart.tools"
+        api_url_base = "https://connect.dev.instacart.tools"
     api_url = f"{api_url_base}/idp/v1/products/products_link"
 
     response_data = None
@@ -232,6 +234,8 @@ def process_recipe_api_route(): # Renamed to avoid conflict with the function
             image_url=image_url,
             # landing_page_config=landing_page_config
         )
+        if instacart_env != 'dev':
+            result['response']['products_link_url']+="?utm_campaign=instacart-idp&utm_medium=affiliate&utm_source=instacart_idp&utm_term=partnertype-mediapartner&utm_content=campaignid-20313_partnerid-6170383"
 
         return jsonify(result), result.get("status_code", 500)
 

@@ -1,16 +1,13 @@
 # ingredient_parser.py
 import re
-
 import spacy
 from pathlib import Path
+import time # For benchmarking
 
 # --- Re-use helper functions from your old parser ---
-# You'll need WORD_NUMBERS and parse_fraction here.
-# You can either copy them directly or import them if they are in a utils file.
-
 WORD_NUMBERS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
-    "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
+    "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 12,
     "half": 0.5, "quarter": 0.25,
     "a": 1, "an": 1,
 }
@@ -32,7 +29,6 @@ def parse_fraction(s):
         else:
             return float(s)
     except (ValueError, ZeroDivisionError):
-        # Check if it's a word number before returning None
         val = WORD_NUMBERS.get(s.lower())
         if val is not None:
             return float(val)
@@ -41,72 +37,85 @@ def parse_fraction(s):
 # --- Configuration ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MODEL_PATH = PROJECT_ROOT / "models" / "ingredient_ner_model_patience_stop" / "model_final"
+
 NLP_CUSTOM = None # Global variable to hold the loaded model
 
 def load_model(model_path=MODEL_PATH):
-    """Loads the custom spaCy NER model."""
+    """Loads the custom spaCy NER model only once."""
     global NLP_CUSTOM
     if NLP_CUSTOM is None: # Load only once
         if model_path.exists():
-            NLP_CUSTOM = spacy.load(model_path)
-            print(f"Loaded custom NER model from {model_path}")
-        else:
-            print(f"ERROR: Model not found at {model_path}. Please train the model first.")
-            # Fallback or raise error
-            # For now, let's try loading a base spaCy model as a dummy
-            # In a real app, you'd handle this more gracefully or ensure the model exists.
-            print("Warning: Custom model not found. Falling back to en_core_web_sm (will not perform custom NER).")
             try:
-                NLP_CUSTOM = spacy.load("en_core_web_sm")
-            except OSError:
-                print("Downloading en_core_web_sm as fallback...")
-                spacy.cli.download("en_core_web_sm")
-                NLP_CUSTOM = spacy.load("en_core_web_sm")
+                # Crucial for speed: Disable pipeline components not needed for your NER task.
+                # If your custom model only performs NER, you don't need tagger, parser, etc.
+                # Adjust this list based on what components your custom model actually contains and needs.
+                # Common components to disable if only NER is needed:
+                # "tagger", "parser", "attribute_ruler", "lemmatizer", "textcat"
+                # If your custom model was specifically trained ONLY for NER, it might not even have these.
+                # In that case, spacy.load() might still be faster if you specify them here.
+                components_to_disable = ["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer", "textcat", "senter"]
+                NLP_CUSTOM = spacy.load(model_path, disable=components_to_disable)
+                print(f"Loaded custom NER model from {model_path} with disabled components: {', '.join(components_to_disable)}")
+            except ValueError as e:
+                # This can happen if the model doesn't have some of the components you tried to disable.
+                # In that case, load the model without explicit disabling.
+                print(f"Warning: Could not disable all specified components for model at {model_path} ({e}). Attempting to load without explicit disabling.")
+                NLP_CUSTOM = spacy.load(model_path)
+                print(f"Loaded custom NER model from {model_path} (without explicit component disabling).")
+            except Exception as e:
+                print(f"ERROR: Failed to load custom model from {model_path}: {e}")
+                print("Falling back to en_core_web_sm (will not perform custom NER).")
+                try_load_fallback_model()
+        else:
+            print(f"ERROR: Custom model not found at {model_path}.")
+            print("Falling back to en_core_web_sm (will not perform custom NER).")
+            try_load_fallback_model()
     return NLP_CUSTOM
 
+def try_load_fallback_model():
+    """Helper to load or download fallback spaCy model."""
+    global NLP_CUSTOM
+    try:
+        # Fallback model, generally slower for just NER as it's a full pipeline
+        NLP_CUSTOM = spacy.load("en_core_web_sm")
+        print("Loaded fallback model: en_core_web_sm.")
+    except OSError:
+        print("Downloading en_core_web_sm as fallback...")
+        try:
+            spacy.cli.download("en_core_web_sm")
+            NLP_CUSTOM = spacy.load("en_core_web_sm")
+            print("Successfully downloaded and loaded fallback model: en_core_web_sm.")
+        except Exception as e:
+            print(f"CRITICAL ERROR: Could not download or load en_core_web_sm: {e}")
+            NLP_CUSTOM = None # Ensure it's None if even fallback fails
 
-# ingredient_parser.py
-import re
-import spacy # Assuming spacy and re are needed by other parts of your file
-# ... (other necessary imports like Path, and your helper functions like parse_fraction)
 
-# Make sure parse_fraction is defined if it's not already
-# For example:
-# def parse_fraction(s):
-#     # ... your implementation ...
-#     return float_value_or_None
-#  UNIT CAN HAVE mediumtolarge,medium-sized, ounces/4, cups/500, fluid ounces/,-ounce. MUST PARSE
+# Pre-compile regex patterns for performance
+PARENTHETICAL_REGEX = re.compile(r'\([^)]*\)')
+UNIT_DASH_NUMBER_REGEX = re.compile(r'-\d+$')
 def format_extracted_entities(doc, original_text):
-    # Initialize parsed_item with new fields for alternative quantity and unit
+    """
+    Extracts entities from a spaCy Doc object and formats them into the desired dictionary structure.
+    All recognized entities contribute to the 'display_text'.
+    """
     parsed_item = {
         "quantity": "",
-        "alternative_quantity": "", # NEW FIELD
         "unit": "",
-        "alternative_unit": "",   # NEW FIELD
         "name": "",
-        "alternative_name": "",   # Existing, for alternative names
-        "preparation": [],        # Keeping as list for now
-        "comment": [],            # Keeping as list for now
-        "display_text": original_text.strip()
+        "display_text": original_text.strip() # Initialize with full text as fallback
     }
 
     temp_name_parts = []
     temp_quantity_text = None
-    temp_unit_text = None
     primary_unit_candidate = None
-    last_core_entity_end_char = 0
-
     parenthetical_qty = None
     parenthetical_unit = None
-    # is_juice_pattern = False # Not used in provided function
-    # juice_subject_parts = [] # Not used in provided function
+    last_core_entity_end_char = 0 # Tracks the furthest character position of any recognized entity
 
-    # Ensure entities are sorted by start character to process them in order
-    # This helps with logic that might depend on the order of appearance.
     sorted_ents = sorted(doc.ents, key=lambda ent: ent.start_char)
+    paren_phrases_spans = [(m.start(), m.end()) for m in PARENTHETICAL_REGEX.finditer(original_text)]
 
-    for ent in sorted_ents: # Iterate through sorted entities
-        paren_phrases_spans = [(m.start(), m.end()) for m in re.finditer(r'\([^)]*\)', original_text)]
+    for ent in sorted_ents:
         is_part_of_paren_phrase = any(p_start <= ent.start_char and ent.end_char <= p_end for p_start, p_end in paren_phrases_spans)
 
         if ent.label_ == "QTY":
@@ -117,30 +126,30 @@ def format_extracted_entities(doc, original_text):
             last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char)
 
         elif ent.label_ == "UNIT":
-            raw_unit_text = ent.text.lower().strip().rstrip('.') # Normalize: lowercase, strip, remove trailing dot
-            parsed_unit_candidate = raw_unit_text # What we'll try to match against allowed units
+            raw_unit_text = ent.text.lower().strip().rstrip('.')
+            parsed_unit_candidate = raw_unit_text
 
-            # 1. Handle compound units with slashes or specific patterns first
             if "/" in raw_unit_text:
-                # e.g., "ounces/4", "cups/500", "fluid ounces/..."
-                # The part before the slash is usually the primary unit
                 parsed_unit_candidate = raw_unit_text.split('/', 1)[0].strip()
-                # You might want to store the part after "/" if it's meaningful, e.g., in an alt_qty or comment
-                # print(f"DEBUG: Split unit '{raw_unit_text}' into primary '{parsed_unit_candidate}'")
-            elif raw_unit_text == "-ounce": # Handle "-ounce" specifically, often part of e.g., "16-ounce can"
-                parsed_unit_candidate = "ounce" # Normalize to "ounce"
-            elif raw_unit_text.endswith("-sized"): # e.g., "medium-sized"
-                parsed_unit_candidate = raw_unit_text # Keep as "medium-sized" if that's an allowed unit
-            elif raw_unit_text == "mediumtolarge": # Handle specific combined terms
-                parsed_unit_candidate = "medium-large" # Normalize to a more standard form or keep as is if allowed
+            elif raw_unit_text == "-ounce" or raw_unit_text == "-ounces":
+                parsed_unit_candidate = "ounce"
+            elif raw_unit_text == "largest-available":
+                parsed_unit_candidate = "large"
+            elif raw_unit_text == "-cup" or raw_unit_text == "-cups":
+                parsed_unit_candidate = "cup"
+            elif raw_unit_text.endswith("-sized"):
+                parsed_unit_candidate = raw_unit_text
+            elif raw_unit_text == "mediumtolarge":
+                parsed_unit_candidate = "medium-large"
+            elif UNIT_DASH_NUMBER_REGEX.search(raw_unit_text):
+                parsed_unit_candidate = UNIT_DASH_NUMBER_REGEX.sub('', raw_unit_text).strip()
 
-            # 2. Assign to primary_unit_candidate or parenthetical_unit_candidate
             if not is_part_of_paren_phrase:
                 if primary_unit_candidate is None:
                     primary_unit_candidate = parsed_unit_candidate
             elif is_part_of_paren_phrase:
-                if parenthetical_unit_candidate is None:
-                    parenthetical_unit_candidate = parsed_unit_candidate
+                if parenthetical_unit is None:
+                    parenthetical_unit = parsed_unit_candidate
 
             last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char)
 
@@ -148,119 +157,74 @@ def format_extracted_entities(doc, original_text):
             temp_name_parts.append(ent.text)
             last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char)
 
-        elif ent.label_ == "ALT_NAME": # This is for alternative *ingredient names*
-            # Store the first encountered ALT_NAME directly
-            if not parsed_item["alternative_name"]:
-                parsed_item["alternative_name"] = ent.text
+        # All other entities contribute to display_text length but not specific fields
+        elif ent.label_ in ["ALT_NAME", "ALT_QTY", "ALT_UNIT"]:
             last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char)
 
-        # --- ADDED/MODIFIED SECTION for ALT_QTY and ALT_UNIT ---
-        elif ent.label_ == "ALT_QTY":
-            if not parsed_item["alternative_quantity"]: # Take the first one found
-                parsed_item["alternative_quantity"] = ent.text
-            last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char) # Ensure it contributes to display_text
-
-        elif ent.label_ == "ALT_UNIT":
-            if not parsed_item["alternative_unit"]: # Take the first one found
-                parsed_item["alternative_unit"] = ent.text
-            last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char) # Ensure it contributes to display_text
-        # --- END OF ADDED/MODIFIED SECTION ---
-
-        elif ent.label_ == "PREP": # Added for completeness if you intend to use it
-            parsed_item["preparation"].append(ent.text)
-            last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char) # PREP can be part of display text
-
-        elif ent.label_ == "COMMENT": # Added for completeness
-            parsed_item["comment"].append(ent.text)
-            last_core_entity_end_char = max(last_core_entity_end_char, ent.end_char) # COMMENT can be part of display text
-
-
-    # Prioritize non-parenthetical QTY/UNIT, then parenthetical if primary is missing
+    # Determine final primary quantity and unit
     if temp_quantity_text is None and parenthetical_qty is not None:
         temp_quantity_text = parenthetical_qty
-    if temp_unit_text is None and parenthetical_unit is not None: # temp_unit_text would have been lowercased already if set
-        temp_unit_text = parenthetical_unit # parenthetical_unit was also lowercased if set
+
+    temp_unit_text = None
+    if primary_unit_candidate:
+        temp_unit_text = primary_unit_candidate
+    elif parenthetical_unit:
+        temp_unit_text = parenthetical_unit
 
     # Construct display_text
-    # last_core_entity_end_char is now updated by QTY, UNIT, NAME, ALT_NAME, ALT_QTY, ALT_UNIT, PREP, COMMENT
     if last_core_entity_end_char > 0:
         display_text_candidate = original_text[:last_core_entity_end_char].strip()
         parsed_item["display_text"] = display_text_candidate.rstrip(',').strip()
     else:
         parsed_item["display_text"] = original_text.strip()
 
-
+    # Parse and assign quantity
     if temp_quantity_text:
         parsed_q = parse_fraction(temp_quantity_text)
         if parsed_q is not None:
             parsed_item["quantity"] = str(int(parsed_q)) if parsed_q == int(parsed_q) else f"{parsed_q:.3f}".rstrip('0').rstrip('.')
         else:
             parsed_item["quantity"] = temp_quantity_text
-    # else: parsed_item["quantity"] = "" # Already initialized
 
-    if temp_unit_text: # Already lowercased during assignment
-        parsed_item["unit"] = temp_unit_text.strip().rstrip('.') # Ensure stripped and no trailing dot
-    # else: parsed_item["unit"] = "" # Already initialized
+    # Assign unit (already normalized)
+    if temp_unit_text:
+        parsed_item["unit"] = temp_unit_text.strip().rstrip('.')
 
-
-    name_str = " ".join(temp_name_parts).strip() # This only contains text from NAME entities
+    # Join name parts
+    name_str = " ".join(temp_name_parts).strip()
     if name_str:
         parsed_item["name"] = name_str
     elif not doc.ents and len(original_text.split()) <= 3 :
         parsed_item["name"] = original_text.strip()
         if not parsed_item.get("display_text") or last_core_entity_end_char == 0:
             parsed_item["display_text"] = original_text.strip()
-    # else: parsed_item["name"] = "" # Already initialized
 
-    # Fallback for display_text if it somehow got emptied or was never set properly
-    if not parsed_item.get("display_text"):
-        parsed_item["display_text"] = original_text.strip()
-
-    # Join preparation and comment lists
-    parsed_item["preparation"] = ", ".join(p for p in parsed_item["preparation"] if p)
-    parsed_item["comment"] = ". ".join(c for c in parsed_item["comment"] if c)
-
-
-    # Final check for validity
     is_valid_ingredient = False
     if parsed_item.get("name"):
         is_valid_ingredient = True
-    elif parsed_item.get("quantity") and parsed_item.get("unit"): # Unit must be populated
+    elif parsed_item.get("quantity") and parsed_item.get("unit"):
         is_valid_ingredient = True
 
     if not is_valid_ingredient:
-        if not doc.ents and len(parsed_item.get("display_text","").split()) <=2:
-            if not parsed_item["name"]: # Check again
+        if not doc.ents and len(parsed_item.get("display_text","").split()) <= 2:
+            if not parsed_item["name"]:
                 parsed_item["name"] = parsed_item.get("display_text","")
-            is_valid_ingredient = True # if it's a short unparsed string, treat it as a valid name
+            is_valid_ingredient = True
 
     return parsed_item if is_valid_ingredient else None
 
-def parse_single_ingredient_line(ingredient_line):
-    """
-    Parses a single ingredient line using the custom NER model.
-    """
-    nlp_model = load_model() # Ensures model is loaded
-    if nlp_model is None: # Should ideally not happen if load_model handles fallback
-        print("Error: NLP model could not be loaded.")
-        return {"display_text": ingredient_line, "name": ingredient_line, "quantity": "", "unit": ""}
 
-    doc = nlp_model(ingredient_line.strip())
-    # print(f"DEBUG: For line '{ingredient_line}', NER entities:")
-    # for ent in doc.ents:
-    #     print(f"  Text: '{ent.text}', Label: '{ent.label_}'")
-
-    return format_extracted_entities(doc, ingredient_line)
-
-
-# --- This is the main function your Flask app will call ---
 def extract_ingredients_ner(ingredients_list_raw):
     """
-    Processes a list of raw ingredient strings and parses them.
-    This replaces your old `extract_ingredients` function.
+    Processes a list of raw ingredient strings and parses them using spaCy's nlp.pipe for speed.
     """
+    # Load the model ONCE at the beginning of the main function
+    nlp_model = load_model()
+    if nlp_model is None:
+        print("Critical Error: NLP model could not be loaded. Aborting parsing.")
+        return []
+
     if not isinstance(ingredients_list_raw, list):
-        # Handle cases where a single string might be passed
         if isinstance(ingredients_list_raw, str):
             ingredients_list_raw = [ingredients_list_raw]
         else:
@@ -268,86 +232,149 @@ def extract_ingredients_ner(ingredients_list_raw):
             return []
 
     parsed_ingredients = []
+    # Store tuples of (original_line_for_display, text_for_nlp_processing, is_garnish_header_flag, original_index)
+    # original_index is added to maintain output order if needed, though zip keeps order too.
+    texts_for_nlp_pipe_with_context = []
+    nlp_input_texts = [] # This list will hold the actual strings passed to nlp.pipe
 
-    # Pre-processing steps from your old parser (like 'and' splitting) can go here if desired.
-    # For simplicity, we'll parse each line as is first.
-    # You might want to re-integrate your 'and' splitting logic:
-    processed_lines = []
-    for line_input in ingredients_list_raw:
-        # --- Your "and" splitting logic from OLD_INGREDIENTS_PARSER ---
-        # (Slightly simplified for brevity here, copy your full logic)
-        if "salt and pepper" in line_input.lower(): # Example, make more robust
-            processed_lines.append(line_input) # Treat as one
-        # elif " and " in line_input and not re.search(r'\([^)]*and[^)]*\)', line_input): # From your old code
-        #     parts = line_input.split(" and ")
-        #     for part in parts:
-        #         if part.strip():
-        #             processed_lines.append(part.strip())
-        else:
-            processed_lines.append(line_input.strip())
-
-    for line in processed_lines:
-        if not line.strip():
+    for i, line_input in enumerate(ingredients_list_raw):
+        line = line_input.strip()
+        if not line:
             continue
 
-        line_lower = line.lower() # Work with a lowercased version for startswith checks
+        line_lower = line.lower()
+        text_to_process = line # Default
+        is_garnish_header_line = False
+        skip_nlp_processing = False # Flag for lines not needing NLP
 
-        # Handle "for the garnish:" specifically
+        if "salt and pepper" in line_lower:
+            # Special case for "salt and pepper" - process as one
+            pass # Keep text_to_process as full line
+        # Add any other "and" splitting logic here if needed. For this example, keeping simple.
+        # elif " and " in line and not re.search(r'\([^)]*and[^)]*\)', line):
+        #     # This logic would require splitting and potentially adding multiple items for one original line
+        #     # which complicates the 1:1 mapping for nlp.pipe results.
+        #     # For this example, we'll avoid splitting for batching efficiency directly here.
+        #     pass
+
+        # Handle specific header/instruction lines that should be skipped or only partially processed
         if line_lower.startswith("for the garnish:"):
-            garnish_item_text = line.split(":", 1)[1].strip()
-            if garnish_item_text: # Ensure there's something after the colon
-                parsed_item = parse_single_ingredient_line(garnish_item_text)
-                if parsed_item:
-                    # The expected display_text is the full original line
-                    parsed_item["display_text"] = line.strip()
-                    # The name should be from the parsed garnish_item_text
-                    # quantity and unit might also come from parsing garnish_item_text
-                    parsed_ingredients.append(parsed_item)
-            continue # Move to the next line after handling "for the garnish:"
-
-        # Handle other headers/instructions that should be skipped
-        elif line_lower.startswith(("instructions:", "notes:")): # "for the" (generic) removed
-            continue
-
-        # Handle lines that *only* start with "garnish:" (not "for the garnish:")
+            text_to_process = line.split(":", 1)[1].strip()
+            is_garnish_header_line = True
+        elif line_lower.startswith(("instructions:", "notes:")):
+            skip_nlp_processing = True # These lines are skipped entirely from NLP
         elif line_lower.startswith("garnish:"):
-            garnish_item_text = line.split(":", 1)[1].strip()
-            if garnish_item_text:
-                parsed_item = parse_single_ingredient_line(garnish_item_text)
-                if parsed_item:
-                    parsed_item["display_text"] = line.strip()
-                    parsed_ingredients.append(parsed_item)
+            text_to_process = line.split(":", 1)[1].strip()
+            is_garnish_header_line = True
+
+        if skip_nlp_processing:
+            continue # Move to the next line
+
+        # If text_to_process is empty after splitting (e.g., "garnish: "), or if it's just a header,
+        # we might want to handle it as a simple fallback item rather than sending to NLP.
+        if not text_to_process:
+            parsed_ingredients.append({
+                "quantity": "", "unit": "",
+                "name": original_full_line.strip(), "display_text": original_full_line.strip()
+            })
             continue
 
-        # If it's not a special header, parse as a regular ingredient
-        parsed_item = parse_single_ingredient_line(line)
-        if parsed_item:
-            parsed_ingredients.append(parsed_item)
-        else:
-            print(f"Warning: Could not parse line into structured format: '{line}'")
+        texts_for_nlp_pipe_with_context.append((line, text_to_process, is_garnish_header_line, i))
+        nlp_input_texts.append(text_to_process)
 
+
+    # Process all collected texts in a batch using nlp.pipe
+    # batch_size can be adjusted for performance, typically 50-100 or more.
+    # n_process can be set to the number of CPU cores for parallel processing, if applicable.
+    # For smaller models or few lines, n_process=1 (default) might be faster due to multiprocessing overhead.
+    docs_generator = nlp_model.pipe(nlp_input_texts, batch_size=64, n_process=1) # n_process=1 often best for custom NER unless CPU bound
+
+    # Now, iterate through the original context and the processed docs
+    # Ensure a 1:1 mapping between nlp_input_texts and docs_generator
+    results_map = {} # To store results and sort by original index later if input lines were split
+    for (original_full_line, text_used_for_nlp, is_garnish_header_line, original_index), doc in zip(texts_for_nlp_pipe_with_context, docs_generator):
+        parsed_item = format_extracted_entities(doc, text_used_for_nlp) # Pass text_used_for_nlp as original_text to format_extracted_entities
+
+        if parsed_item:
+            # For garnish lines, the display_text should be the full original line,
+            # even if the parsing only happened on the part after the colon.
+            if is_garnish_header_line:
+                parsed_item["display_text"] = original_full_line.strip()
+            else:
+                # If it's not a garnish header, display_text from format_extracted_entities is correct
+                # (it uses text_used_for_nlp internally, which is correct here)
+                pass
+            results_map[original_index] = parsed_item
+        else:
+            # Fallback if parsing fails, add as a basic item with only desired fields
+            results_map[original_index] = {
+                "quantity": "",
+                "unit": "",
+                "name": original_full_line.strip(), # Use the full original line for fallback name/display
+                "display_text": original_full_line.strip()
+            }
+
+    # Reconstruct the final list in original order
+    for i in range(len(ingredients_list_raw)):
+        if i in results_map:
+            parsed_ingredients.append(results_map[i])
+        # Note: Lines entirely skipped (e.g., "instructions:") will not have an entry in results_map
+        # This is desired behavior if those lines should not appear in the parsed output at all.
 
     return parsed_ingredients
 
 if __name__ == '__main__':
-    # Example usage:
-    print("--- Testing ingredient_parser.py ---")
-    load_model() # Load the model
+    print("--- Benchmarking ingredient_parser.py (NLP Pipe) ---")
 
-    test_ingredients1 = ["1/2 cup finely chopped pecans, for garnish", "2 large eggs", "salt"]
-    parsed1 = extract_ingredients_ner(test_ingredients1)
-    print("\nParsed Set 1:")
-    for item in parsed1:
+    # Create a larger list for a more noticeable benchmark
+    sample_ingredients = [
+        "1/2 cup finely chopped pecans, for garnish",
+        "2 large eggs",
+        "salt",
+        "1 tbsp fresh parsley, chopped (or dried)",
+        "300g chicken breast, sliced",
+        "1 (15-ounce) can black beans, rinsed and drained",
+        "Juice of 2 lemons (about 1/4 cup)",
+        "1 large onion, chopped",
+        "2 tablespoons olive oil",
+        "1 (15-ounce) can crushed tomatoes",
+        "1/2 teaspoon dried oregano, or to taste",
+        "Salt and freshly ground black pepper, to taste",
+        "4 ounces pasta, such as spaghetti (about 1 cup cooked)",
+        "For the garnish: chopped fresh parsley",
+        "1 chicken breast, skin removed and cut into bite-sized pieces",
+        "mediumtolarge sweet potato, peeled and diced",
+        "2-ounce bar unsweetened chocolate, chopped",
+        "1 whole chicken (about 3 pounds), cut into 8 pieces",
+        "1 large bell pepper (any color), sliced",
+        "a pinch of cayenne pepper",
+        "water", # Short, no entities
+        "Instructions: Preheat oven to 350F.", # Should be skipped
+        "Notes: Serve warm." # Should be skipped
+    ]
+
+    # Generate a very large list to clearly see batching benefits
+    num_repetitions = 1000 # Increase this for more significant benchmarks
+    large_test_ingredients = []
+    for _ in range(num_repetitions):
+        large_test_ingredients.extend(sample_ingredients)
+    print(f"Total lines to process: {len(large_test_ingredients)}")
+
+    start_time = time.time()
+    parsed_large_set = extract_ingredients_ner(large_test_ingredients)
+    end_time = time.time()
+    print(f"\nProcessing {len(large_test_ingredients)} lines took: {end_time - start_time:.4f} seconds")
+
+    # Print a few examples from the large set to confirm output format
+    print("\nSample from Parsed Large Set (first 3):")
+    for item in parsed_large_set[:3]:
+        print(item)
+    print("\nSample from Parsed Large Set (last 3):")
+    for item in parsed_large_set[-3:]:
         print(item)
 
-    test_ingredients2 = ["1 (15-ounce) can black beans, rinsed and drained"]
-    parsed2 = extract_ingredients_ner(test_ingredients2)
-    print("\nParsed Set 2:")
-    for item in parsed2:
-        print(item)
-
-    test_ingredients3 = ["Juice of 2 lemons (about 1/4 cup)"] # This will be challenging without specific 'juice of' logic
-    parsed3 = extract_ingredients_ner(test_ingredients3)
-    print("\nParsed Set 3 (Challenging Case):")
-    for item in parsed3:
+    print("\n--- Original Test Cases (still running) ---")
+    parsed_sample_set = extract_ingredients_ner(sample_ingredients)
+    print("\nParsed Sample Set:")
+    for item in parsed_sample_set:
         print(item)

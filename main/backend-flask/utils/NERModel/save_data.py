@@ -173,7 +173,7 @@ TRAIN_DATA = [
         (0, 1, "QTY"),  # "3"
         (2, 13, "UNIT"),  # "tablespoons"
         (14, 21, "PREP"),  # "chopped"
-        (22, 27, "NAME"),  # "fresh" (from NAME 22-36)
+        (22, 27, "PREP"),  # "fresh" (from NAME 22-36)
         (28, 36, "NAME")  # "cilantro" (from NAME 22-36)
     ]}),
 
@@ -618,7 +618,7 @@ TRAIN_DATA = [
         (0, 1, "QTY"),  # "6"
         (2, 6, "UNIT"),  # "cups"
         (8, 14, "COMMENT"),  # "335" (from COMMENT 8-14)
-        (15, 20, "NAME"),  # "fresh" (from NAME 15-25)
+        (15, 20, "PREP"),  # "fresh" (from NAME 15-25)
         (21, 25, "NAME"),  # "kale" (from NAME 15-25)
         (25, 26, "O"),  # ","
         (27, 49, "PREP"),  # "chopped" (from PREP 27-49)
@@ -770,7 +770,7 @@ TRAIN_DATA = [
     ("Fresh berries and whipped topping, for serving", {
         "entities": [
             # Original NAME1:(0,13,"NAME") "Fresh berries", NAME2:(18,33,"NAME") "whipped topping", PREP:(35,46,"PREP") "for serving"
-            (0, 5, "NAME"),  # "Fresh" (from NAME1 0-13)
+            (0, 5, "PREP"),  # "Fresh" (from NAME1 0-13)
             (6, 13, "NAME"),  # "berries" (from NAME1 0-13)
             (14, 17, "O"),  # "and"
             (18, 25, "NAME"),  # "whipped" (from NAME2 18-33)
@@ -1038,7 +1038,7 @@ TRAIN_DATA = [
             (2, 12, "UNIT"),  # "tablespoon"
             (13, 20, "PREP"),  # "chopped" (your original span included comma)
             (20, 21, "PREP"),  # "," (from PREP 13-20) - *Highly Unusual*
-            (22, 27, "NAME"),  # "fresh" (from NAME 22-34)
+            (22, 27, "PREP"),  # "fresh" (from NAME 22-34)
             (28, 34, "NAME"),  # "chives" (from NAME 22-34)
             (34, 35, "O"),  # ","
             (36, 65, "COMMENT"),  # "plus" (from COMMENT 36-65)
@@ -1054,7 +1054,7 @@ TRAIN_DATA = [
             (2, 12, "UNIT"),  # "tablespoon"
             (13, 20, "PREP"),  # "chopped" (original included comma)
             (20, 21, "PREP"),  # "," (from PREP 13-20) - *Highly Unusual*
-            (22, 27, "NAME"),  # "fresh" (from NAME 22-40)
+            (22, 27, "PREP"),  # "fresh" (from NAME 22-40)
             (28, 33, "NAME"),  # "thyme" (from NAME 22-40)
             (34, 40, "NAME"),  # "leaves" (from NAME 22-40)
             (40, 41, "O"),  # ","
@@ -1071,7 +1071,7 @@ TRAIN_DATA = [
             (2, 12, "UNIT"),  # "tablespoon"
             (13, 20, "PREP"),  # "chopped" (original included comma)
             (20, 21, "PREP"),  # "," (from PREP 13-20) - *Highly Unusual*
-            (22, 27, "NAME"),  # "fresh" (from NAME 22-43)
+            (22, 27, "PREP"),  # "fresh" (from NAME 22-43)
             (28, 35, "NAME"),  # "Italian" (from NAME 22-43)
             (36, 43, "NAME"),  # "parsley" (from NAME 22-43)
             (45, 74, "COMMENT"),  # "plus" (from COMMENT 45-74)
@@ -1496,7 +1496,7 @@ TRAIN_DATA = [
             # Original COMMENT:(2,7,"COMMENT") "thumb", NAME:(8,20,"NAME") "fresh ginger", PREP:(22,39,"PREP") "peeled and grated"
             (0, 1, "QTY"),  # "1"
             (2, 7, "COMMENT"),  # "thumb"
-            (8, 13, "NAME"),  # "fresh" (from NAME 8-20)
+            (8, 13, "PREP"),  # "fresh" (from NAME 8-20)
             (14, 20, "NAME"),  # "ginger" (from NAME 8-20)
             (20, 21, "O"),  # ","
             (22, 39, "PREP"),  # "peeled" (from PREP 22-39)
@@ -3095,8 +3095,7 @@ TRAIN_DATA = [
         "entities": [
             (0, 1, "QTY"),  # "1" (Kept as original QTY span)
             (2, 7, "UNIT"),  # "pound"
-            (8, 13, "NAME"),  # "fresh" (Kept as original PREP span)
-            (14, 23, "ALT_NAME"),  # "or frozen" (Kept as original ALT_NAME span)
+            (8, 23, "PREP"),  # "fresh" (Kept as original PREP span)
             (24, 35, "NAME")  # "cranberries"
         ]
     }),
@@ -4124,7 +4123,7 @@ TRAIN_DATA = [
             # Comma at 19 is O
             (21, 35, "COMMENT"),   # "recipe follows"
             # Comma at 35 is O
-             (37,39,'ALT_NAME'),
+            (37,39,'ALT_NAME'),
             (40, 41, "ALT_QTY"),   # "4" (quantity for the alternative item)
             (42, 48, "PREP"),      # "seeded" (preparation/description of the alternative item)
             (49, 58, "ALT_NAME"),  # "hamburger" (alternative ingredient name part)
@@ -4371,7 +4370,7 @@ TRAIN_DATA = [
             (2, 7, "COMMENT"),     # "shots" (Not an allowed UNIT from your list for this context)
             (8, 16, "NAME"),       # "espresso"
             # Comma at 16 is O
-         (18,20,'ALT_NAME'),
+            (18,20,'ALT_NAME'),
             # Alternative Item
             (21, 24, "ALT_QTY"),   # "1/2" (quantity for the alternative item)
             (25, 28, "ALT_UNIT"),  # "cup" (unit for the alternative item)
@@ -7648,7 +7647,7 @@ TRAIN_DATA = [
             # Primary Item description
             (0, 1, "QTY"),         # "3"
             (2, 7, "UNIT"),        # "small"
-           (8,10,'ALT_NAME'),
+            (8,10,'ALT_NAME'),
             (11, 12, "ALT_QTY"),   # "2" (alternative quantity for bananas)
             (13, 18, "ALT_UNIT"),  # "large" (alternative size unit for bananas)
             # State
@@ -8171,7 +8170,7 @@ TRAIN_DATA = [
             # Primary Item description
             (0, 1, "QTY"),         # "2"
             (2, 8, "UNIT"),        # "medium"
-             (9,11,'ALT_NAME'),
+            (9,11,'ALT_NAME'),
             # Alternative description for the same item
             (12, 13, "ALT_QTY"),   # "1" (alternative quantity for onion)
             (14, 19, "ALT_UNIT"),  # "large" (alternative size unit for onion)
@@ -8913,13 +8912,11 @@ TRAIN_DATA = [
     }),
 
     # Example 158
-    ("1/2 teaspoon MSG", {
-        "entities": [
-            (0, 3, "QTY"),  # "1/2" (Kept)
-            (4, 12, "UNIT"),  # "teaspoon"
-            (13, 16, "NAME")  # "MSG"
-        ]
-    }),
+    ("2 teaspoon MSG", {"entities": [
+        (0, 1, "QTY"),
+        (2, 10, "UNIT"),      # Fixed: 'teaspoon' (char 2 to 10)
+        (11, 14, "NAME")       # Fixed: 'MSG' (char 11 to 14)
+    ]}),
 
     # Example 159
     ("Celery sticks and/or baguette slices", {
@@ -10465,7 +10462,7 @@ TRAIN_DATA = [
             (2, 7, "UNIT"),  # "large" (from original UNIT "large ears" 2-12)
             (8, 12, "UNIT"),  # "ears" (from original UNIT "large ears" 2-12)
             (13, 15, "O"),  # "or"
-            (16, 21, "NAME"),  # "fresh" (from original NAME "fresh corn" 16-26)
+            (16, 21, "PREP"),  # "fresh" (from original NAME "fresh corn" 16-26)
             (22, 26, "NAME")  # "corn" (from original NAME "fresh corn" 16-26)
         ]
     }),
@@ -11120,7 +11117,7 @@ TRAIN_DATA = [
             (0, 1, "QTY"),  # "1" (Kept)
             (2, 5, "UNIT"),  # "cup"
             (6, 11, "NAME"),  # "diced" (from original NAME "diced fresh tomatoes" 6-26)
-            (12, 17, "NAME"),  # "fresh" (from original NAME "diced fresh tomatoes" 6-26)
+            (12, 17, "PREP"),  # "fresh" (from original NAME "diced fresh tomatoes" 6-26)
             (18, 26, "NAME")  # "tomatoes" (from original NAME "diced fresh tomatoes" 6-26)
         ]
     }),
@@ -11150,7 +11147,7 @@ TRAIN_DATA = [
         "entities": [
             (0, 2, "QTY"),  # "12" (Kept)
             (3, 9, "UNIT"),  # "ounces"
-            (10, 15, "NAME"),  # "fresh" (from original NAME "fresh spinach and cheese tortellini" 10-45)
+            (10, 15, "PREP"),  # "fresh" (from original NAME "fresh spinach and cheese tortellini" 10-45)
             (16, 23, "NAME"),  # "spinach" (from original NAME 10-45)
             (24, 45, "ALT_NAME"),  # "and" (from original NAME 10-45) - *Unusual*
         ]
@@ -11745,7 +11742,7 @@ TRAIN_DATA = [
             (3, 9, "UNIT"),  # "ounces"
             (10, 23, "COMMENT"),  # "(2 1/2 pints)" (Kept)
             (24, 28, "PREP"),  # "firm" (from original NAME "firm fresh raspberries" 24-46)
-            (29, 34, "NAME"),  # "fresh" (from original NAME 24-46)
+            (29, 34, "PREP"),  # "fresh" (from original NAME 24-46)
             (35, 46, "NAME")  # "raspberries" (from original NAME 24-46)
         ]
     }),
@@ -11956,7 +11953,7 @@ TRAIN_DATA = [
             (0, 5, "QTY"),  # "1 1/4" (Kept)
             (6, 12, "UNIT"),  # "pounds"
             (13, 37, "PREP"),  # "firm" (from original NAME "firm, slightly underripe fresh figs" 13-48)
-            (38, 43, "NAME"),  # "fresh" (from NAME 13-48)
+            (38, 43, "PREP"),  # "fresh" (from NAME 13-48)
             (44, 48, "NAME"),  # "figs" (from NAME 13-48)
             # Comma at 48 is "O"
             (50, 82, "PREP"),  # "rinsed" (from original PREP "rinsed, stems removed and halved" 50-82)
@@ -12039,7 +12036,7 @@ TRAIN_DATA = [
         "entities": [
             (0, 1, "QTY"),  # "1" (Kept)
             (2, 7, "UNIT"),  # "pound"
-            (8, 13, "NAME"),  # "fresh" (from original NAME "fresh tagliatelle" 8-25)
+            (8, 13, "PREP"),  # "fresh" (from original NAME "fresh tagliatelle" 8-25)
             (14, 25, "NAME")  # "tagliatelle" (from original NAME "fresh tagliatelle" 8-25)
         ]
     }),
@@ -13435,15 +13432,7 @@ TRAIN_DATA = [
     }),
 
     # Example 75
-    ("8 ounces any combination of cremini, shiitake, or oyster mushrooms (about 4 cups)", {
-        "entities": [
-            (0, 1, "QTY"),  # "8" (Kept)
-            (2, 8, "UNIT"),  # "ounces"
-            (9, 56, "ALT_NAME"),  # "any combination of cremini, shiitake, or oyster" (Kept)
-            (57, 66, "NAME"),  # "mushrooms"
-            (67, 81, "COMMENT")  # "(about 4 cups)" (Kept)
-        ]
-    }),
+
 
     # Example 76
     ("1/4 cup mild honey", {
@@ -14444,7 +14433,7 @@ TRAIN_DATA = [
         "entities": [
             (0, 1, "QTY"),  # "2" (Kept)
             (2, 9, "UNIT"),  # "bunches"
-            (10, 15, "NAME"),  # "fresh" (from original NAME "fresh parsley" 10-23)
+            (10, 15, "PREP"),  # "fresh" (from original NAME "fresh parsley" 10-23)
             (16, 23, "NAME")  # "parsley" (from original NAME "fresh parsley" 10-23)
         ]
     }),
@@ -14832,8 +14821,7 @@ TRAIN_DATA = [
         "entities": [
             (0, 1, "QTY"),  # "2" (Kept)
             (2, 13, "UNIT"),  # "tablespoons"
-            (14, 19, "NAME"),  # "fresh"
-            (20, 28, "ALT_NAME"),  # "or dried" (Kept)
+            (14, 28, "PREP"),  # "fresh"
             (29, 35, "NAME")  # "chives"
         ]
     }),
@@ -14894,8 +14882,7 @@ TRAIN_DATA = [
         "entities": [
             (0, 1, "QTY"),  # "1" (Kept)
             (2, 7, "UNIT"),  # "pound"
-            (8, 13, "NAME"),  # "fresh"
-            (14, 23, "ALT_NAME"),  # "or frozen" (Kept)
+            (8, 23, "PREP"),  # "fresh"
             (24, 36, "NAME"),  # "strawberries"
             # Comma at 36 is "O"
             (38, 44, "PREP")  # "halved" (Kept)
@@ -16187,7 +16174,7 @@ TRAIN_DATA = [
             (13, 14, "QTY"),  # "3" (Kept)
             (15, 20, "UNIT"),  # "heads"
             (21, 25, "PREP"),  # "from" (Kept)
-            (26, 31, "NAME"),  # "fresh" (from original NAME "fresh passion flowers" 26-47)
+            (26, 31, "PREP"),  # "fresh" (from original NAME "fresh passion flowers" 26-47)
             (32, 39, "NAME"),  # "passion" (from original NAME 26-47)
             (40, 47, "NAME")  # "flowers" (from original NAME 26-47)
         ]
@@ -17542,7 +17529,7 @@ TRAIN_DATA = [
         "entities": [
             (0, 1, "QTY"),  # "2" (Kept)
             (2, 6, "UNIT"),  # "cups"
-            (7, 12, "NAME"),  # "fresh"
+            (7, 12, "PREP"),  # "fresh"
             (13, 23, "NAME")  # "vegetables"
         ]
     }),
@@ -18130,7 +18117,7 @@ TRAIN_DATA = [
             (0, 3, "QTY"),  # "1/2" (Kept)
             (4, 7, "UNIT"),  # "cup"
             (8, 12, "PREP"),  # "torn" (Kept)
-            (13, 18, "NAME"),  # "fresh"
+            (13, 18, "PREP"),  # "fresh"
             (19, 23, "NAME")  # "mint"
         ]
     }),
@@ -18499,7 +18486,7 @@ TRAIN_DATA = [
     ("3 ounces fresh ginger, peeled and thinly sliced (a 1 1/2 to 2-inch piece ginger root)",
      {  # If comment included parens
          "entities": [
-             (0, 1, "QTY"), (2, 8, "UNIT"), (9, 14, "NAME"), (15, 21, "NAME"),
+             (0, 1, "QTY"), (2, 8, "UNIT"), (9, 14, "PREP"), (15, 21, "NAME"),
              (23, 47, "PREP"),
              (48, 85, "COMMENT")
          ]
@@ -19513,7 +19500,7 @@ TRAIN_DATA = [
     }),
     ("1/2 cup raisins, optional", {"entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 15, "NAME"), (17, 25, "COMMENT")]}),
     ("1/2 cup packed, fresh basil leaves (about 2 ounces), soaked, rinsed thoroughly, and dried, plus about 8 basil sprigs, for garnish",
-     {"entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 14, "PREP"), (16, 21, "NAME"), (22, 27, "NAME"), (28, 34, "NAME"),
+     {"entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 14, "PREP"), (16, 21, "PREP"), (22, 27, "NAME"), (28, 34, "NAME"),
                    (35, 51, "COMMENT"), (53, 59, "PREP"), (61, 78, "PREP"), (80, 89, "PREP"), (91, 129, "COMMENT")]}),
     ("1 tablespoon capers, roughly chopped",
      {"entities": [(0, 1, "QTY"), (2, 12, "UNIT"), (13, 19, "NAME"), (21, 36, "PREP")]}),
@@ -19595,7 +19582,7 @@ TRAIN_DATA = [
         "entities": [(0, 1, "QTY"), (2, 5, "UNIT"), (6, 18, "PREP"), (19, 30, "ALT_NAME"),
                      (31, 34, "NAME"), (35, 40, "NAME"), (42, 53, "COMMENT")]}),
     ("2 tablespoons chopped fresh tarragon stems and leaves", {
-        "entities": [(0, 1, "QTY"), (2, 13, "UNIT"), (14, 21, "PREP"), (22, 27, "NAME"), (28, 36, "NAME"),
+        "entities": [(0, 1, "QTY"), (2, 13, "UNIT"), (14, 21, "PREP"), (22, 27, "PREP"), (28, 36, "NAME"),
                      (37, 42, "NAME"), (43, 53, "ALT_NAME")]}),
     ("2 1/2 pounds oranges, segments and pulp only",
      {"entities": [(0, 5, "QTY"), (6, 12, "UNIT"), (13, 20, "NAME"), (22, 44, "PREP")]}),
@@ -19672,7 +19659,7 @@ TRAIN_DATA = [
                      (31, 64, "PREP")]}),
     ("1 tablespoon peeled and grated fresh ginger", {
         "entities": [(0, 1, "QTY"), (2, 12, "UNIT"), (13, 19, "PREP"), (20, 23, "PREP"), (24, 30, "PREP"),
-                     (31, 36, "NAME"), (37, 43, "NAME")]}),
+                     (31, 36, "PREP"), (37, 43, "NAME")]}),
     ("2 rolls red fruit leather rounds, such as Joray", {
         "entities": [(0, 1, "QTY"), (2, 7, "UNIT"), (8, 11, "NAME"), (12, 17, "NAME"), (18, 25, "NAME"),
                      (26, 32, "COMMENT"), (34, 47, "COMMENT")]}),
@@ -19685,7 +19672,7 @@ TRAIN_DATA = [
         "entities": [(0, 1, "QTY"), (2, 6, "UNIT"), (7, 12, "PREP"), (13, 18, "NAME"), (19, 25, "NAME"),
                      (27, 54, "PREP")]}),
     ("12 figs, fresh or dried, washed and trimmed",
-     {"entities": [(0, 2, "QTY"), (3, 7, "NAME"), (9, 24, "ALT_NAME"), (25, 43, "PREP")]}),
+     {"entities": [(0, 2, "QTY"), (3, 7, "NAME"), (9, 24, "PREP"), (25, 43, "PREP")]}),
     ("1/4 pound ricotta salata, cut into small triangles 1-inch long",
      {"entities": [(0, 3, "QTY"), (4, 9, "UNIT"), (10, 17, "NAME"), (18, 24, "NAME"), (26, 62, "PREP")]}),
     ("2 (16-ounce) cans white frosting", {
@@ -19712,7 +19699,7 @@ TRAIN_DATA = [
     # Assuming 11/4 is a typo for 1 1/4 or 1/4, parsed as single QTY
     ("1 tablespoon peeled and minced fresh ginger", {
         "entities": [(0, 1, "QTY"), (2, 12, "UNIT"), (13, 19, "PREP"), (20, 23, "PREP"), (24, 30, "PREP"),
-                     (31, 36, "NAME"), (37, 43, "NAME")]}),
+                     (31, 36, "PREP"), (37, 43, "NAME")]}),
     ("8 pilchards or herrings", {"entities": [(0, 1, "QTY"), (2, 11, "NAME"), (12, 23, "ALT_NAME")]}),
     ("1/2 jalapeño, seeds and stem removed, finely chopped",
      {"entities": [(0, 3, "QTY"), (4, 12, "NAME"), (14, 36, "PREP"), (38, 52, "PREP")]}),
@@ -19721,7 +19708,7 @@ TRAIN_DATA = [
         "entities": [(0, 1, "QTY"), (2, 7, "UNIT"), (8, 12, "NAME"), (14, 18, "ALT_NAME"), (20, 30, "ALT_NAME"),
                      (32, 72, "PREP")]}),
     ("3 tablespoons finely shredded fresh basil leaves", {
-        "entities": [(0, 1, "QTY"), (2, 13, "UNIT"), (14, 20, "PREP"), (21, 29, "PREP"), (30, 35, "NAME"),
+        "entities": [(0, 1, "QTY"), (2, 13, "UNIT"), (14, 20, "PREP"), (21, 29, "PREP"), (30, 35, "PREP"),
                      (36, 41, "NAME"), (42, 48, "NAME")]}),
     ("3 sprigs parsley or tarragon",
      {"entities": [(0, 1, "QTY"), (2, 8, "COMMENT"), (9, 16, "NAME"), (17, 28, "ALT_NAME")]}),
@@ -19740,7 +19727,7 @@ TRAIN_DATA = [
      {"entities": [(0, 1, "QTY"), (2, 10, "UNIT"), (11, 17, "NAME"), (18, 23, "NAME"), (24, 31, "NAME")]}),
     # Duplicate entry
     ("1/2 cup chopped fresh flat leaf parsley", {
-        "entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 15, "PREP"), (16, 21, "NAME"), (22, 26, "NAME"),
+        "entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 15, "PREP"), (16, 21, "PREP"), (22, 26, "NAME"),
                      (27, 31, "NAME"), (32, 39, "NAME")]}),
     ("2 Pink Lady apples, unpeeled",
      {"entities": [(0, 1, "QTY"), (2, 6, "NAME"), (7, 11, "NAME"), (12, 18, "NAME"), (20, 28, "PREP")]}),
@@ -19768,12 +19755,12 @@ TRAIN_DATA = [
         "entities": [(0, 1, "QTY"), (2, 12, "UNIT"), (13, 19, "PREP"), (20, 23, "PREP"), (24, 30, "PREP"),
                      (31, 37, "NAME")]}),
     ("1 tablespoon minced fresh parsley plus parsley leaves, for garnish", {
-        "entities": [(0, 1, "QTY"), (2, 12, "UNIT"), (13, 19, "PREP"), (20, 25, "NAME"), (26, 33, "NAME"),
+        "entities": [(0, 1, "QTY"), (2, 12, "UNIT"), (13, 19, "PREP"), (20, 25, "PREP"), (26, 33, "NAME"),
                      (34, 66, "COMMENT")]}),
     ("3 baby carrots, plus shredded carrots, for garnish",
      {"entities": [(0, 1, "QTY"), (2, 6, "NAME"), (7, 14, "NAME"), (16, 37, "COMMENT"), (39, 50, "COMMENT")]}),
     ("1/2 teaspoon chopped fresh flat leaf parsley", {
-        "entities": [(0, 3, "QTY"), (4, 12, "UNIT"), (13, 20, "PREP"), (21, 26, "NAME"), (27, 31, "NAME"),
+        "entities": [(0, 3, "QTY"), (4, 12, "UNIT"), (13, 20, "PREP"), (21, 26, "PREP"), (27, 31, "NAME"),
                      (32, 36, "NAME"), (37, 44, "NAME")]}),
     ("1 small knob ginger, peeled and grated (about 2 tablespoons)", {
         "entities": [(0, 1, "QTY"), (2, 7, "UNIT"), (8, 12, "COMMENT"), (13, 19, "NAME"), (21, 38, "PREP"),
@@ -19835,7 +19822,7 @@ TRAIN_DATA = [
      {"entities": [(0, 1, "QTY"), (2, 9, "UNIT"), (10, 16, "NAME"), (17, 27, "COMMENT"), (28, 34, "PREP")]}),
     ("1 small piece brightly colored fresh or dried fruit", {
         "entities": [(0, 1, "QTY"), (2, 7, "UNIT"), (8, 13, "COMMENT"), (14, 22, "PREP"), (23, 30, "PREP"),
-                     (31, 36, "NAME"), (37, 45, "ALT_NAME"), (46, 51, "NAME")]}),
+                     (31, 45, "PREP"), (46, 51, "NAME")]}),
     ("1 banana, peeled and sliced", {"entities": [(0, 1, "QTY"), (2, 8, "NAME"), (10, 27, "PREP")]}),
     ("1/4 cup nut-size kernel cereal (recommended: Grape Nuts or Ezekiel)", {
         "entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 16, "PREP"), (17, 23, "NAME"),
@@ -20068,7 +20055,7 @@ TRAIN_DATA = [
         "entities": [(0, 1, "QTY"), (2, 7, "UNIT"), (8, 15, "PREP"), (16, 22, "NAME"), (23, 37, "ALT_NAME"),
                      (38, 48, "NAME")]}),  # Applying the refined logic from previous discussion
     ("1/3 cup finely chopped fresh herb leaves (parsley, oregano, basil, marjoram, etc.)", {
-        "entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 14, "PREP"), (15, 22, "PREP"), (23, 28, "NAME"),
+        "entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 14, "PREP"), (15, 22, "PREP"), (23, 28, "PREP"),
                      (29, 33, "NAME"), (34, 40, "NAME"), (41, 81, "COMMENT")]}),
     ("8 whole large, fresh sardines, cleaned but with head and tail intact", {
         "entities": [(0, 1, "QTY"), (2, 7, "PREP"), (8, 13, "UNIT"), (15, 20, "PREP"), (21, 29, "NAME"),
@@ -20084,7 +20071,7 @@ TRAIN_DATA = [
     ("1 pound tubetti, or elbow macaroni",
      {"entities": [(0, 1, "QTY"), (2, 7, "UNIT"), (8, 15, "NAME"), (17, 34, "ALT_NAME")]}),
     ("1 cup torn fresh basil",
-     {"entities": [(0, 1, "QTY"), (2, 5, "UNIT"), (6, 10, "PREP"), (11, 16, "NAME"), (17, 22, "NAME")]}),
+     {"entities": [(0, 1, "QTY"), (2, 5, "UNIT"), (6, 10, "PREP"), (11, 16, "PREP"), (17, 22, "NAME")]}),
     ("1 leek, very thinly sliced", {"entities": [(0, 1, "QTY"), (2, 6, "NAME"), (8, 26, "PREP")]}),
     ("2 limes, juice of", {"entities": [(0, 1, "QTY"), (2, 7, "NAME"), (9, 17, "PREP")]}),
     # "juice of" as a preparation instruction
@@ -20141,9 +20128,14 @@ TRAIN_DATA = [
      {"entities": [(0, 13, "QTY"), (14, 26, "UNIT"), (27, 34, "PREP"), (35, 39, "NAME"), (40, 60, "COMMENT")]}),
     ("1 cup fresh basil, roughly chopped",
      {"entities": [(0, 1, "QTY"), (2, 5, "UNIT"), (6, 11, "PREP"), (12, 17, "NAME"), (19, 34, "PREP")]}),
-    ("3/4 pound, 3 links, hot or sweet Italian sausage, split and meat removed from casing", {
-        "entities": [(0, 3, "QTY"), (4, 9, "UNIT"), (11, 19, "ALT_QTY"), (20, 23, "NAME"), (24, 48, "ALT_NAME"),
-                     (50, 84, "PREP")]}),
+    ("3/4 pound, 3 links, hot or sweet Italian sausage, split and meat removed from casing", {"entities": [
+        (0, 3, "QTY"),
+        (4, 9, "UNIT"),
+        (11, 18, "ALT_QTY"),
+        (20, 32, "PREP"),     # Corrected: "hot or sweet"
+        (33, 48, "NAME"),     # Corrected: "Italian sausage" (removed leading space)
+        (50, 84, "PREP")
+    ]}),
     ("3 tablespoons tamari", {"entities": [(0, 1, "QTY"), (2, 13, "UNIT"), (14, 20, "NAME")]}),
     ("1/4 cup tamari", {"entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 14, "NAME")]}),
     ("1/4 cup shari", {"entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 13, "NAME")]}),
@@ -20179,6 +20171,12 @@ TRAIN_DATA = [
     ("1 teaspoon fivespice powder", {"entities": [(0, 1, "QTY"), (2, 10, "UNIT"), (11, 20, "NAME"), (21, 27, "NAME")]}),
     ("1 quart hard cider", {"entities": [(0, 1, "QTY"), (2, 7, "UNIT"), (8, 12, "NAME"), (13, 18, "NAME")]}),
     ("1/4 to 1/2 cup of any wine or vermouth", {
+        "entities": [(0, 3, "QTY"), (4, 10, "ALT_QTY"), (11, 14, "UNIT"), (18, 21, "NAME"), (22, 26, "NAME"),
+                     (27, 38, "ALT_NAME")]}),
+    ("1/3 to 1/2 cup of any wine or vermouth", {
+        "entities": [(0, 3, "QTY"), (4, 10, "ALT_QTY"), (11, 14, "UNIT"), (18, 21, "NAME"), (22, 26, "NAME"),
+                     (27, 38, "ALT_NAME")]}),
+    ("1/4 to 1/3 cup of any wine or vermouth", {
         "entities": [(0, 3, "QTY"), (4, 10, "ALT_QTY"), (11, 14, "UNIT"), (18, 21, "NAME"), (22, 26, "NAME"),
                      (27, 38, "ALT_NAME")]}),
     ("2 pounds Portuguese chourico (linguica is the milder sausage for the faint of heart.)",
@@ -20226,22 +20224,7 @@ TRAIN_DATA = [
                      (29, 50, "COMMENT")]}),
     ("6 to 8 tortillas or buns",
      {"entities": [(0, 1, "QTY"), (2, 6, "ALT_QTY"), (7, 16, "NAME"), (17, 24, "ALT_NAME")]}),
-    ("1 cup liquid of your choice, such as water, stock, beer, etc.", {
-        "entities": [
-            (0, 1, "QTY"),  # "1"
-            (2, 5, "UNIT"),  # "cup"
-            (6, 12, "COMMENT"),  # "liquid" (Placeholder)
-            (13, 28, "COMMENT"),  # "of your choice," (Further comment on the placeholder)
-            (29, 36, "COMMENT"),  # "such as " (Introductory phrase for examples)
-            (37, 42, "NAME"),  # "water" (First actual ingredient suggestion)
-            # Comma at 42 is O
-            (44, 49, "ALT_NAME"),  # "stock" (Second suggestion)
-            # Comma at 49 is O
-            (51, 55, "ALT_NAME"),  # "beer" (Third suggestion)
-            # Comma at 55 is O
-            (57, 61, "COMMENT")  # "etc." (Comment indicating more options)
-        ]
-    }),
+
     ("Optional toppers: diced avocado, chopped tomatoes, fresh cilantro leaves, lime wedges, sliced radishes, shaved cabbage, sliced jalapenos",
      {"entities": [(0, 16, "COMMENT"),  # "Optional toppers: "
                    (18, 23, "PREP"),  # "diced"
@@ -20630,8 +20613,7 @@ TRAIN_DATA = [
                      (38, 44, "NAME"), (45, 53, "PREP"), (55, 62, "PREP")]}),
     ("4 candy bars (recommended: Snickers, Milky Way,Zero, etc)",
      {"entities": [(0, 1, "QTY"), (2, 7, "NAME"), (8, 12, "NAME"), (13, 57, "COMMENT")]}),
-    ("1 pound hot or sweet Italian sausage links",
-     {"entities": [(0, 1, "QTY"), (2, 7, "UNIT"), (8, 11, "NAME"), (12, 42, "ALT_NAME")]}),
+
     ("One 3.5-ounce package frozen açai (about 1/2 cup)", {
         "entities": [(0, 3, "QTY"), (14, 21, "UNIT"), (4, 13, "COMMENT"), (22, 28, "PREP"), (29, 33, "NAME"),
                      (34, 49, "COMMENT")]}),
@@ -20979,7 +20961,7 @@ TRAIN_DATA = [
             # Primary Item description
             (0, 1, "QTY"),         # "2"
             (2, 8, "UNIT"),        # "medium"
-             (9,11,"ALT_NAME"),
+            (9,11,"ALT_NAME"),
             # Alternative description for the same item
             (12, 13, "ALT_QTY"),   # "1" (alternative quantity for onion)
             (14, 19, "ALT_UNIT"),  # "large" (alternative size unit for onion)
@@ -21006,6 +20988,45 @@ TRAIN_DATA = [
     ("4 large parsnips, peeled (about 1 pound)",
      {"entities": [(0, 1, "QTY"), (2, 7, "UNIT"), (8, 16, "NAME"), (18, 24, "PREP"), (25, 40, "COMMENT")]}),
     ("2 tablespoons sweetener of choice, such as honey, agave or maple syrup", {
+        "entities": [
+            (0, 1, "QTY"),           # "2"
+            (2, 13, "UNIT"),         # "tablespoons"
+            (14, 23, "COMMENT"),     # "sweetener" (The general category, now a comment)
+            (24, 34, "COMMENT"),     # "of choice," (includes comma now as part of comment)
+            (35, 42, "COMMENT"),     # "such as " (Introductory phrase)
+            (43, 48, "NAME"),        # "honey" (First specific example)
+            # Comma at 48 is O
+            (50, 55, "ALT_NAME"),    # "agave"
+            (56, 70, "ALT_NAME")     # "or maple syrup"
+        ]
+    }),
+    ("3 tablespoons sweetener of choice, such as honey, agave or maple syrup", {
+        "entities": [
+            (0, 1, "QTY"),           # "2"
+            (2, 13, "UNIT"),         # "tablespoons"
+            (14, 23, "COMMENT"),     # "sweetener" (The general category, now a comment)
+            (24, 34, "COMMENT"),     # "of choice," (includes comma now as part of comment)
+            (35, 42, "COMMENT"),     # "such as " (Introductory phrase)
+            (43, 48, "NAME"),        # "honey" (First specific example)
+            # Comma at 48 is O
+            (50, 55, "ALT_NAME"),    # "agave"
+            (56, 70, "ALT_NAME")     # "or maple syrup"
+        ]
+    }),
+    ("4 tablespoons sweetener of choice, such as honey, agave or maple syrup", {
+        "entities": [
+            (0, 1, "QTY"),           # "2"
+            (2, 13, "UNIT"),         # "tablespoons"
+            (14, 23, "COMMENT"),     # "sweetener" (The general category, now a comment)
+            (24, 34, "COMMENT"),     # "of choice," (includes comma now as part of comment)
+            (35, 42, "COMMENT"),     # "such as " (Introductory phrase)
+            (43, 48, "NAME"),        # "honey" (First specific example)
+            # Comma at 48 is O
+            (50, 55, "ALT_NAME"),    # "agave"
+            (56, 70, "ALT_NAME")     # "or maple syrup"
+        ]
+    }),
+    ("1 tablespoons sweetener of choice, such as honey, agave or maple syrup", {
         "entities": [
             (0, 1, "QTY"),           # "2"
             (2, 13, "UNIT"),         # "tablespoons"
@@ -21146,7 +21167,7 @@ TRAIN_DATA = [
                      # Alternative description for the same item
                      (12, 13, "ALT_QTY"),   # "1" (alternative quantity for onion)
                      (14, 19, "ALT_UNIT"),  # "large" (alternative size unit for onion),
-                      (21, 26, "NAME"), (28, 34, "PREP"),
+                     (21, 26, "NAME"), (28, 34, "PREP"),
                      (35, 42, "PREP")]}),
     ("24 ounces dduk (about 4 cups)",
      {"entities": [(0, 2, "QTY"), (3, 9, "UNIT"), (10, 14, "NAME"), (15, 29, "COMMENT")]}),
@@ -21166,7 +21187,2840 @@ TRAIN_DATA = [
      {"entities": [(0, 1, "QTY"), (2, 10, "UNIT"), (12, 26, "COMMENT"), (27, 41, "NAME"), (42, 47, "NAME")]}),
     ("1/2 cup grated Parmigiano-Reggiano, a couple of handfuls, plus some to pass at table", {
         "entities": [(0, 3, "QTY"), (4, 7, "UNIT"), (8, 14, "NAME"), (15, 34, "NAME"), (36, 57, "COMMENT"),
-                     (58, 84, "COMMENT")]})
+                     (58, 84, "COMMENT")]}),
+
+        ("6 rolls, for serving", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "NAME"),
+            (9, 20, "COMMENT")
+        ]}),
+        ("2 rounded tablespoons finely cut or snipped parsley", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "COMMENT"),
+            (10, 21, "UNIT"),
+            (22, 43, "PREP"),
+            (44, 51, "NAME")
+        ]}),
+        ("1 pint natural organic yogurt", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),
+            (7, 14, "PREP"),
+            (15, 22, "PREP"),
+            (23, 29, "NAME")
+        ]}),
+        ("3 tablespoons liquid smoke", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),
+            (14, 26, "NAME")
+        ]}),
+        ("1 1/2 tablespoons liquid smoke", {"entities": [
+            (0, 5, "QTY"),
+            (6, 17, "UNIT"),
+            (18, 30, "NAME")
+        ]}),
+        ("1 1/2 cups sour cream", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),
+            (11, 21, "NAME")
+        ]}),
+        ("2 onions chopped, about 1 1/2 cups", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "NAME"),
+            (9, 16, "PREP"),
+            (18, 34, "COMMENT")
+        ]}),
+
+        ("12 to 16 ounces sliced aged or sharp provolone", {"entities": [
+            (0, 2, "QTY"),
+            (3, 8, "ALT_QTY"),
+            (9, 15, "UNIT"),
+            (16, 22, "PREP"),
+            (23, 27, "PREP"),
+            (28, 30, "COMMENT"),
+            (31, 36, "NAME"),
+            (37, 46, "NAME")
+        ]}),
+        ("1/2 cup or the last bits of mayonnaise", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 27, "COMMENT"),
+            (28, 38, "NAME")
+        ]}),
+        ("3 ounces dried bonito flakes", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (9, 14, "PREP"),
+            (15, 21, "NAME"),
+            (22, 28, "NAME")
+        ]}),
+        ("4 cups shredded and green cabbage", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),
+            (7, 15, "PREP"),
+            (16, 19, "COMMENT"),
+            (20, 25, "NAME"),
+            (26, 33, "NAME")
+        ]}),
+        ("2 live lobsters 1 1/2 pounds each", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "PREP"),
+            (7, 15, "NAME"),
+            (16, 33, "COMMENT")
+        ]}),
+        ("1 pound cod", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),
+            (8, 11, "NAME")
+        ]}),
+        ("1 cup (vegetable) stock, heated", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),
+            (6, 17, "COMMENT"),
+            (18, 23, "NAME"),
+            (25, 31, "PREP")
+        ]}),
+        ("3/4 pound percatelli", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),
+            (10, 20, "NAME")
+        ]}),
+        ("1 1/2 cups dried bonito flakes", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),
+            (11, 16, "PREP"),
+            (17, 23, "NAME"),
+            (24, 30, "NAME")
+        ]}),
+        ("1 pineapple- diced", {"entities": [
+            (0, 1, "QTY"),
+            (2, 12, "NAME"),
+            (13, 18, "PREP")
+        ]}),
+
+        ("1 cup fresh or if unavailable, frozen cranberries, coarsely chopped (if using frozen, chop berries while still frozen)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),
+            (6, 11, "PREP"),
+            (12, 29, "COMMENT"),
+            (31, 49, "NAME"),
+            (51, 67, "PREP"),
+            (69, 117, "COMMENT")
+        ]}),
+        ("32 littleneck clams on the half shell", {"entities": [
+            (0, 2, "QTY"),
+            (3, 13, "NAME"),
+            (14, 19, "NAME"),
+            (20, 37, "PREP")
+        ]}),
+        ("1 pound squid, cleaned and sliced", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),
+            (8, 13, "NAME"),
+            (15, 33, "PREP")
+        ]}),
+
+        ("1/4 cup currants", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 16, "NAME")
+        ]}),
+    ("3 cups all-purpose or bread flour, plus additional for rolling", {"entities": [ (0, 1, "QTY"), (2, 6, "UNIT"), (7, 18, "NAME"), (19, 27, "ALT_NAME"), (28, 33, "NAME"), (35, 62, "COMMENT") ]}),
+    ("2 tablespoons plus 1 teaspoon Chef Paul Prudhomme's Meat Magic", {"entities": [ (0, 1, "QTY"), (2, 13, "UNIT"), (14, 29, "COMMENT"), (30, 62, "NAME") ]}),
+        ("2/3 cup M&M's", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 13, "NAME")
+        ]}),
+
+    ("9 ounces (MSG free) fish balls", {"entities": [ (0, 1, "QTY"), (2, 8, "UNIT"), (10, 19, "COMMENT"), (20, 30, "NAME") ]}),
+            ("1 cup plus 4 tablespoon for dredging and the gravy", {"entities": [
+                (0, 1, "QTY"),
+                (2, 5, "UNIT"),
+                (6, 27, "COMMENT"),
+                (28, 49, "COMMENT")
+            ]}),
+            ("3 tablespoons plus a drizzle Portuguese olive oil", {"entities": [
+                (0, 1, "QTY"),
+                (2, 13, "UNIT"),
+                (14, 28, "COMMENT"),
+                (29, 49, "NAME")
+            ]}),
+    ("1 (1 lb.) package frozen, mixed vegetables thawed", {"entities": [ (0, 1, "QTY"), (3, 8, "COMMENT"), (10, 17, "UNIT"), (18, 24, "PREP"), (26, 31, "PREP"), (32, 42, "NAME"), (43, 49, "PREP") ]}),
+
+                ("12 pecan halves", {"entities": [
+                    (0, 2, "QTY"),
+                    (3, 8, "NAME"),
+                    (9, 15, "COMMENT")
+                ]}),            ("1 package store bought brownie mix, any brand, batter prepared to package directions", {"entities": [
+                (0, 1, "QTY"),
+                (2, 9, "UNIT"),
+                (10, 22, "PREP"),
+                (23, 34, "NAME"),
+                (36, 45, "COMMENT"),
+                (47, 84, "COMMENT")
+            ]}),
+
+            ("1 measure of Pimm's", {"entities": [
+                (0, 1, "QTY"),
+                (2, 9, "UNIT"),
+                (13, 19, "NAME")
+            ]}),
+            ("1/2 cup pickled or roasted peppers, drained and chopped", {"entities": [
+                (0, 3, "QTY"),
+                (4, 7, "UNIT"),
+                (8, 26, "PREP"),
+                (27, 34, "NAME"),
+                (36, 43, "PREP"),
+                (44, 47, "COMMENT"),
+                (48, 55, "PREP")
+            ]}),
+            ("3 tablespoons store-bought pesto", {"entities": [
+                (0, 1, "QTY"),
+                (2, 13, "UNIT"),
+                (14, 26, "PREP"),
+                (27, 32, "NAME")
+            ]}),
+            ("2 pounds crab meat", {"entities": [
+                (0, 1, "QTY"),
+                (2, 8, "UNIT"),
+                (9, 13, "NAME"),
+                (14, 18, "NAME")
+            ]}),
+            ("A handful of fresh herb leaves, such as basil, parsley and rosemary", {"entities": [
+                (0, 9, "COMMENT"),
+                (13, 18, "PREP"),
+                (19, 23, "NAME"),
+                (24, 30, "NAME"),
+                (32, 39, "COMMENT"),
+                (40, 45, "ALT_NAME"),
+                (47, 54, "ALT_NAME"),
+                (55, 67, "ALT_NAME")
+            ]}),
+    ("7 cups all-purpose or cake flour", {"entities": [ (0, 1, "QTY"), (2, 6, "UNIT"), (7, 18, "NAME"), (22, 26, "ALT_NAME"), (27, 32, "NAME") ]}),
+    ("1/4 cup plus 2 tablespoons pure maple syrup", {"entities": [ (0, 3, "QTY"), (4, 7, "UNIT"), (8, 26, "COMMENT"), (27, 31, "NAME"), (32, 43, "NAME") ]}),
+            ("2 parsnips cut into chunks", {"entities": [
+                (0, 1, "QTY"),
+                (2, 10, "NAME"),
+                (11, 26, "PREP")
+            ]}),
+
+    ("3 tablespoons (45 grams) pure maple syrup", {"entities": [ (0, 1, "QTY"), (2, 13, "UNIT"), (14, 24, "COMMENT"), (25, 41, "NAME") ]}),
+            ("3/4 cup all-purpose or chickpea flour", {"entities": [
+                (0, 3, "QTY"),
+                (4, 7, "UNIT"),
+                (8, 19, "NAME"),
+                (20, 31, "ALT_NAME"),
+                (32, 37, "NAME")
+            ]}),
+    ("3 tablespoons cold pure maple syrup", {"entities": [ (0, 1, "QTY"), (2, 13, "UNIT"), (14, 18, "PREP"), (19, 35, "NAME") ]}),
+            ("1/2 cup non-fat yogurt", {"entities": [
+                (0, 3, "QTY"),
+                (4, 7, "UNIT"),
+                (8, 15, "PREP"),
+                (16, 22, "NAME")
+            ]}),
+    ("4 cups leftover, turkey stuffing, dressing, moistened with leftover gravy or giblet broth - divided", {"entities": [ (0, 1, "QTY"), (2, 6, "UNIT"), (7, 15, "PREP"), (17, 32, "NAME"), (34, 42, "ALT_NAME"), (44, 89, "PREP"), (92, 99, "COMMENT") ]}),
+    ("2 cups trimmed and sliced in coins broccoli stems", {"entities": [ (0, 1, "QTY"), (2, 6, "UNIT"), (7, 14, "PREP"), (15, 34, "PREP"), (35, 49, "NAME") ]}),
+    ("1/3 ounce young or fresh ginger, peeled and diced", {"entities": [ (0, 3, "QTY"), (4, 9, "UNIT"), (10, 15, "PREP"), (19, 24, "PREP"), (25, 31, "NAME"), (33, 49, "PREP") ]}),
+    ("Two 15-ounce cans sliced peaches in syrup", {"entities": [ (0, 3, "QTY"), (4, 12, "COMMENT"), (13, 17, "UNIT"), (18, 24, "PREP"), (25, 32, "NAME"), (33, 41, "PREP") ]}),
+    ("2 quarts of your favorite turkey gravy", {"entities": [ (0, 1, "QTY"), (2, 8, "UNIT"), (9, 25, "COMMENT"), (26, 38, "NAME") ]}),
+
+    ("1 tsp. balsamic reduction*", {"entities": [ (0, 1, "QTY"), (2, 6, "UNIT"), (7, 25, "NAME"), (25, 26, "COMMENT") ]}),
+    ("5 ounces shredded 5-cheese blend (whole milk and skim milk mozzarella, Parmesan, Romano, provolone)", {"entities": [ (0, 1, "QTY"), (2, 8, "UNIT"), (9, 17, "PREP"), (18, 32, "NAME"), (34, 99, "COMMENT") ]}),
+            ("1/4 cup shoyu (soy sauce), more or less", {"entities": [
+                (0, 3, "QTY"),
+                (4, 7, "UNIT"),
+                (8, 13, "NAME"),
+                (15, 39, "COMMENT")
+            ]}),
+            ("8 (#10) tin cans, lined with newspaper", {"entities": [
+                (0, 1, "QTY"),
+                (3, 7, "COMMENT"),
+                (8, 11, "NAME"),
+                (12, 16, "NAME"),
+                (18, 38, "PREP")
+            ]}),
+
+    ("1 quart or more of liquid such as beer, or broth", {"entities": [ (0, 1, "QTY"), (2, 7, "UNIT"), (8, 25, "COMMENT"), (26, 33, "COMMENT"), (34, 38, "NAME"), (43, 48, "ALT_NAME") ]}),
+            ("2 cups fresh or quick frozen cranberries", {"entities": [
+                (0, 1, "QTY"),
+                (2, 6, "UNIT"),
+                (7, 12, "PREP"),
+                (13, 28, "PREP"),
+                (29, 40, "NAME")
+            ]}),
+            ("4 cups shoyu, yamasa", {"entities": [
+                (0, 1, "QTY"),
+                (2, 6, "UNIT"),
+                (7, 12, "NAME"),
+                (14, 20, "ALT_NAME")
+            ]}),
+            ("12 ounces pale ale", {"entities": [
+                (0, 2, "QTY"),
+                (3, 9, "UNIT"),
+                (10, 18, "NAME")
+            ]}),
+
+            ("1/2 cup sour cream", {"entities": [
+                (0, 3, "QTY"),
+                (4, 7, "UNIT"),
+                (8, 18, "NAME")
+            ]}),
+            ("8 ounces sour cream", {"entities": [
+                (0, 1, "QTY"),
+                (2, 8, "UNIT"),
+                (9, 19, "NAME")
+            ]}),
+            ("3/4 cup sour cream", {"entities": [
+                (0, 3, "QTY"),
+                (4, 7, "UNIT"),
+                (8, 18, "NAME")
+            ]}),
+            ("1 (16 ounce) container sour cream", {"entities": [
+                (0, 1, "QTY"),
+                (3, 11, "COMMENT"),
+                (13, 22, "UNIT"),
+                (23, 33, "NAME")
+            ]}),
+            ("One 16-ounce container sour cream", {"entities": [
+                (0, 3, "QTY"),
+                (4, 12, "COMMENT"),
+                (13, 22, "UNIT"),
+                (23, 33, "NAME")
+            ]}),
+
+    ("2 medium beets, trimmed and scrubbed", {"entities": [ (0, 1, "QTY"), (2, 8, "UNIT"), (9, 14, "NAME"), (16, 36, "PREP") ]}),
+    ("1/2 cup plus 2 tablespoons cognac or brandy", {"entities": [ (0, 3, "QTY"), (4, 7, "UNIT"), (8, 26, "COMMENT"), (27, 33, "NAME"), (34, 43, "ALT_NAME") ]}),
+    ("1/2 cup plus 2 tablespoons sriracha sauce, such as Huy Fong", {"entities": [ (0, 3, "QTY"), (4, 7, "UNIT"), (8, 26, "COMMENT"), (27, 35, "NAME"), (36, 41, "NAME"), (43, 59, "COMMENT") ]}),
+    ("2 tablespoons fat reserved from the confit", {"entities": [ (0, 1, "QTY"), (2, 13, "UNIT"), (14, 17, "NAME"), (18, 42, "PREP") ]}),
+    ("2 tablespoons of your favorite liqueur", {"entities": [ (0, 1, "QTY"), (2, 13, "UNIT"), (14, 30, "COMMENT"), (31, 38, "NAME") ]}),
+            ("2 tablespoons cotija, finely grated, plus more at the end", {"entities": [
+                (0, 1, "QTY"),
+                (2, 13, "UNIT"),
+                (14, 20, "NAME"),
+                (22, 35, "PREP"),
+                (37, 57, "COMMENT")
+            ]}),
+            ("4 large, not overripe bananas", {"entities": [
+                (0, 1, "QTY"),
+                (2, 7, "UNIT"),
+                (9, 21, "PREP"),
+                (22, 29, "NAME")
+            ]}),
+
+    ("1 small jar, 6 to 8 ounces, marinated mushrooms, drained", {"entities": [
+        (0, 1, "QTY"),
+        (2, 11, "UNIT"),
+        (13, 26, "COMMENT"),
+        (28, 47, "NAME"),
+        (49, 56, "PREP")
+    ]}),
+        ("2 tablespoons low sodium soy sauce", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),
+            (14, 24, "PREP"),
+            (25, 34, "NAME")
+        ]}),
+    ("4 ounces frisee, washed and torn into pieces", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),
+        (9, 15, "NAME"),
+        (17, 44, "PREP")
+    ]}),
+    ("1 pound very fresh, firm, white-fleshed fish", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 39, "PREP"),
+        (40, 44, "NAME")
+    ]}),
+    ("1/2 cup dried currants", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 13, "NAME"),
+        (14, 22, "NAME")
+    ]}),
+        ("1/2 cup currants", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 16, "NAME")
+        ]}),
+    ("4 tablespoons Teriyaki with Wasabi and Ginger Sauce (recommended: Hoboken Eddie's Hukilau Hanna Sauce)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (14, 51, "NAME"),
+        (52, 101, "COMMENT")
+    ]}),
+    ("1 pound emmanthal, cubed", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 17, "NAME"),
+        (19, 24, "PREP")
+    ]}),
+        ("5 large hamburger buns", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),
+            (8, 22, "NAME")
+        ]}),
+    ("1/2 cup (125 milliliters) Any Herb Pesto, recipe follows", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 25, "COMMENT"),
+        (26, 40, "NAME"),
+        (42, 56, "COMMENT")
+    ]}),
+        ("1 cup mayo", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),
+            (6, 10, "NAME")
+        ]}),
+        ("1/2 ounce B and B liqueur", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),
+            (10, 25, "NAME")
+        ]}),
+    ("1 cup cooked grain, like barley, brown rice or farro, or cooked root vegetable", {"entities": [
+        (0, 1, "QTY"),
+        (2, 5, "UNIT"),
+        (6, 12, "PREP"),
+        (13, 18, "NAME"),
+        (20, 52, "ALT_NAME"),
+        (54, 78, "ALT_NAME")
+    ]}),
+    ("2 tablespoons dried currants", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (14, 19, "NAME"),
+        (20, 28, "NAME")
+    ]}),
+
+        ("1/2 cup fresh or frozen, thawed, corn", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 31, "PREP"),
+            (33, 37, "NAME")
+        ]}),
+        ("6 ounces firm tofu, cut into 1/4-inch cubes", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (9, 13, "PREP"),
+            (14, 18, "NAME"),
+            (20, 43, "PREP")
+        ]}),
+        ("3/4 pound, 3 links, hot or sweet Italian sausage, split and meat removed from casing", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),
+            (11, 18, "PREP"),
+            (20, 32, "PREP"),
+            (33, 48, "NAME"),
+            (50, 83, "PREP")
+        ]}),
+        ("1/2 cup, dried scallops, soaked in hot water until soft", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (9, 14, "PREP"),
+            (15, 23, "NAME"),
+            (25, 55, "PREP")
+        ]}),
+        ("12 scallops", {"entities": [
+            (0, 2, "QTY"),
+            (3, 11, "NAME") # 'scallops' itself acts as the unit for countable items.
+        ]}),
+        ("10 1/2 ounces/300 g fried tofu, finely sliced", {"entities": [
+            (0, 6, "QTY"),
+            (7, 17, "UNIT"),
+            (18, 19, "COMMENT"),
+            (20, 25, "PREP"),
+            (26, 30, "NAME"),
+            (32, 45, "PREP")
+        ]}),
+        ("1/4 cup thinly sliced-on-the-bias celery", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 33, "PREP"),
+            (34, 40, "NAME")
+        ]}),
+
+        ("2 tablespoons hot fudge sauce", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),
+            (14, 29, "NAME")
+        ]}),
+    ("4 portions, 6 to 8 ounces each, mahi mahi fillets", {"entities": [
+        (0, 1, "QTY"),
+        (2, 10, "COMMENT"), # Reverted: 'portions' is a COMMENT, not a UNIT.
+        (12, 30, "COMMENT"), # Corrected span for '6 to 8 ounces each'
+        (32, 49, "NAME")     # Corrected span for 'mahi mahi fillets'
+    ]}),
+    ("2 tablespoons finely chopped, peeled fresh galanga or ginger", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (14, 28, "PREP"),   # Corrected: 'finely chopped'
+        (30, 36, "PREP"),   # Corrected: 'peeled'
+        (37, 42, "PREP"),   # Corrected: 'fresh'
+        (43, 50, "NAME"),   # Corrected: 'galanga'
+        (51, 60, "ALT_NAME") # Corrected: 'ginger' (with 'or' as 'O' between NAME and ALT_NAME)
+    ]}),
+    ("6 to 8 cups peeled and sliced fruit, like apples, pears, and strawberries", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "ALT_QTY"),
+        (7, 11, "UNIT"),
+        (12, 29, "PREP"),   # Corrected: 'peeled and sliced'
+        (30, 35, "NAME"),   # Corrected: 'fruit'
+        (37, 73, "COMMENT") # Corrected: 'like apples, pears, and strawberries'
+    ]}),
+    ("1/2 cup drained and sliced sundried tomatoes in oil", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 26, "PREP"),    # Corrected: 'drained and sliced'
+        (27, 44, "NAME"),    # Corrected: 'sundried tomatoes'
+        (45, 51, "COMMENT")  # Corrected: 'in oil'
+    ]}),
+    ("1/8 teaspoon cloves, ground", {"entities": [
+        (0, 3, "QTY"),
+        (4, 12, "UNIT"),
+        (13, 19, "NAME"),    # Corrected: 'cloves' (comma is separate)
+        (21, 27, "PREP")
+    ]}),
+        ("1 snapper head", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "NAME"),
+            (10, 14, "UNIT") # 'head' is a countable unit for items like lettuce, fish heads.
+        ]}),
+        ("1 1/3 cups plus 1 tablespoon mayonnaise", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),
+            (11, 28, "COMMENT"), # "plus 1 tablespoon" is a comment on the quantity/unit
+            (29, 39, "NAME")
+        ]}),
+    ("1 small disk washed-rind cheese, such as Camembert", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),   # Corrected: 'small' is a UNIT
+        (8, 31, "NAME"),   # Corrected: 'disk washed-rind cheese' (combines disk, rind, cheese)
+        (33, 50, "COMMENT") # Corrected: 'such as Camembert'
+    ]}),
+        ("8 medium or 12 small beets", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"), # "medium" describes the preparation/state of the item
+            (12, 14, "ALT_QTY"),
+            (15, 20, "ALT_UNIT"), # "small" describes the preparation/state of the item
+            (21, 26, "NAME")
+        ]}),
+        ("1/3 pound minced clams, drained", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),
+            (10, 16, "PREP"),
+            (17, 22, "NAME"),
+            (24, 31, "PREP")
+        ]}),
+
+    ("1 cup liquid (water, broth, wine or a combo) for deglazing", {"entities": [
+        (0, 1, "QTY"),
+        (2, 5, "UNIT"),
+        (6, 12, "NAME"),
+        (14, 43, "COMMENT"), # Correct: '(water, broth, wine or a combo)' (span 13-42 is accurate)
+        (45, 58, "COMMENT")  # Correct: 'for deglazing' (was 43-56 and started with ')', should be 45-56)
+    ]}),
+        ("1 celery stalk, finely diced", {"entities": [
+            (0, 1, "QTY"),
+            (2, 14, "NAME"), # 'stalk' is not in the allowed units list, so it's part of the NAME
+            (16, 28, "PREP")
+        ]}),
+
+        ("4 sticks (1 pound butter) minus 1 heaping tablespoon, cut into chips and softened", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "COMMENT"), # 'sticks' is not in allowed units, so it's a descriptive comment
+            (10, 11, "QTY"),     # Corrected: '1' for butter
+            (12, 17, "UNIT"),    # Corrected: 'pound' as unit for butter
+            (18, 24, "NAME"),    # Corrected: 'butter' as name
+            (26, 31, "COMMENT"), # 'minus' as a directive/comment
+            (32, 33, "QTY"),     # '1' for tablespoon
+            (34, 41, "PREP"),    # 'heaping' as prep for tablespoon
+            (42, 52, "UNIT"),    # 'tablespoon' as unit
+            (54, 82, "PREP")     # 'cut into chips and softened'
+        ]}),
+
+    ("2 tablespoons sweetener of choice, such as honey, agave or maple syrup, plus more if desired", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (14, 42, "COMMENT"),   # "sweetener of choice"
+        (43, 49, "NAME"),      # "honey"
+        (50, 55, "ALT_NAME"),  # "agave"
+        (56, 70, "ALT_NAME"),  # "maple syrup" (treating "or" as an 'O' token)
+        (72, 92, "COMMENT")    # "plus more if desired"
+    ]}),
+        ("1 2-liter bottle ginger ale, well chilled", {"entities": [
+            (0, 1, "QTY"),
+            (2, 16, "COMMENT"), # '2-liter bottle' describes the form, 'bottle' is not an allowed unit
+            (17, 27, "NAME"),
+            (29, 41, "PREP")
+        ]}),
+    ("2 pounds oxtails, excess fat trimmed (substitute with chuck or short ribs)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),
+        (9, 16, "NAME"),    # Corrected: 'oxtails' (removed comma)
+        (18, 36, "PREP"),    # Corrected: 'excess fat trimmed' (removed opening parenthesis)
+        (37, 74, "COMMENT")  # Corrected: '(substitute with chuck or short ribs)' (included both parentheses)
+    ]}),
+        ("1/2 to 3/4 cup sour cream", {"entities": [
+            (0, 3, "QTY"),
+            (4, 10, "ALT_QTY"),
+            (11, 14, "UNIT"),
+            (15, 25, "NAME")
+        ]}),
+    ("1/8 pound, 3 slices, pancetta, chopped", {"entities": [
+        (0, 3, "QTY"),
+        (4, 9, "UNIT"),
+        (11, 19, "COMMENT"), # Corrected: '3 slices' (removed trailing comma)
+        (21, 29, "NAME"),    # Corrected: 'pancetta' (removed trailing comma)
+        (31, 38, "PREP")     # Corrected: 'chopped'
+    ]}),
+        ("1 celery stalk, sliced", {"entities": [
+            (0, 1, "QTY"),
+            (2, 14, "NAME"), # 'stalk' is not in the allowed units list, so it's part of the NAME
+            (16, 22, "PREP")
+        ]}),
+    ("4 cups loosely packed arugula, washed and dried", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 21, "PREP"),
+        (22, 29, "NAME"),
+        (31, 47, "PREP")     # Corrected: 'washed and dried'
+    ]}),
+
+    ("1 shallot minced", {"entities": [
+        (0, 1, "QTY"),
+        (2, 9, "NAME"),      # Corrected: 'shallot'
+        (10, 16, "PREP")     # Corrected: 'minced'
+    ]}),
+    ("2 cups cold allnatural fruit juice or juice blend", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 11, "PREP"),
+        (12, 22, "PREP"),
+        (23, 34, "NAME"),
+        (35, 49, "ALT_NAME")  # Corrected: 'or juice blend'
+    ]}),
+    ("10 ounces bottled or filtered water", {"entities": [
+        (0, 2, "QTY"),
+        (3, 9, "UNIT"),
+        (10, 17, "PREP"),
+        (18, 29, "PREP"),     # Corrected: 'or filtered'
+        (30, 35, "NAME")      # Corrected: 'water'
+    ]}),
+    ("1 package (21 ounces) fudge brownie mix", {"entities": [
+        (0, 1, "QTY"),
+        (2, 9, "UNIT"),
+        (10, 21, "COMMENT"),  # Corrected: '(21 ounces)'
+        (22, 39, "NAME")      # Corrected: 'fudge brownie mix'
+    ]}),
+        ("3 pounds flanken (short ribs)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (9, 16, "NAME"),
+            (17, 29, "ALT_NAME") # '(short ribs)' as alt name
+        ]}),
+    ("6 cups lightly packed arugula, leafy hydroponic - if available", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 21, "PREP"),     # Corrected: 'lightly packed'
+        (22, 29, "NAME"),     # Corrected: 'arugula'
+        (31, 62, "COMMENT")   # Corrected: 'leafy hydroponic - if available'
+    ]}),
+    ("2 large bunches washed and stemmed arugula", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 15, "COMMENT"),  # 'bunches' as COMMENT, as per previous discussion
+        (16, 34, "PREP"),     # Corrected: 'washed and stemmed'
+        (35, 42, "NAME")      # Corrected: 'arugula'
+    ]}),
+    ("1/2 cup packed micro-parsley", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 14, "PREP"),
+        (15, 28, "NAME")      # Corrected: 'micro-parsley'
+    ]}),
+        ("1 tsp garlic, minced", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),
+            (6, 12, "NAME"),
+            (14, 20, "PREP")
+        ]}),
+        ("1 pound fresh or frozen cavatelli", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),
+            (8, 13, "PREP"),    # 'fresh'
+            (14, 23, "PREP"),    # 'or frozen'
+            (24, 33, "NAME")
+        ]}),
+
+        ("1/2 cup, packed, brown sugar", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (9, 15, "PREP"),     # 'packed'
+            (17, 28, "NAME")      # 'brown sugar'
+        ]}),
+        ("2 bananas", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "NAME")        # 'bananas' itself is the item, no unit from list.
+        ]}),
+        ("3 bananas", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "NAME")
+        ]}),
+        ("2 pita pockets, halved", {"entities": [
+            (0, 1, "QTY"),
+            (2, 14, "NAME"),      # 'pita pockets' is the item name, not an allowed unit.
+            (16, 22, "PREP")
+        ]}),
+        ("3/4 ounce pickle juice", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),
+            (10, 22, "NAME")
+        ]}),
+        ("1/4 cup toffee bits", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 19, "NAME")
+        ]}),
+        ("1/2- ounce pickle slices", {"entities": [
+            (0, 4, "QTY"),         # '1/2-'
+            (5, 10, "UNIT"),       # 'ounce'
+            (11, 24, "NAME")       # 'pickle slices'
+        ]}),
+        ("8 large pita rounds, cut into strips", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # 'large' is an allowed UNIT.
+            (8, 19, "NAME"),
+            (21, 36, "PREP")
+        ]}),
+        ("3 pita pockets, each cut into 8 wedges", {"entities": [
+            (0, 1, "QTY"),
+            (2, 14, "NAME"),
+            (16, 38, "PREP")      # 'each cut into 8 wedges' as a preparation instruction.
+        ]}),
+
+        ("1 teaspoon dried thyme", {"entities": [
+            (0, 1, "QTY"),
+            (2, 10, "UNIT"),
+            (11, 16, "NAME"),
+            (17, 22, "NAME")
+        ]}),
+        ("6 ounces (168 grams) fresh or frozen rhubarb, thick sliced (about 1 1/2 cups)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (10, 19, "COMMENT"),
+            (21, 36, "PREP"),
+            (37, 44, "NAME"),
+            (46, 58, "PREP"),
+            (60, 76, "COMMENT")
+        ]}),
+        ("1 1/2 teaspoons dried thyme", {"entities": [
+            (0, 5, "QTY"),
+            (6, 15, "UNIT"),
+            (16, 21, "NAME"),
+            (22, 27, "NAME")
+        ]}),
+        ("12 ounces ripe, but not mushy peaches (about 2 peaches)", {"entities": [
+            (0, 2, "QTY"),
+            (3, 9, "UNIT"),
+            (10, 29, "PREP"),
+            (30, 37, "NAME"),
+            (39, 54, "COMMENT")
+        ]}),
+        ("2 cups onions, diced", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),
+            (7, 13, "NAME"),
+            (15, 20, "PREP")
+        ]}),
+        ("1/2 teaspoon dried thyme", {"entities": [
+            (0, 3, "QTY"),
+            (4, 12, "UNIT"),
+            (13, 18, "NAME"),
+            (19, 24, "NAME")
+        ]}),
+        ("2 ounces mezcal, optional", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (9, 15, "NAME"),
+            (17, 25, "COMMENT")
+        ]}),
+
+        ("One 8-ounce package or about 20 to 24 shishito peppers", {"entities": [
+            (0, 3, "QTY"),
+            (4, 11, "COMMENT"),  # "8-ounce" describes the package size/weight
+            (12, 19, "UNIT"),     # "package" is an allowed UNIT
+            (20, 37, "COMMENT"),  # "or about 20 to 24" as a descriptive comment
+            (38, 54, "NAME")
+        ]}),
+        ("6 ounces reshteh or linguine (see Cook\u2019s Note)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (9, 16, "NAME"),
+            (17, 28, "ALT_NAME"),
+            (30, 45, "COMMENT")
+        ]}),
+        ("1 can (14 to 14-1/2-ounce) reduced-sodium or regular beef broth", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),       # "can" is an allowed UNIT
+            (6, 26, "COMMENT"),    # "(14 to 14-1/2-ounce)" as descriptive comment
+            (27, 52, "PREP"),
+            (53, 63, "NAME")
+        ]}),
+        ("12 grissini (thin breadsticks)", {"entities": [
+            (0, 2, "QTY"),
+            (3, 11, "NAME"),      # "grissini" is the item name, not an allowed unit
+            (13, 29, "COMMENT")
+        ]}),
+    ("Two 14-ounce cans of pinto or black beans, with liquid", {"entities": [
+        (0, 3, "QTY"),
+        (4, 12, "COMMENT"),   # "14-ounce" describes the cans
+        (13, 17, "UNIT"),      # "cans" is an allowed UNIT
+        (21, 26, "NAME"),      # Corrected: "pinto" as NAME
+        (27, 35, "ALT_NAME"),  # Corrected: "black beans" as ALT_NAME ("or" is not included)
+        (36, 41, "NAME"),  # Corrected: "black beans" as ALT_NAME ("or" is not included)
+        (43, 54, "PREP")
+    ]}),
+        ("1 1/2 cups glaze of your choosing (recipes follow)", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),
+            (11, 16, "NAME"),
+            (17, 33, "COMMENT"),
+            (34, 50, "COMMENT")
+        ]}),
+        ("3 tablespoons finely chopped fresh", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),
+            (14, 28, "PREP"),
+            (29, 34, "PREP")      # "fresh" as a preparation status
+        ]}),
+        ("2 chiles such as red finger, Fresno or jalapeno, seeded and chopped", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "NAME"),      # "chiles" is the item name, not an allowed unit
+            (9, 16, "COMMENT"),    # "such as"
+            (17, 27, "ALT_NAME"),
+            (29, 35, "ALT_NAME"),
+            (36, 47, "ALT_NAME"),
+            (49, 67, "PREP")
+        ]}),
+        ("3 parsley sprigs", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "NAME"),
+            (10, 16, "COMMENT")   # "sprigs" is not an allowed unit, treat as descriptive comment
+        ]}),
+        ("1 pound celeriac peeled and cut into 2-inch pieces", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),
+            (8, 16, "NAME"),
+            (17, 50, "PREP")
+        ]}),
+
+        ("2 bags Earl Grey tea", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "COMMENT"),   # "bags" is a descriptive comment, not an allowed unit
+            (7, 20, "NAME")
+        ]}),
+        ("About 2 tablespoons Mixed Spices*", {"entities": [
+            (0, 5, "COMMENT"),   # "About" is a descriptive comment
+            (6, 7, "QTY"),
+            (8, 19, "UNIT"),
+            (20, 32, "NAME"),
+        ]}),
+        ("2 yolks", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "NAME")       # "yolks" is the item name, no unit from the allowed list
+        ]}),
+        ("2 ounces whiskey of choice", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (9, 16, "NAME"),
+            (17, 26, "COMMENT")  # "of choice" as a descriptive comment
+        ]}),
+        ("2 gallons fresh or sea water", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "UNIT"),
+            (10, 15, "PREP"),
+            (16, 22, "PREP"),     # "or sea"
+            (23, 28, "NAME")
+        ]}),
+        ("1/3 cup toasted, chopped, blanched hazelnuts", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 15, "PREP"),
+            (17, 24, "PREP"),
+            (26, 34, "PREP"),
+            (35, 44, "NAME")
+        ]}),
+        ("8 ounces firm, solid low-moisture mozzarella, finely grated", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (9, 33, "PREP"),
+            (34, 44, "NAME"),
+            (46, 59, "PREP")      # "finely grated"
+        ]}),
+    ("1 pound shishito peppers", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 24, "NAME")
+    ]}),
+    ("1 tablespoon (1 turn around the pan) vegetable, olive, or corn oil", {"entities": [
+        (0, 1, "QTY"),
+        (2, 12, "UNIT"),     # "tablespoon"
+        (14, 35, "COMMENT"),  # "(1 turn around the pan)"
+        (37, 46, "ALT_NAME"), # Corrected: "vegetable" (from 'v' to 'e')
+        (48, 53, "NAME"),     # Corrected: "olive" (from 'o' to 'e')
+        (58, 62, "ALT_NAME"), # Corrected: "corn" (from 'c' to 'n')
+        (63, 66, "NAME")      # Corrected: "oil" (from 'o' to 'l')
+    ]}),
+    ("3 leeks, washed and sliced", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "NAME"),
+        (9, 26, "PREP")      # Corrected: "washed and sliced" (from 'w' to 'd')
+    ]}),
+    ("2 tablespoons (2 turns around the pan) olive or vegetable oil", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),     # Correct: "tablespoons"
+        (14, 37, "COMMENT"),  # Corrected: "(2 turns around the pan)" (from '(' to ')')
+        (39, 44, "NAME"),     # Corrected: "olive" (from 'o' to 'e')
+        (48, 57, "ALT_NAME"), # Corrected: "vegetable" (from 'v' to 'e', "or" is implicitly outside)
+        (58, 61, "NAME")      # Corrected: "oil" (from 'o' to 'l')
+    ]}), ("3 leeks (white part only), thinly sliced", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "NAME"),
+        (9, 24, "COMMENT"),  # Correct: "(white part only)"
+        (27, 40, "PREP")     # Corrected: "thinly sliced" (from 't' to 'd')
+    ]}),
+    ("1/4 cup mojo", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 12, "NAME")
+    ]}),
+    ("6 tablespoons browning", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (14, 22, "NAME")
+    ]}),
+    ("2 cans (14 to 14-1/2-ounce) reduced-sodium or regular beef broth", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 27, "COMMENT"),   # Corrected: "(14 to 14-1/2-ounce)" (includes both parentheses)
+        (28, 53, "PREP"),     # Corrected: "reduced-sodium" (from 'r' to 'm')
+        (54, 64, "NAME")      # Corrected: "beef broth" (from 'b' to 'h')
+    ]}),
+    ("1 pound sausage, cooked and cut into 1/2 inch pieces", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 15, "NAME"),
+        (17, 52, "PREP")      # Corrected: "cooked and cut into 1/2 inch pieces" (from 'c' to 's')
+    ]}),
+    ("1 pound soy “meat”", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 18, "NAME")      # Corrected: "soy “meat”" (precisely covers from 's' to closing '”')
+    ]}),
+
+    ("1/2 head frisee, torn", {"entities": [
+        (0, 3, "QTY"),
+        (4, 8, "UNIT"),     # "head" is an allowed UNIT
+        (9, 15, "NAME"),
+        (17, 21, "PREP")
+    ]}),
+    ("1/2 teaspoon double-acting baking powder", {"entities": [
+        (0, 3, "QTY"),
+        (4, 12, "UNIT"),
+        (13, 26, "PREP"),     # Corrected: "double-acting" (from 'd' at 13 to 'g' at 25 + 1 = 26)
+        (27, 40, "NAME")      # Corrected: "baking powder" (from 'b' at 27 to 'r' at 39 + 1 = 40)
+    ]}),
+    ("2 cups low sodium soy sauce", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 17, "PREP"),     # "low sodium"
+        (18, 27, "NAME")
+    ]}),
+    ("1/2 cup small dice of mixed yellow, green and red bell pepper, for garnish", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 17, "PREP"),     # "small dice"
+        (21, 57, "NAME"),     # "mixed yellow, green and red bell pepper"
+        (59, 70, "COMMENT")   # "for garnish"
+    ]}),
+    ("2 1/2 pounds organic or grass-fed beef (80/20)", {"entities": [
+        (0, 5, "QTY"),
+        (6, 12, "UNIT"),
+        (13, 20, "PREP"),
+        (21, 33, "PREP"),     # Corrected: "or grass-fed" (from 'o' at 21 to 'd' at 32 + 1 = 33)
+        (34, 38, "NAME"),     # Corrected: "beef" (from 'b' at 34 to 'f' at 37 + 1 = 38)
+        (39, 45, "COMMENT")   # Corrected: "(80/20)" (from '(' at 39 to ')' at 44 + 1 = 45)
+    ]}),
+    ("3 cups (about 8 ounces) frisee, washed and dried", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 22, "COMMENT"), # (about 8 ounces) - This span is correct as per error output's tokenization.
+        (24, 30, "NAME"),
+        (32, 48, "PREP")     # Corrected: "washed and dried" (from 'w' at 32 to 'd' at 47 + 1 = 48)
+    ]}),
+    ("1 tablespoon non-hydrogenated vegan margarine, melted (recommended: Earth Balance)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 12, "UNIT"),
+        (13, 29, "PREP"),
+        (30, 35, "PREP"),
+        (36, 45, "NAME"),
+        (47, 53, "PREP"),     # Corrected: "melted" (from 'm' at 47 to 'd' at 52 + 1 = 53)
+        (54, 81, "COMMENT")   # Correct: "(recommended: Earth Balance)" (from '(' at 54 to ')' at 80 + 1 = 81)
+    ]}),
+    ("1 large Gala or other baking apple, peeled, cored, and finely chopped (about 1 cup)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),      # "large"
+        (8, 12, "NAME"),     # "Gala"
+        (13, 28, "ALT_NAME"), # Corrected: "or other baking apple" (from 'o' at 13 to 'e' at 33 + 1 = 34)
+        (29, 34, "ALT_NAME"), # Corrected: "or other baking apple" (from 'o' at 13 to 'e' at 33 + 1 = 34)
+        (36, 69, "PREP"),     # Corrected: "peeled, cored, and finely chopped" (from 'p' at 36 to 'd' at 68 + 1 = 69)
+        (70, 83, "COMMENT")  # Corrected: "(about 1 cup)" (from '(' at 70 to ')' at 82 + 1 = 83)
+    ]}),
+    ("1 large apricot, pitted, quartered and thinly sliced", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),      # "large" is an allowed UNIT
+        (8, 15, "NAME"),
+        (17, 52, "PREP")
+    ]}),
+    ("1 teaspoon MSG, optional", {"entities": [
+        (0, 1, "QTY"),
+        (2, 10, "UNIT"),
+        (11, 14, "NAME"),
+        (16, 24, "COMMENT")
+    ]}),
+
+    ("1 package pappadums, quartered (flavored with garlic, if possible)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 9, "UNIT"),
+        (10, 19, "NAME"),
+        (21, 30, "PREP"),     # Corrected: "quartered" (from 'q' at 21 to 'd' at 29 + 1 = 30)
+        (31, 66, "COMMENT")   # Corrected: "(flavored with garlic, if possible)" (from '(' at 31 to ')' at 65 + 1 = 66)
+    ]}),
+        ("3 mirlitons (chayote), cooked, peeled, and diced", {"entities": [
+            (0, 1, "QTY"),
+            (2, 11, "NAME"),
+            (12, 21, "ALT_NAME"),
+            (23, 43, "PREP")
+        ]}),
+    ("5 teaspoons gluten (available at health food stores and specialty grocery stores)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 11, "UNIT"),
+        (12, 18, "NAME"),
+        (19, 81, "COMMENT")  # Corrected: "(available at health food stores and specialty grocery stores)" (from '(' at 19 to ')' at 80 + 1 = 81)
+    ]}),
+
+    ("1 package, 2 ounces, nut topping, available on baking aisle", {"entities": [
+        (0, 1, "QTY"),
+        (2, 9, "UNIT"),
+        (11, 19, "COMMENT"),   # ", 2 ounces," (span 9-20 is accurate as shown in error output)
+        (21, 32, "NAME"),     # Corrected: "nut topping" (from 'n' at 21 to 'g' at 31 + 1 = 32)
+        (34, 59, "COMMENT")   # Corrected: "available on baking aisle" (from 'a' at 34 to 'e' at 59 + 1 = 60)
+    ]}),
+    ("4 pounds center cut cod, on the bone, but cut off 1-inch of the belly to make the saddle stand sturdily", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),
+        (9, 23, "NAME"),
+        (25, 103, "COMMENT") # Corrected: "on the bone...sturdily" (from 'o' at 25 to 'y' at 102 + 1 = 103)
+    ]}),
+        ("1/2 cup small dice of mixed yellow, green and red bell pepper, for garnish", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 20, "PREP"),
+            (21, 57, "NAME"),
+            (59, 70, "COMMENT")
+        ]}),
+        ("2 tablespoons taj\u00edn, plus more for serving", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),
+            (14, 19, "NAME"),
+            (21, 42, "COMMENT")
+        ]}),
+    ("10 ounces mixed domestic and wild mushrooms, sliced or cut into bite-sized pieces (about 4 cups)", {"entities": [
+        (0, 2, "QTY"),
+        (3, 9, "UNIT"),
+        (10, 43, "NAME"),     # Corrected: "mixed domestic and wild mushrooms" (from 'm' at 10 to 's' at 41 + 1 = 42)
+        (45, 81, "PREP"),     # Corrected: ", sliced or cut into bite-sized pieces" (from ',' at 43 to 's' at 80 + 1 = 81)
+        (82, 95, "COMMENT")   # Corrected: "(about 4 cups)" (from '(' at 82 to ')' at 95 + 1 = 96)
+    ]}),
+    ("1/3 cup koseret (dried woodsy flavored herb, dried oregano can be substituted)", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 15, "NAME"),
+        (16, 78, "COMMENT")  # Corrected: Span from '(' at 16 to ')' at 77 (so, 77+1=78)
+    ]}),
+        ("1/2 medium plantain, peeled and julienned", {"entities": [
+            (0, 3, "QTY"),
+            (4, 10, "UNIT"),
+            (11, 19, "NAME"),
+            (21, 41, "PREP")
+        ]}),
+        ("1 cup of your favorite ketchup", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),
+            (6, 22, "COMMENT"),
+            (23, 30, "NAME")
+        ]}),
+        ("One 8-ounce package or about 20 to 24 shishito peppers", {"entities": [
+            (0, 3, "QTY"),
+            (4, 11, "COMMENT"),
+            (12, 19, "UNIT"),
+            (20, 37, "COMMENT"),
+            (38, 54, "NAME")
+        ]}),
+    ("1/2 cup (1 stick butter), melted", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (9, 10, "QTY"),      # "1"
+        (11, 16, "COMMENT"),  # "stick"
+        (17, 23, "NAME"),     # "butter"
+        (26, 32, "PREP")      # Corrected: "melted" (from 'm' at 26 to 'd' at 31 + 1 = 32)
+    ]}),
+        ("1 teaspoon cardamom pods", {"entities": [
+            (0, 1, "QTY"),
+            (2, 10, "UNIT"),
+            (11, 24, "NAME")
+        ]}),
+    ("1 can (20 oz.) DOLE® Pineapple Slices", {"entities": [
+        (0, 1, "QTY"),
+        (2, 5, "UNIT"),
+        (6, 14, "COMMENT"),   # Corrected: "(20 oz.)" (from '(' at 6 to ')' at 13 + 1 = 14)
+        (15, 37, "NAME")      # Corrected: "DOLE® Pineapple Slices" (from 'D' at 15 to 's' at 37 + 1 = 38)
+    ]}),
+        ("12 ounces good ale (recommended: Bass)", {"entities": [
+            (0, 2, "QTY"),
+            (3, 9, "UNIT"),
+            (10, 14, "PREP"),
+            (15, 18, "NAME"),
+            (19, 37, "COMMENT")
+        ]}),
+        ("1 1/2 cups no-sugar-added ketchup", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),
+            (11, 25, "PREP"),
+            (26, 33, "NAME")
+        ]}),
+        ("1 package 3 or 4-inch wooden party picks", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "UNIT"),
+            (10, 21, "COMMENT"),
+            (22, 28, "PREP"),
+            (29, 40, "NAME")
+        ]}),
+    ("1/4 cup plus more, if necessary, lemon juice", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 32, "COMMENT"),  # Fix: 'plus more, if necessary,'
+        (33, 44, "NAME")      # Fix: 'lemon juice'
+    ]}),
+    ("1 1/2 cups peeled and finely grated sweet potato", {"entities": [
+        (0, 5, "QTY"),
+        (6, 10, "UNIT"),
+        (11, 32, "PREP"),
+        (33, 47, "NAME")
+    ]}),
+    ("4 sticks (1 pound butter) minus 1 heaping tablespoon, cut into chips and softened", {"entities": [
+        (0, 1, "COMMENT"),
+        (2, 8, "COMMENT"),
+        (10, 11, "QTY"),
+        (12, 17, "UNIT"),
+        (18, 24, "NAME"),
+        (26, 52, "COMMENT"),
+        (54, 80, "PREP")
+    ]}),
+    ("One 8- to 9-ounce package of your favorite refrigerated tortellini", {"entities": [
+        (0, 3, "QTY"),
+        (4, 17, "COMMENT"),
+        (18, 25, "UNIT"),
+        (26, 42, "COMMENT"),
+        (43, 55, "PREP"),
+        (56, 66, "NAME")
+    ]}),
+    ("3 tablespoons chopped mixed green and red peppers", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (14, 21, "PREP"),
+        (22, 49, "NAME")
+    ]}),
+    ("4 large crusty, seeded rolls, split", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 15, "PREP"),
+        (16, 22, "PREP"),  # Fix: 'seeded'
+        (23, 28, "NAME"),   # Fix: 'rolls'
+        (30, 35, "PREP")    # Fix: 'split'
+    ]}),
+    ("4 ounces shishito peppers", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),
+        (9, 25, "NAME")
+    ]}),
+    ("1 panettone (about 2 pounds), cut into 1-inch-thick slices", {"entities": [
+        (0, 1, "QTY"),
+        (2, 11, "NAME"),
+        (13, 28, "COMMENT"),
+        (30, 58, "PREP")
+    ]}),
+    ("2 flatbreads", {"entities": [
+        (0, 1, "QTY"),
+        (2, 12, "NAME")
+    ]}),
+    ("1 cup oatmeal", {"entities": [
+        (0, 1, "QTY"),
+        (2, 5, "UNIT"),
+        (6, 13, "NAME")
+    ]}),
+    ("4 cone cups", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "NAME"),
+        (7, 11, "UNIT")
+    ]}),
+    ("4 large sprigs of chervil", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 14, "COMMENT"),
+        (18, 25, "NAME")
+    ]}),
+    ("4 tablespoons, butter, divided", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (15, 21, "NAME"),
+        (23, 30, "PREP")
+    ]}),
+    ("1 large raw lobster tail, shell removed and meat cut into 1-inch pieces, at room temperature", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 11, "PREP"),
+        (12, 24, "NAME"),
+        (26, 71, "PREP"),  # Fix: Span ends at 'pieces' (char 71), not including trailing comma or 'a'
+        (73, 92, "COMMENT") # Fix: Span starts at 'at' (char 73) and ends at 'temperature' (char 94)
+    ]}),
+    ("1 pound emmanthal, cubed", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 17, "NAME"),
+        (19, 24, "PREP")
+    ]}),
+    ("1 12-ounce package shishito peppers", {"entities": [
+        (0, 1, "QTY"),
+        (2, 10, "COMMENT"),
+        (11, 18, "UNIT"),
+        (19, 35, "NAME")
+    ]}),
+    ("1/2 cup oatmeal", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 15, "NAME")
+    ]}),
+    ("1 quart (4 cups) liquid (I'm using chicken stock)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 16, "COMMENT"),  # Fix: '(4 cups)'
+        (17, 23, "NAME"),     # Fix: 'liquid'
+        (25, 49, "COMMENT")
+    ]}),
+    ("2 cups (225 grams) chocolate chunks", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 18, "COMMENT"),  # Fix: '(225 grams)'
+        (19, 35, "NAME")      # Fix: 'chocolate chunks'
+    ]}),
+    ("1 large or 2 regular Vidalia or sweet onions, halved and sliced", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 12, "ALT_QTY"),
+        (13, 20, "ALT_UNIT"),
+        (21, 28, "NAME"),
+        (32, 37, "ALT_NAME"), # Fix: 'sweet'
+        (38, 44, "ALT_NAME"), # Fix: 'onions'
+        (46, 63, "PREP")      # Fix: 'halved and sliced'
+    ]}),
+    ("1/2 pound cooked special crabmeat", {"entities": [
+        (0, 3, "QTY"),
+        (4, 9, "UNIT"),
+        (10, 16, "PREP"),
+        (17, 24, "PREP"),
+        (25, 33, "NAME")
+    ]}),
+    ("1 small wheel, 4 inches, camembert, liverot or Pont L'Eveque cheese, available in specialty cheese case", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 13, "UNIT"),      # Fix: 'wheel' as UNIT, corrected end
+        (15, 24, "COMMENT"),   # Fix: '4 inches,'
+        (25, 35, "NAME"),      # Fix: 'camembert,'
+        (36, 43, "ALT_NAME"),  # Fix: 'liverot'
+        (47, 68, "ALT_NAME"),  # Fix: 'Pont L'Eveque cheese,'
+        (69, 103, "COMMENT")    # Fix: 'available in specialty cheese case'
+    ]}),
+    ("1/4 to 1/2 ounce dried morels or porcinis, or a combination of both", {"entities": [
+        (0, 3, "QTY"),
+        (4, 10, "ALT_QTY"),
+        (11, 16, "UNIT"),
+        (17, 22, "PREP"),    # Fix: 'dried'
+        (23, 29, "NAME"),    # Fix: 'morels'
+        (30, 42, "ALT_NAME"), # Fix: 'porcinis,'
+        (43, 67, "COMMENT")  # Fix: 'or a combination of both'
+    ]}),
+    ("1/4 pound pickled tongue", {"entities": [
+        (0, 3, "QTY"),
+        (4, 9, "UNIT"),
+        (10, 17, "PREP"),
+        (18, 24, "NAME")
+    ]}),
+    ("1 tablespoon plus 1/2 teaspoon cardamom seeds", {"entities": [
+        (0, 1, "QTY"),
+        (2, 12, "UNIT"),
+        (13, 29, "ALT_QTY"),
+        (30, 44, "NAME")
+    ]}),
+    ("1 head frissee", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 14, "NAME")
+    ]}),
+    ("1 teaspoon, 1/3 palm full, fennel seeds", {"entities": [
+        (0, 1, "QTY"),
+        (2, 10, "UNIT"),      # Fixed: 'teaspoon' (char 2 to 10)
+        (10, 26, "COMMENT"),  # Fixed: ', 1/3 palm full,' (char 10 to 26)
+        (27, 39, "NAME")
+    ]}),
+    ("4 large sheets parchment paper", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "PREP"),
+        (8, 14, "UNIT"),
+        (15, 30, "NAME")
+    ]}),
+    ("12 tablespoons chopped, cooked vegetable of choice; such as asparagus, chopped spinach or artichoke hearts", {"entities": [
+        (0, 2, "QTY"),
+        (3, 14, "UNIT"),
+        (15, 30, "PREP"),
+        (31, 50, "NAME"),
+        (52, 106, "COMMENT")  # Fixed: Start after semicolon (char 52)
+    ]}),
+    ("2 teaspoon MSG", {"entities": [
+        (0, 1, "QTY"),
+        (2, 9, "UNIT"),
+        (10, 13, "NAME")
+    ]}),
+    ("1/2 cup kasseri, grated", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 15, "NAME"),
+        (15, 23, "PREP")
+    ]}),
+    ("2 bananas (not too ripe)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 9, "NAME"),
+        (10, 24, "COMMENT")
+    ]}),
+    ("2 quarts all-natural chunk charcoal", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),
+        (9, 26, "PREP"),
+        (27, 35, "NAME")
+    ]}),
+    ("1 (8 to 10-pound turkey) neck and giblets removed", {"entities": [
+        (0, 1, "QTY"),
+        (2, 24, "COMMENT"),  # Fixed: '(8 to 10-pound turkey)' (char 1 to 24)
+        (25, 49, "PREP")      # Fixed: 'neck and giblets removed' (char 25 to 49)
+    ]}),
+    ("4 mirlitons (chayote squash), halved (about 3 pounds)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 11, "NAME"),
+        (12, 29, "COMMENT"),
+        (30, 36, "PREP"),     # Fixed: 'halved' (char 30 to 36)
+        (37, 53, "COMMENT")   # Fixed: '(about 3 pounds)' (char 37 to 53)
+    ]}),
+    ("1 package (8 ounces) shredded 6-cheese Italian Blend (Mozzarella, smoked Provolone, Parmesan, Romano, Fontina, and Asiago cheeses)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 9, "UNIT"),
+        (10, 20, "COMMENT"),
+        (21, 29, "NAME"),
+        (30, 52, "NAME"),     # Fix: Corrected end char to 48 (for "6-cheese Italian Blend")
+        (53, 129, "COMMENT")   # This entity's start char 53 is now correct (for "(Mozzarella...")
+    ]}),
+    ("2 cups 10x or 12x powdered sugar, sifted", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 17, "COMMENT"),  # Fixed: '10x or 12x' (char 7 to 17)
+        (18, 33, "NAME"),     # Fixed: 'powdered sugar,' (char 18 to 33)
+        (34, 40, "PREP")      # Fixed: 'sifted' (char 34 to 40)
+    ]}),
+    ("1 cup oil reserved from poaching tuna", {"entities": [
+        (0, 1, "QTY"),
+        (2, 5, "UNIT"),
+        (6, 9, "NAME"),
+        (10, 37, "COMMENT")
+    ]}),
+    ("1/4 teaspoon MSG (optional)", {"entities": [
+        (0, 3, "QTY"),
+        (4, 12, "UNIT"),      # Fixed: 'teaspoon' (char 4 to 12)
+        (13, 16, "NAME"),      # Fixed: 'MSG' (char 13 to 16)
+        (17, 26, "COMMENT")    # Fixed: '(optional)' (char 16 to 27)
+    ]}),
+    ("2 tablespoons fat reserved from the confit", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (14, 17, "NAME"),
+        (18, 42, "COMMENT")
+    ]}),
+    ("1/4 cup equal parts chopped capers and cornichons", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 19, "PREP"),
+        (20, 27, "PREP"),
+        (28, 49, "NAME")
+    ]}),
+    ("1/2 cup plus 2 teaspoons sour cream", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 24, "COMMENT"),  # Fixed: 'plus 2 teaspoons' (char 8 to 24)
+        (25, 35, "NAME")      # Fixed: 'sour cream' (char 25 to 35)
+    ]}),
+    ("14 ounces (400 grams) wild boar meat, minced", {"entities": [
+        (0, 2, "QTY"),
+        (3, 9, "UNIT"),
+        (10, 21, "COMMENT"),
+        (22, 36, "NAME"),
+        (36, 44, "PREP")
+    ]}),
+    ("2 teaspoons non-fat or skim powdered milk", {"entities": [
+        (0, 1, "QTY"),
+        (2, 11, "UNIT"),      # Fixed: 'teaspoons' (char 2 to 11)
+        (12, 19, "NAME"),      # Fixed: 'non-fat' (char 11 to 18)
+        (20, 27, "ALT_NAME"),      # Fixed: 'or skim' (char 19 to 26)
+        (28, 41, "NAME")       # Fixed: 'powdered milk' (char 27 to 41)
+    ]}),
+    ("1 ficelle (approximately 12 inches), or French bread of choice", {"entities": [
+        (0, 1, "QTY"),
+        (2, 9, "NAME"),
+        (10, 35, "COMMENT"),  # Fixed: '(approximately 12 inches)' (char 10 to 35)
+        (35, 62, "ALT_NAME")  # Fixed: ', or French bread of choice' (char 35 to 62)
+    ]}),
+    ("1/2 tablespoon reduced-sodium or lite soy sauce", {"entities": [
+        (0, 3, "QTY"),
+        (4, 14, "UNIT"),
+        (15, 37, "PREP"),
+        (38, 47, "NAME")
+    ]}),
+    ("1 ounce, or about 3 1/2 tablespoons, almond and sugar powder, recipe follows", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (7, 35, "COMMENT"),  # Correct span for ", or about 3 1/2 tablespoons"
+        (35, 60, "NAME"),     # Correct span for ", almond and sugar powder"
+        (60, 76, "COMMENT")   # Fix: Corrected string is "recipe follows" and end char is 76 (original was 75 and truncated)
+    ]}),
+    ("1 quart cold-smoked cod", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 19, "PREP"),
+        (20, 23, "NAME")
+    ]}),
+    ("3 teaspoon MSG, optional", {"entities": [
+        (0, 1, "QTY"),
+        (2, 10, "UNIT"),      # Fixed: 'teaspoon' (char 2 to 10)
+        (11, 14, "NAME"),      # Fixed: 'MSG' (char 11 to 14)
+        (14, 24, "COMMENT")    # Fixed: ', optional' (char 14 to 24)
+    ]}),
+
+        ("1/4 ounce absinthe", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),
+            (10, 18, "NAME")
+        ]}),
+    ("2 cups chopped or sliced apricots, plums, peaches or pineapple", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 24, "PREP"),
+        (25, 33, "NAME"),       # 'apricots' as NAME
+        (35, 40, "ALT_NAME"),   # 'plums' as ALT_NAME
+        (42, 49, "ALT_NAME"),   # 'peaches' as ALT_NAME
+        (53, 62, "ALT_NAME")    # 'pineapple' as ALT_NAME (leaving 'or' as 'O' tag)
+    ]}),
+        ("2 partridges, washed and patted dry, broken into legs and breasts", {"entities": [
+            (0, 1, "QTY"),
+            (2, 12, "NAME"), # 'partridges' is a countable item. No specific unit like 'each' is requested for it, so it's part of the NAME.
+            (12, 65, "PREP")
+        ]}),
+        ("1/2 cup chocolate chunks or chips", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 24, "NAME"),
+            (25, 33, "ALT_NAME")
+        ]}),
+        ("3 to 4 quarts oil with a high smoke point, such as cottonseed, peanut or vegetable", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "ALT_QTY"),
+            (7, 13, "UNIT"),
+            (14, 17, "NAME"),
+            (18, 82, "COMMENT")
+        ]}),
+        ("2 tablespoons freshly grated wasabi, flash frozen or powder made into a paste", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),
+            (14, 28, "PREP"),
+            (29, 35, "NAME"),
+            (37, 77, "COMMENT")
+        ]}),
+        ("1 package pot sticker wraps (recommended: Dynasty, Gyoza/Potsticker wrappers)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "UNIT"),
+            (10, 27, "NAME"),
+            (28, 77, "COMMENT")
+        ]}),
+        ("1/4 cup thinly sliced young and tender celery stalk", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),
+            (8, 21, "PREP"),
+            (22, 38, "PREP"),
+            (39, 51, "NAME")
+        ]}),
+        ("1 1/4 ounces (36 grams) trimoline", {"entities": [
+            (0, 5, "QTY"),
+            (6, 12, "UNIT"),
+            (13, 23, "COMMENT"),
+            (24, 33, "NAME")
+        ]}),
+        ("2 tablespoons, plus 1 cup pure olive oil", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),
+            (13, 25, "COMMENT"), # Covers ", plus 1 cup"
+            (26, 30, "PREP"),
+            (31, 40, "NAME")
+        ]}),
+        ("1 tablespoon plus 1/2 teaspoon cardamom seeds", {"entities": [
+            (0, 1, "QTY"),
+            (2, 12, "UNIT"),
+            (13, 29, "COMMENT"), # Covers "plus 1/2 teaspoon"
+            (30, 44, "NAME")
+        ]}),
+        ("1 cup chocolate chunks", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),
+            (6, 22, "NAME")
+        ]}),
+        ("2 pounds assorted wild and exotic mushrooms, such as morels, chanterelles, shiitake or oyster mushrooms", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (9, 33, "PREP"),
+            (34, 43, "NAME"),
+            (43, 103, "COMMENT")
+        ]}),
+        ("4 ounces semi-sweet chocolate, chopped", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),
+            (9, 19, "PREP"),
+            (20, 29, "NAME"),
+            (29, 38, "PREP")
+        ]}),
+
+    ("Generous handful or two of fresh coriander leaves, roughly chopped", {"entities": [
+        (0, 23, "COMMENT"),  # Fix: 'Generous handful or two' (ends at 23, removing trailing space)
+        (27, 32, "PREP"),   # Fix: 'fresh' (starts at 27)
+        (33, 49, "NAME"),   # Fix: 'coriander leaves,' (starts at 33, ends at 49)
+        (49, 66, "PREP")    # Fix: ', roughly chopped' (starts at 49, ends at 66)
+    ]}),
+    ("6 ounces (about 1/2 head) Hakusai (Chinese cabbage)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),
+        (9, 25, "COMMENT"),  # Fix: '(about 1/2 head)' (ends at 25, removing trailing space)
+        (26, 51, "NAME")    # Fix: 'Hakusai (Chinese cabbage)' (starts at 26, was 'akusai')
+    ]}),
+        ("15 steaks", {"entities": [
+            (0, 2, "QTY"),
+            (3, 9, "NAME")        # "steaks" (countable item)
+        ]}),
+    ("1 large or 2 medium onions, chopped", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 12, "ALT_QTY"),
+        (13, 19, "ALT_UNIT"),
+        (20, 26, "NAME"),
+        (28, 35, "PREP")    # Fix: 'chopped' (starts at 28, not 27, and ends at 35)
+    ]}),
+        ("1/4 pound shiitakes, discard stems, julienned", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),
+            (10, 20, "NAME"),     # "shiitakes,"
+            (21, 35, "PREP"),     # "discard stems,"
+            (36, 45, "PREP")      # "julienned"
+        ]}),
+        ("One 8-ounce package mixed gourmet mushrooms (the package I buy contains trumpet, brown clamshell and velvet pioppini, but any mushroom you want to use is fine)", {"entities": [
+            (0, 3, "QTY"),        # "One"
+            (4, 11, "COMMENT"),  # "8-ounce" (size description for package)
+            (12, 19, "UNIT"),     # "package"
+            (20, 43, "NAME"),     # "mixed gourmet mushrooms"
+            (44, 159, "COMMENT")   # "(the package I buy contains trumpet, brown clamshell and velvet pioppini, but any mushroom you want to use is fine)"
+        ]}),
+        ("One 8-ounce package mixed gourmet mushrooms (the package I buy contains trumpet, brown clamshell and velvet pioppini, but any mushroom you want to use is fine)", {"entities": [
+            (0, 3, "QTY"),        # "One"
+            (4, 11, "COMMENT"),  # "8-ounce"
+            (12, 19, "UNIT"),     # "package"
+            (20, 43, "NAME"),     # "mixed gourmet mushrooms"
+            (44, 159, "COMMENT")   # "(the package I buy contains trumpet, brown clamshell and velvet pioppini, but any mushroom you want to use is fine)"
+        ]}),
+        ("1 cup bar-b-que sauce", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),
+            (6, 21, "NAME")
+        ]}),
+        ("1 large or 2 medium onions, finely chopped", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),      # "large"
+            (8, 12, "ALT_QTY"),  # "or 2"
+            (13, 19, "ALT_UNIT"), # "medium"
+            (20, 27, "NAME"),     # "onions,"
+            (28, 42, "PREP")      # "finely chopped"
+        ]}),
+    ("1 cup liquid of your choice, such as beer, wine, water or stock", {"entities": [
+        (0, 1, "QTY"),
+        (2, 5, "UNIT"),
+        (6, 12, "NAME"),
+        (13, 63, "COMMENT")  # Fix: 'of your choice, such as beer, wine, water or stock' (ends at 63 to include 'k' of 'stock')
+    ]}),
+    ("1 medium or 2 small onions, cut into 1/4-inch dice (about 1 1/2 cups)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),
+        (9, 13, "ALT_QTY"),
+        (14, 19, "ALT_UNIT"),
+        (20, 27, "NAME"),
+        (28, 50, "PREP"),    # Fix: 'cut into 1/4-inch dice' (ends at 50)
+        (51, 69, "COMMENT")  # Fix: '(about 1 1/2 cups)' (starts at 51, not 48)
+    ]}),
+    ("2 cups fresh, or frozen and thawed, cranberries", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 13, "PREP"),
+        (14, 34, "PREP"),  # Fix: 'or frozen and thawed,' (ends at 34 to include 'd,' of 'thawed,')
+        (36, 47, "NAME")   # Fix: 'cranberries' (starts at 36, ends at 47)
+    ]}),
+    ("2 teaspoons togerashi*", {"entities": [
+        (0, 1, "QTY"),
+        (2, 11, "UNIT"),      # Fix: 'teaspoons' (ends at 11)
+        (12, 21, "NAME"),     # Fix: 'togerashi' (starts at 12, ends at 21)
+        (21, 22, "COMMENT")   # Fix: '*' (starts at 21, ends at 22)
+    ]}),
+    ("2 large, sweet, juicy carrots, julienned", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "PREP"),
+        (9, 14, "PREP"),   # Fix: 'sweet' (starts at 9, not 8)
+        (16, 21, "PREP"),   # Fix: 'juicy' (starts at 16, not 15)
+        (22, 29, "NAME"),
+        (31, 40, "PREP")    # Fix: 'julienned' (starts at 31, not 30)
+    ]}),
+        ("1 cup liquid (I'm using water)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),
+            (6, 12, "NAME"),     # "liquid"
+            (13, 30, "COMMENT")   # "(I'm using water)"
+        ]}),
+    ("1/4 cup packed very finely minced, pureed, or grated ginger", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 14, "PREP"),
+        (15, 34, "PREP"),
+        (35, 42, "PREP"),
+        (43, 52, "NAME"),  # Fix: 'or grated' (ends at 52, not 53)
+        (53, 59, "NAME")   # Fix: 'ginger' (starts at 53, ends at 59)
+    ]}),
+
+    ("2 packages or 10 biscuits buttermilk biscuit dough", {"entities": [
+        (0, 1, "QTY"),
+        (2, 10, "UNIT"),
+        (11, 25, "ALT_QTY"),
+        (26, 50, "NAME")      # Fix: String representation is now "buttermilk biscuit dough" (ends at 49, fixing truncation)
+    ]}),
+    ("1 pound roasted, peeled, and cleaned chestnuts cut into quarters", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 36, "PREP"),      # Fix: String representation is now "roasted, peeled, and cleaned" (ends at 35, fixing truncation)
+        (37, 46, "NAME"),
+        (47, 64, "PREP")
+    ]}),
+        ("1/2 cup fudge sauce", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 19, "NAME")       # "fudge sauce"
+        ]}),
+    ("1 large rind trimmed from a hunk of Parmigiano-Reggiano cheese or a few small pieces rind perhaps saved-up", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 12, "PREP"),
+        (13, 20, "PREP"),
+        (21, 35, "COMMENT"),   # Fix: Span for "from a hunk of" (ends at 35)
+        (36, 62, "NAME"),      # Fix: Span for "Parmigiano-Reggiano cheese" (starts at 36)
+        (63, 106, "COMMENT"),   # Fix: Span for "or a few small pieces"
+    ]}),
+        ("About 1 1/2 teaspoons or scant half palmful chili powder", {"entities": [
+            (0, 5, "COMMENT"),    # "About"
+            (6, 11, "QTY"),        # "1 1/2"
+            (12, 21, "UNIT"),     # "teaspoons"
+            (22, 40, "COMMENT"),  # "or scant half palmful"
+            (41, 53, "NAME")      # "chili powder"
+        ]}),
+    ("About 1 1/2 teaspoons or scant half palmful pimenton or smoked paprika", {"entities": [
+        (0, 5, "COMMENT"),
+        (6, 11, "QTY"),
+        (12, 21, "UNIT"),
+        (22, 43, "COMMENT"),  # Fix: Span for "or scant half palmful" (ends at 43)
+        (44, 52, "NAME"),     # Fix: Span for "pimenton" (starts at 44)
+        (53, 70, "ALT_NAME")  # Fix: Span for "or smoked paprika" (starts at 53)
+    ]}),
+        ("1 tablespoon single cream", {"entities": [
+            (0, 1, "QTY"),
+            (2, 12, "UNIT"),     # "tablespoon"
+            (13, 19, "PREP"),     # "single"
+            (20, 25, "NAME")      # "cream"
+        ]}),
+    ("1 large rind trimmed from a hunk of Parmigiano-Reggiano cheese, or a few small pieces of saved-up rind", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 12, "PREP"),
+        (13, 20, "PREP"),
+        (21, 35, "COMMENT"),   # Fix: Span for "from a hunk of" (ends at 35)
+        (36, 62, "NAME"),      # Fix: Span for "Parmigiano-Reggiano cheese" (starts at 36)
+        (64, 97, "COMMENT"),
+    ]}),
+        ("1 package (21 ounces) fudge brownie mix", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "UNIT"),       # "package"
+            (10, 21, "COMMENT"),  # "(21 ounces)"
+            (22, 40, "NAME")      # "fudge brownie mix"
+        ]}),
+        ("2 cups (measured uncooked) medium shells cooked, chilled and patted dry", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 26, "COMMENT"),   # "(measured uncooked)"
+            (27, 33, "PREP"),     # "medium"
+            (34, 40, "NAME"),      # "shells"
+            (41, 71, "PREP")       # "cooked, chilled and patted dry"
+        ]}),
+    ("1 cup and 2 tablespoons or 250 grams water", {"entities": [
+        (0, 1, "QTY"),
+        (2, 5, "UNIT"),
+        (6, 36, "COMMENT"),  # Fix: Span for "and 2 tablespoons or 250 grams"
+        (37, 42, "NAME")      # Fix: Span for "water"
+    ]}),
+
+    ("1/2 cup 1-inch parsnip chunks", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 14, "PREP"),      # Fix: Span for "1-inch"
+        (15, 29, "NAME")       # Fix: Span for "parsnip chunks"
+    ]}),
+        ("1 1/2 pounds loose sausage", {"entities": [
+            (0, 5, "QTY"),
+            (6, 12, "UNIT"),      # "pounds"
+            (13, 18, "PREP"),      # "loose"
+            (19, 26, "NAME")       # "sausage"
+        ]}),
+    ("A quarter of a pineapple, core removed and diced", {"entities": [
+        (0, 14, "PREP"),      # Fix: Span for "A quarter of a"
+        (15, 25, "NAME"),     # Fix: Span for "pineapple,"
+        (26, 48, "PREP")      # Fix: Span for "core removed and diced"
+    ]}),
+        ("1 1/2 cups pitted, nicoise olives", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),      # "cups"
+            (11, 18, "PREP"),      # "pitted,"
+            (19, 26, "PREP"),      # "nicoise"
+            (27, 33, "NAME")       # "olives"
+        ]}),
+        ("4 Earl Grey tea bags", {"entities": [
+            (0, 1, "QTY"),
+            (2, 15, "NAME"),      # "Earl Grey tea"
+            (16, 20, "COMMENT")      # "bags" (as countable unit)
+        ]}),
+    ("1 pound fresh, young, green beans, trimmed", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 14, "PREP"),
+        (15, 21, "PREP"),
+        (22, 27, "NAME"),     # Fix: Span for "green"
+        (28, 34, "NAME"),     # Fix: Span for "beans,"
+        (35, 42, "PREP")      # Fix: Span for "trimmed"
+    ]}),
+    ("1 1/2 cups low sodium, fat free chicken broth", {"entities": [
+        (0, 5, "QTY"),
+        (6, 10, "UNIT"),
+        (11, 22, "PREP"),
+        (23, 31, "PREP"),
+        (32, 45, "NAME")       # Fix: Span for "chicken broth" (ends at 45)
+    ]}),
+    ("1 quart (approximately) vegetable or chicken stock to have on hand to adjust sauce", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 23, "COMMENT"),
+        (24, 33, "NAME"),
+        (34, 44, "ALT_NAME"),
+        (45, 50, "NAME"),
+        (51, 82, "COMMENT")    # Fix: Span for "to have on hand to adjust sauce" (ends at 83, removing trailing space if any)
+    ]}),
+    ("1 1/4 pounds skinned and bones uncooked chicken, cut into cubes to make 4 cups", {"entities": [
+        (0, 5, "QTY"),
+        (6, 12, "UNIT"),
+        (13, 30, "PREP"),      # Fix: Span for "skinned and bones" (ends at 30)
+        (31, 39, "PREP"),      # Fix: Span for "uncooked" (starts at 31)
+        (40, 47, "NAME"),     # Fix: Span for "chicken" (starts at 40)
+        (49, 78, "PREP")
+    ]}),
+        ("1 bundle thin asparagus trimmed and sliced on an angle", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "bundle"
+            (9, 13, "PREP"),       # "thin"
+            (14, 23, "NAME"),      # "asparagus"
+            (24, 54, "PREP")       # "trimmed and sliced on an angle"
+        ]}),
+        ("9 Earl Grey tea bags", {"entities": [
+            (0, 1, "QTY"),
+            (2, 15, "NAME"),      # "Earl Grey tea"
+            (16, 20, "COMMENT")      # "bags" (as countable unit)
+        ]}),
+        ("1 1/2 pounds loose sweet Italian sausage", {"entities": [
+            (0, 5, "QTY"),
+            (6, 12, "UNIT"),      # "pounds"
+            (13, 18, "PREP"),      # "loose"
+            (19, 24, "NAME"),      # "sweet"
+            (25, 32, "NAME"),      # "Italian"
+            (33, 40, "NAME")       # "sausage"
+        ]}),
+    ("1 pound dried, salted codfish", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 13, "PREP"),      # Fix: Span for "dried" (ends at 13). The comma is left untagged.
+        (15, 21, "PREP"),     # Fix: Span for "salted" (starts at 15)
+        (22, 29, "NAME")      # Fix: Span for "codfish" (starts at 22)
+    ]}),
+
+        ("1 small disk washed-rind cheese, such as Camembert", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "small" (from countable items list)
+            (8, 12, "UNIT"),      # "disk" (as a countable unit/form)
+            (13, 24, "PREP"),      # "washed-rind"
+            (25, 30, "NAME"),      # "cheese,"
+            (31, 50, "COMMENT")    # "such as Camembert"
+        ]}),
+        ("1 ounce Herbsaint (or Absinth or Pernod)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "ounce"
+            (8, 17, "NAME"),      # "Herbsaint"
+            (19, 39, "ALT_NAME")  # "(or Absinth or Pernod)"
+        ]}),
+        ("2 tablespoons of chipolte in adobo, pureed", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),      # "tablespoons"
+            (14, 16, "COMMENT"),   # "of" (often untagged, or can be COMMENT if you want to include prepositions)
+            (17, 34, "NAME"),      # "chipolte in adobo,"
+            (36, 42, "PREP")       # "pureed"
+        ]}),
+
+        ("One 16-oz package kataifi (shredded phyllo dough)", {"entities": [
+            (0, 3, "QTY"),        # "One"
+            (4, 9, "COMMENT"),   # "16-oz" (size description for package)
+            (10, 17, "UNIT"),     # "package"
+            (18, 25, "NAME"),      # "kataifi"
+            (27, 48, "COMMENT")    # "(shredded phyllo dough)"
+        ]}),
+
+        ("1 1/2 pound pre-marinated apple bourbon pork tenderloin, Hormel®", {"entities": [
+            (0, 5, "QTY"),
+            (6, 11, "COMMENT"),   # "1-1 1/2 pound" (a specific quantity/weight range description)
+            (12, 25, "PREP"),      # "pre-marinated"
+            (26, 55, "NAME"),      # "apple bourbon pork tenderloin,"
+            (57, 64, "COMMENT")    # "Hormel®" (brand)
+        ]}),
+        ("5 ounces washed and dried lamb's lettuce, stemmed (aka corn salad or mache)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "ounces"
+            (9, 25, "PREP"),      # "washed and dried"
+            (26, 40, "NAME"),      # "lamb's lettuce,"
+            (42, 49, "PREP"),      # "stemmed"
+            (50, 74, "COMMENT")    # "(aka corn salad or mache)"
+        ]}),
+        ("1/2 cup processed or cream cheese", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 17, "PREP"),      # "processed"
+            (18, 20, "O"),        # "or" (untagged, acts as a conjunction)
+            (21, 33, "NAME")       # "cream cheese"
+        ]}),
+    ("1/3 cup processed or cream cheese", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 17, "PREP"),      # "processed"
+            (18, 20, "O"),        # "or" (untagged, acts as a conjunction)
+            (21, 33, "NAME")       # "cream cheese"
+        ]}),
+    ("1/4 cup processed or cream cheese", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 17, "PREP"),      # "processed"
+            (18, 20, "O"),        # "or" (untagged, acts as a conjunction)
+            (21, 33, "NAME")       # "cream cheese"
+        ]}),
+        ("1 pound (58 percent cocoa) chocolate, finely chopped", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (9, 25, "COMMENT"),   # "(58 percent cocoa)"
+            (27, 36, "NAME"),      # "chocolate,"
+            (38, 52, "PREP")       # "finely chopped"
+        ]}),
+        ("4 ounces very fine (fideo or capellini) noodles, broken into 1inch lengths", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "ounces"
+            (9, 18, "PREP"),      # "very fine"
+            (19, 38, "COMMENT"),   # "(fideo or capellini)"
+            (40, 48, "NAME"),      # "noodles,"
+            (49, 74, "PREP")       # "broken into 1inch lengths"
+        ]}),
+    ("2 or 2 1/2 pounds head, bones, and skins from carp, pike, and whitefish", {"entities": [
+        (0, 1, "QTY"),
+        (2, 10, "ALT_QTY"),  # "or 2 1/2"
+        (11, 17, "UNIT"),     # "pounds"
+        (18, 23, "PREP"),      # "head,"
+        (24, 30, "PREP"),      # "bones,"
+        (31, 40, "PREP"),      # "and skins"
+        (41, 45, "COMMENT"),   # "from" (as a preposition, best as COMMENT or O)
+        (46, 50, "NAME"),      # 'carp' as NAME
+        (52, 56, "ALT_NAME"),  # 'pike' as ALT_NAME (leaving ',' and 'and' untagged 'O')
+        (58, 71, "ALT_NAME")   # 'whitefish' as ALT_NAME (leaving ',' and 'and' untagged 'O')
+    ]}),
+        ("1/2 cup popcorn kernels, freshly popped", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 23, "NAME"),      # "popcorn kernels,"
+            (25, 39, "PREP")       # "freshly popped"
+        ]}),
+        ("1 tablespoon plus 1 1/2 teaspoons doubanjiang (spicy bean paste)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 12, "UNIT"),     # "tablespoon"
+            (13, 29, "COMMENT"),  # "plus 1 1/2 teaspoons"
+            (30, 41, "NAME"),      # "doubanjiang"
+            (42, 64, "COMMENT")    # "(spicy bean paste)"
+        ]}),
+
+        ("1 pound boned and skinned halibut, haddock, or cod", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (8, 25, "PREP"),      # "boned and skinned"
+            (26, 33, "NAME"),      # "halibut,"
+            (35, 42, "ALT_NAME"),  # "haddock,"
+            (44, 50, "ALT_NAME")   # "or cod"
+        ]}),
+        ("4 tablespoons fat skimmed from the pan juices", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),      # "tablespoons"
+            (14, 17, "NAME"),      # "fat"
+            (18, 45, "PREP")       # "skimmed from the pan juices"
+        ]}),
+        ("3/4 cup liquid of your choice, such as beef stock, chicken stock, water or wine (I'm using red wine)", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 14, "NAME"),      # "liquid"
+            (15, 61, "COMMENT"),   # "of your choice, such as beef stock, chicken stock, water or wine"
+            (62, 89, "COMMENT")    # "(I'm using red wine)"
+        ]}),
+        ("10 pretzels", {"entities": [
+            (0, 2, "QTY"),
+            (3, 11, "NAME")       # "pretzels" (countable item)
+        ]}),
+        ("1 1/2 lbs ground, lean pork", {"entities": [
+            (0, 5, "QTY"),
+            (6, 9, "UNIT"),       # "lbs"
+            (10, 16, "PREP"),      # "ground,"
+            (18, 22, "PREP"),      # "lean"
+            (23, 27, "NAME")       # "pork"
+        ]}),
+        ("1 cup torn or shredded mozzarella, such as Good & Gather™ Mozzarella Cheese", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),       # "cup"
+            (6, 22, "PREP"),      # "torn"
+            (23, 33, "NAME"),      # "mozzarella,"
+            (35, 75, "COMMENT")    # "such as Good & Gather™ Mozzarella Cheese"
+        ]}),
+
+        ("1 1/2 cups whipped cream, for garnish", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),       # "cups"
+            (11, 24, "NAME"),      # "whipped cream,"
+            (26, 37, "COMMENT")    # "for garnish"
+        ]}),
+        ("1/3 cup plus 1 tablespoon EVOO", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 25, "COMMENT"),    # "plus 1 tablespoon"
+            (26, 30, "NAME")       # "EVOO"
+        ]}),
+        ("8 tablespoons whipped cream or whipped topping", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),      # "tablespoons"
+            (14, 27, "NAME"),      # "whipped cream"
+            (28, 46, "ALT_NAME")   # "whipped topping"
+        ]}),
+        ("1/2 cup coarse, raw, or demerara sugar", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 32, "PREP"),      # "coarse,"
+            (33, 38, "NAME")       # "sugar"
+        ]}),
+        ("2 tablespoons minced pimiento", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),      # "tablespoons"
+            (14, 20, "PREP"),      # "minced"
+            (21, 29, "NAME")       # "pimiento"
+        ]}),
+        ("3 tablespoons plus 1/3 cup walnuts, chopped", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),      # "tablespoons"
+            (14, 26, "ALT_QTY"),  # "plus 1/3 cup"
+            (27, 34, "NAME"),      # "walnuts,"
+            (36, 43, "PREP")       # "chopped"
+        ]}),
+
+        ("1 cup grapes, sliced", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),       # "cup"
+            (6, 13, "NAME"),      # "grapes,"
+            (14, 20, "PREP")       # "sliced"
+        ]}),
+        ("1 cup hot fudge sauce, warmed, plus more for serving", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),       # "cup"
+            (6, 21, "NAME"),      # "hot fudge sauce,"
+            (23, 29, "PREP"),      # "warmed,"
+            (31, 52, "COMMENT")    # "plus more for serving"
+        ]}),
+        ("1 (8- to 10-ounce) pack whole cremini mushrooms, halved", {"entities": [
+            (0, 1, "QTY"),
+            (2, 18, "COMMENT"),   # "(8- to 10-ounce)"
+            (19, 23, "COMMENT"),     # "pack" (as a countable unit)
+            (24, 29, "PREP"),      # "whole"
+            (30, 47, "NAME"),      # "cremini mushrooms,"
+            (49, 55, "PREP")       # "halved"
+        ]}),
+        ("12 tablespoons (1 1/2 sticks), butter chilled and cut into small pieces", {"entities": [
+            (0, 2, "QTY"),
+            (3, 14, "UNIT"),      # "tablespoons"
+            (15, 30, "COMMENT"),   # "(1 1/2 sticks),"
+            (31, 37, "NAME"),      # "butter"
+            (38, 71, "PREP")       # "chilled and cut into small pieces"
+        ]}),
+        ("3 truffles with their juice", {"entities": [
+            (0, 1, "QTY"),
+            (2, 10, "NAME"),      # "truffles" (countable item)
+            (11, 27, "COMMENT")    # "with their juice"
+        ]}),
+
+        ("1 (7.5-ounce) can refrigerator biscuits", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "COMMENT"),   # "(7.5-ounce)"
+            (14, 17, "UNIT"),     # "can"
+            (18, 30, "PREP"),      # "refrigerator"
+            (31, 39, "NAME")       # "biscuits"
+        ]}),
+        ("1 pound hot or sweet Italian sausage links", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (8, 20, "PREP"),      # "hot"
+            (21, 28, "NAME"),      # "Italian"
+            (29, 42, "NAME")       # "sausage links"
+        ]}),
+        ("9 ounces (255ml) double cream", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "ounces"
+            (10, 15, "COMMENT"),   # "(255ml)"
+            (17, 29, "NAME"),      # "double"
+        ]}),
+        ("8 cups homemade or low-sodium beef broth, recipe follows", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 29, "PREP"),      # "homemade"
+            (30, 40, "NAME"),      # "beef broth,"
+            (42, 56, "COMMENT")    # "recipe follows"
+        ]}),
+        ("1 waffle cone", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "NAME")       # "waffle cone" (countable item)
+        ]}),
+        ("1/4 cup hot fudge sauce, warmed", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 23, "NAME"),      # "hot fudge sauce,"
+            (25, 31, "PREP")       # "warmed"
+        ]}),
+
+    ("2 tablespoons chopped pimiento", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (14, 21, "PREP"),     # Corrected: "chopped"
+        (22, 30, "NAME")      # Corrected: "pimiento"
+    ]}),
+        ("1 1/2 cups fresh (seedless) grapes, stemmed, halved", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),      # "cups"
+            (11, 16, "PREP"),      # "fresh"
+            (17, 27, "COMMENT"),   # "(seedless)"
+            (28, 35, "NAME"),      # "grapes,"
+            (36, 44, "PREP"),      # "stemmed,"
+            (45, 51, "PREP")       # "halved"
+        ]}),
+    ("3 cups sparkling water, chilled", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 22, "NAME"),      # Corrected: "sparkling water"
+        (24, 31, "PREP")       # Corrected: ", chilled"
+    ]}),
+    ("2 to 3 cups shredded provolone and mozzarella cheese blend", {"entities": [
+        (0, 6, "QTY"),
+        (7, 11, "UNIT"),
+        (12, 20, "NAME"),
+        (21, 30, "NAME"),
+        (31, 58, "ALT_NAME")   # Corrected: "and mozzarella cheese blend"
+    ]}),
+        ("2 cups Quervo 1800", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 18, "NAME")       # "Quervo 1800"
+        ]}),
+    ("4 ounces of your favorite liquor", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),
+        (9, 25, "COMMENT"),   # Corrected: "of your favorite"
+        (26, 32, "NAME")       # Corrected: "liquor" (adjusted start index)
+    ]}),
+        ("2 tablespoons drained, julienned Pickled Radishes, recipe follows", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),      # "tablespoons"
+            (14, 22, "PREP"),      # "drained,"
+            (23, 32, "PREP"),      # "julienned"
+            (33, 50, "NAME"),      # "Pickled Radishes,"
+            (51, 65, "COMMENT")    # "recipe follows"
+        ]}),
+        ("2 jars (16 ounces each) Pace® Picante Sauce", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "COMMENT"),       # "jars" (as a countable unit)
+            (7, 23, "COMMENT"),   # "(16 ounces each)"
+            (24, 43, "NAME")       # "Pace® Picante Sauce"
+        ]}),
+    ("2 cups plus 2 tablespoons bourbon", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 25, "COMMENT"),    # Corrected: "plus 2 tablespoons"
+        (26, 33, "NAME")       # Corrected: "bourbon"
+    ]}),
+        ("1 pound char, skinless, 1/2-inch dice", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (8, 13, "NAME"),      # "char,"
+            (14, 23, "PREP"),      # "skinless,"
+            (24, 37, "PREP")       # "1/2-inch dice"
+        ]}),
+    ("4 tablespoons skimmed fat from turkey drippings", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),
+        (14, 21, "PREP"),     # Corrected: "skimmed" (removed trailing space)
+        (22, 25, "NAME"),     # Corrected: "fat" (fixed starting index and content)
+        (26, 47, "COMMENT")   # Corrected: "from turkey drippings" (fixed starting index and content)
+    ]}),
+    ("5 grams (1 teaspoon salt)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 19, "COMMENT"),   # Corrected: "(1 teaspoon" (removed "salt)" from comment, keeping the full parentheses)
+        (20, 24, "NAME")       # Corrected: "salt" as NAME (the ')' at index 24 is not part of the name)
+    ]}),
+    ("1 quince, peeled, cored, and cut into 1-inch dice", {"entities": [
+        (0, 1, "QTY"),
+        (2, 9, "NAME"),
+        (10, 17, "PREP"),      # Corrected: "peeled,"
+        (18, 24, "PREP"),      # Corrected: "cored,"
+        (25, 49, "PREP")       # Corrected: "and cut into 1-inch dice"
+    ]}),
+        ("1 bottle tonic", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "COMMENT"),       # "bottle" (as a countable unit)
+            (9, 14, "NAME")       # "tonic"
+        ]}),
+    ("1 1/2 cups sparkling water, such as San Pellegrino, chilled", {"entities": [
+        (0, 5, "QTY"),
+        (6, 10, "UNIT"),
+        (11, 26, "NAME"),      # Corrected: "sparkling water"
+        (28, 50, "COMMENT"),   # Corrected: ", such as San Pellegrino"
+        (52, 59, "PREP")       # Corrected: ", chilled"
+    ]}),
+    ("1 pound center-cut halibut, skin removed, cut into 4 equal pieces", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),
+        (8, 18, "PREP"),      # Corrected: "center-cut"
+        (19, 27, "NAME"),      # Corrected: "halibut,"
+        (28, 40, "PREP"),      # "skin removed" is correct as is
+        (42, 65, "PREP")       # "cut into 4 equal pieces" is correct as is
+    ]}),
+
+        ("3 cups low-sodium turkey or chicken broth", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 17, "PREP"),      # "low-sodium"
+            (18, 24, "NAME"),      # "turkey"
+            (25, 35, "ALT_NAME"),  # "or chicken"
+            (36, 41, "NAME")       # "broth"
+        ]}),
+        ("1 cup (250ml) sour cream", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),       # "cup"
+            (6, 13, "COMMENT"),   # "(250ml)"
+            (14, 24, "NAME")      # "sour cream"
+        ]}),
+        ("1/2 cup kasseri, grated", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 15, "NAME"),      # "kasseri,"
+            (16, 23, "PREP")       # "grated"
+        ]}),
+        ("1 tablespoon plus 1/2 teaspoon cardamom seeds", {"entities": [
+            (0, 1, "QTY"),
+            (2, 12, "UNIT"),     # "tablespoon"
+            (13, 29, "COMMENT"),  # "plus 1/2 teaspoon"
+            (30, 44, "NAME")      # "cardamom seeds"
+        ]}),
+        ("2 cups chopped (small cubes) fresh apricots (about 3 apricots)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 14, "PREP"),      # "chopped"
+            (15, 28, "COMMENT"),   # "(small cubes)"
+            (29, 34, "PREP"),      # "fresh"
+            (35, 43, "NAME"),      # "apricots"
+            (45, 61, "COMMENT")    # "(about 3 apricots)"
+        ]}),
+        ("1 1/2 tablespoons Sofrito, recipe follows", {"entities": [
+            (0, 5, "QTY"),
+            (6, 17, "UNIT"),      # "tablespoons"
+            (18, 26, "NAME"),      # "Sofrito,"
+            (27, 41, "COMMENT")    # "recipe follows"
+        ]}),
+        ("1 small handful of thyme sprigs", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "small" (describes the size, as per 'large' etc. in countable items)
+            (8, 15, "COMMENT"),   # "handful" (describes method of quantity, not a formal unit)
+            (19, 31, "NAME")       # "thyme sprigs"
+        ]}),
+        ("1/8 teaspoon clove optional", {"entities": [
+            (0, 3, "QTY"),
+            (4, 12, "UNIT"),     # "teaspoon"
+            (13, 18, "NAME"),      # "clove"
+            (19, 27, "COMMENT")    # "optional"
+        ]}),
+        ("2 pounds hay", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "pounds"
+            (9, 12, "NAME")       # "hay"
+        ]}),
+        ("1 cup liquid of your choice, such as water, stock, beer, etc.", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),       # "cup"
+            (6, 12, "NAME"),      # "liquid"
+            (13, 60, "COMMENT")    # "of your choice, such as water, stock, beer, etc."
+        ]}),
+        ("2 cups chopped (small cubes) fresh apricots (about 3 apricots)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 14, "PREP"),      # "chopped"
+            (15, 29, "COMMENT"),   # "(small cubes)"
+            (30, 35, "PREP"),      # "fresh"
+            (36, 45, "NAME"),      # "apricots"
+            (46, 61, "COMMENT")    # "(about 3 apricots)"
+        ]}),
+        ("1 cup low-sodium turkey or chicken broth", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),       # "cup"
+            (6, 16, "PREP"),      # "low-sodium"
+            (17, 23, "NAME"),      # "turkey"
+            (24, 34, "ALT_NAME"),  # "or chicken"
+            (35, 40, "NAME")       # "broth"
+        ]}),
+        ("6 (16-ounce) center-cut NY strips", {"entities": [
+            (0, 1, "QTY"),
+            (2, 12, "COMMENT"),   # "(16-ounce)"
+            (13, 23, "PREP"),      # "center-cut"
+            (24, 33, "NAME")       # "NY strips"
+        ]}),
+        ("1 1/2 pounds large yellow or red beets, washed and trimmed", {"entities": [
+            (0, 5, "QTY"),
+            (6, 12, "UNIT"),      # "pounds"
+            (13, 18, "PREP"),      # "large" (describes quality/size of beets)
+            (19, 25, "NAME"),      # "yellow"
+            (26, 32, "ALT_NAME"),  # "or red"
+            (33, 38, "NAME"),      # "beets,"
+            (40, 58, "PREP")       # "washed and trimmed"
+        ]}),
+
+    ("1/2 pound clams, manila, count necks, and little necks, scrubbed", {"entities": [
+        (0, 3, "QTY"),
+        (4, 9, "UNIT"),       # "pound"
+        (10, 15, "NAME"),      # "clams,"
+        (16, 23, "ALT_NAME"),  # "manila,"
+        (24, 35, "ALT_NAME"),  # "count necks,"
+        (36, 49, "ALT_NAME"),  # "and little necks,"
+        (50, 58, "PREP")       # "scrubbed"
+    ]}),
+    ("2 medium to large onions, sliced", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),  # "medium to large"
+        (9, 17, "ALT_UNIT"),  # "medium to large"
+        (18, 24, "NAME"),      # "onions,"
+        (26, 32, "PREP")       # "sliced"
+    ]}),
+    ("16 cups hot, freshly popped popcorn", {"entities": [
+        (0, 2, "QTY"),
+        (3, 7, "UNIT"),       # "cups"
+        (8, 12, "PREP"),      # "hot,"
+        (13, 27, "PREP"),      # "freshly popped"
+        (28, 35, "NAME")      # "popcorn"
+    ]}),
+    ("1/2 pound domestic or wild mushrooms, sliced and sauteed", {"entities": [
+        (0, 3, "QTY"),
+        (4, 9, "UNIT"),       # "pound"
+        (10, 26, "PREP"),      # "domestic"
+        (27, 36, "NAME"),      # "mushrooms,"
+        (38, 56, "PREP")       # "sliced and sauteed"
+    ]}),
+    ("16 large, perfect strawberries, preferably with stems", {"entities": [
+        (0, 2, "QTY"),
+        (3, 8, "PREP"),       # "large," (describes quality/size)
+        (10, 17, "PREP"),      # "perfect"
+        (18, 30, "NAME"),      # "strawberries,"
+        (32, 53, "COMMENT")    # "preferably with stems"
+    ]}),
+
+    ("1/2 cup cucumber peeled and sliced into 1/2-inch pieces", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),       # "cup"
+        (8, 16, "NAME"),      # "cucumber"
+        (17, 55, "PREP")       # "peeled and sliced into 1/2-inch pieces"
+    ]}),
+    ("8 ounces any combination of cremini, shiitake, or oyster mushrooms (about 4 cups)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),       # "ounces"
+        (9, 27, "COMMENT"),   # "any combination of"
+        (28, 35, "NAME"),      # "cremini,"
+        (37, 45, "ALT_NAME"),  # "shiitake,"
+        (47, 56, "ALT_NAME"),  # "oyster mushrooms"
+        (57, 66, "NAME"),  # "oyster mushrooms"
+        (67, 81, "COMMENT")    # "(about 4 cups)"
+    ]}),
+    ("4 cups air-popped popcorn", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),       # "cups"
+        (7, 17, "PREP"),      # "air-popped"
+        (18, 25, "NAME")      # "popcorn"
+    ]}),
+    ("2 ounces chopped, crystallized or candied ginger", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),       # "ounces"
+        (9, 16, "PREP"),      # "chopped,"
+        (18, 41, "PREP"),      # "crystallized"
+        (42, 48, "NAME")       # "ginger"
+    ]}),
+    ("1 1/2 teaspoons, 1/2 a palm full, coriander", {"entities": [
+        (0, 5, "QTY"),
+        (6, 15, "UNIT"),      # "teaspoons"
+        (15, 33, "COMMENT"),   # ", 1/2 a palm full,"
+        (34, 43, "NAME")       # "coriander"
+    ]}),
+    ("1 large French loaf, split in half lengthwise", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),       # "large" (as per countable items)
+        (8, 19, "NAME"),      # "French loaf,"
+        (21, 45, "PREP")       # "split in half lengthwise"
+    ]}),
+    ("1 tablespoon whole grain or Dijon mustard", {"entities": [
+        (0, 1, "QTY"),
+        (2, 12, "UNIT"),      # "tablespoon"
+        (13, 33, "PREP"),      # "whole grain"
+        (34, 41, "NAME")       # "mustard"
+    ]}),
+    ("1 small jawbreaker", {"entities": [
+        (0, 1, "QTY"),
+        (2, 7, "UNIT"),       # "small" (as per countable items)
+        (8, 18, "NAME")       # "jawbreaker"
+    ]}),
+
+        ("3 cups mixed blueberries and blackberries", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 12, "PREP"),      # "mixed"
+            (13, 24, "NAME"),      # "blueberries"
+            (25, 41, "ALT_NAME")   # "blackberries"
+        ]}),
+        ("1/3 cup instant grits", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 15, "PREP"),      # "instant"
+            (16, 21, "NAME")       # "grits"
+        ]}),
+        ("1 1/2 cups single cream", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),      # "cups"
+            (11, 17, "PREP"),     # "single"
+            (18, 23, "NAME")       # "cream"
+        ]}),
+        ("1/2 cup 35 percent cream", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 18, "PREP"),      # "35 percent"
+            (19, 24, "NAME")       # "cream"
+        ]}),
+        ("1 1/2 cups asparagus tips", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),      # "cups"
+            (11, 25, "NAME")       # "asparagus tips"
+        ]}),
+        ("1 pound semi-sweet or bittersweet chocolate", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (8, 33, "PREP"),      # "semi-sweet"
+            (34, 43, "NAME")       # "chocolate"
+        ]}),
+        ("1 1/2 cups quick grits", {"entities": [
+            (0, 5, "QTY"),
+            (6, 10, "UNIT"),      # "cups"
+            (11, 16, "PREP"),     # "quick"
+            (17, 22, "NAME")       # "grits"
+        ]}),
+        ("1 package store-bought biscuits", {"entities": [
+            (0, 1, "QTY"),
+            (2, 9, "UNIT"),       # "package"
+            (10, 22, "PREP"),     # "store-bought"
+            (23, 31, "NAME")       # "biscuits"
+        ]}),
+        ("1 1/2 pounds coarse-ground sirloin", {"entities": [
+            (0, 5, "QTY"),
+            (6, 12, "UNIT"),      # "pounds"
+            (13, 26, "PREP"),     # "coarse-ground"
+            (27, 34, "NAME")       # "sirloin"
+        ]}),
+        ("1 cup stone-ground grits", {"entities": [
+            (0, 1, "QTY"),
+            (2, 5, "UNIT"),       # "cup"
+            (6, 18, "PREP"),     # "stone-ground"
+            (19, 24, "NAME")       # "grits"
+        ]}),
+        ("3 pounds skinless, firm, white fish fillets, cut into large chunks", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "pounds"
+            (9, 17, "PREP"),      # "skinless,"
+            (19, 23, "PREP"),      # "firm,"
+            (25, 30, "PREP"),      # "white"
+            (31, 43, "NAME"),      # "fish fillets,"
+            (45, 66, "PREP")       # "cut into large chunks"
+        ]}),
+    # In your train_data.json or equivalent Python list:
+    ("2 tablespoons roux, recipe follows", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),      # "tablespoons"
+        (14, 18, "NAME"),      # "roux"
+        (18, 19, "O"),         # ","
+        (20, 34, "COMMENT")    # "recipe follows"
+    ]}),
+    ("3 tablespoons peeled and chopped fresh ginger root, or galanga", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),      # "tablespoons"
+        (14, 32, "PREP"),      # "peeled"
+        (33, 38, "PREP"),      # "fresh"
+        (39, 50, "NAME"),      # "ginger root,"
+        (52, 62, "ALT_NAME")   # "or galanga"
+    ]}),
+    ("1000 grams poolish", {"entities": [
+        (0, 4, "QTY"),
+        (5, 10, "UNIT"),      # "grams"
+        (11, 18, "NAME")       # "poolish"
+    ]}),
+    # In your train_data.json or equivalent Python list:
+    ("1/3 to 1/2 cup liquid such as dairy milk, almond, cashew or coconut milk", {"entities": [
+        (0, 3, "QTY"),        # "1/3 to 1/2"
+        (4, 10, "ALT_QTY"),        # "1/3 to 1/2"
+        (11, 14, "UNIT"),     # "cup"
+        (15, 21, "NAME"),      # "liquid"
+        (22, 29, "COMMENT"),   # "such as"
+        (30, 40, "ALT_NAME"),  # "dairy milk"
+        (42, 48, "ALT_NAME"),  # "almond"
+        (50, 56, "ALT_NAME"),  # "cashew"
+        (57, 72, "ALT_NAME")   # "or coconut milk"
+    ]}),
+    # In your train_data.json or equivalent Python list:
+    ("1 (12-ounce) can or pouch albacore tuna packed in water, drained and flaked", {"entities": [
+        (0, 1, "QTY"),
+        (2, 12, "COMMENT"),   # "(12-ounce)"
+        (13, 16, "UNIT"),     # "can"
+        (17, 25, "COMMENT"), # "or pouch"
+        (26, 39, "NAME"),      # "albacore tuna"
+        (40, 55, "PREP"),      # "packed in water"
+        (55, 56, "O"),         # ","
+        (57, 75, "PREP")       # "drained and flaked"
+    ]}),
+    # In your dev_data.json or equivalent Python list:
+    ("2 pounds heads and bones from black bass, red snapper or halibut", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),       # "pounds"
+        (9, 14, "NAME"),      # "heads"
+        (15, 18, "O"),         # "and"
+        (19, 24, "NAME"),      # "bones"
+        (25, 29, "COMMENT"),   # "from"
+        (30, 40, "NAME"),      # "black bass"
+        (40, 41, "O"),         # ","
+        (42, 53, "ALT_NAME"),  # "red snapper"
+        (54, 64, "ALT_NAME")   # "halibut"
+    ]}),
+    # In your dev_data.json or equivalent Python list:
+    ("8 ounces (2 cups) shredded cheese recommended: Colby/Monterey blend or Mexican blend", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),       # "ounces"
+        (9, 17, "COMMENT"),   # "(2 cups)"
+        (18, 26, "NAME"),      # "shredded"
+        (27, 33, "NAME"),      # "cheese"
+        (34, 84, "COMMENT")    # "recommended: Colby/Monterey blend or Mexican blend"
+    ]}),
+    ("1/3 ounce Jim Beam", {"entities": [
+        (0, 3, "QTY"),
+        (4, 9, "UNIT"),       # "ounce"
+        (10, 18, "NAME")       # "Jim Beam"
+    ]}),
+    # In your dev_data.json or equivalent Python list:
+    # In your dev_data.json or equivalent Python list:
+    ("1/4 cup finely chopped fresh chervil if available", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),       # "cup"
+        (8, 22, "PREP"),      # "finely chopped"
+        (29, 36, "NAME"),      # "chervil"
+        (37, 49, "COMMENT")    # "if available"
+    ]}),
+    ("2 teaspoons whole peppercorn", {"entities": [
+        (0, 1, "QTY"),
+        (2, 11, "UNIT"),      # "teaspoons"
+        (12, 17, "PREP"),     # "whole"
+        (18, 28, "NAME")       # "peppercorn"
+    ]}),
+
+        ("3 cups (700ml) stock or hot water", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 14, "COMMENT"),   # "(700ml)"
+            (15, 20, "NAME"),      # "stock"
+            (21, 33, "ALT_NAME")   # "hot water"
+        ]}),
+        ("1 pound All-Purpose Pasta Dough, cut into tagliatelle shape, recipe follows", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (8, 31, "NAME"),      # "All-Purpose Pasta Dough,"
+            (33, 59, "PREP"),      # "cut into tagliatelle shape,"
+            (61, 75, "COMMENT")    # "recipe follows"
+        ]}),
+        ("1/4 pound pork, trimmed of fat", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),       # "pound"
+            (10, 15, "NAME"),      # "pork,"
+            (16, 30, "PREP")       # "trimmed of fat"
+        ]}),
+        ("1/3 cup store bought or homemade Tapenade, recipe follows", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 32, "PREP"),      # "homemade"
+            (33, 42, "NAME"),      # "Tapenade,"
+            (43, 57, "COMMENT")    # "recipe follows"
+        ]}),
+        ("1 pound firm, small zucchini, 1/2-inch dice", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (8, 12, "PREP"),      # "firm,"
+            (14, 19, "PREP"),      # "small"
+            (20, 28, "NAME"),      # "zucchini,"
+            (30, 43, "PREP")       # "1/2-inch dice"
+        ]}),
+        ("8 T-bone steaks, each 10 to 12 ounces", {"entities": [
+            (0, 1, "QTY"),
+            (2, 15, "NAME"),      # "T-bone steaks," (countable item)
+            (17, 37, "COMMENT")    # "each 10 to 12 ounces"
+        ]}),
+
+        ("1/4 cup granulated or powdered garlic", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 30, "PREP"),      # "granulated"
+            (31, 37, "NAME")       # "garlic"
+        ]}),
+        ("1/2 pound penne, cooked and drained according to package directions", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),       # "pound"
+            (10, 15, "NAME"),      # "penne,"
+            (17, 35, "PREP"),      # "cooked and drained"
+            (36, 67, "COMMENT")    # "according to package directions"
+        ]}),
+
+        ("1/2 tablespoon ginger julienned super fine", {"entities": [
+            (0, 3, "QTY"),
+            (4, 14, "UNIT"),      # "tablespoon"
+            (15, 21, "NAME"),      # "ginger"
+            (22, 42, "PREP"),      # "julienned"
+        ]}),
+        ("1/2 cup of a mustard vinaigrette", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 11, "COMMENT"),   # "of a"
+            (12, 32, "NAME")      # "mustard vinaigrette"
+        ]}),
+        ("1/2 cup buttermilk, room temperature", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 19, "NAME"),      # "buttermilk,"
+            (20, 36, "PREP")       # "room temperature"
+        ]}),
+        ("4 cups pitted cherries", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 13, "PREP"),      # "pitted"
+            (14, 22, "NAME")       # "cherries"
+        ]}),
+
+        ("1 pound purchased cheese tortellini", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (8, 17, "PREP"),      # "purchased"
+            (18, 35, "NAME")       # "cheese tortellini"
+        ]}),
+
+        ("7 pounds bones with meat (pork ribs, neck bones and ox tails)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "pounds"
+            (9, 14, "NAME"),      # "bones"
+            (15, 24, "PREP"),      # "with meat"
+            (25, 54, "COMMENT")    # "(pork ribs, neck bones and ox tails)"
+        ]}),
+        ("2 tablespoons capers, washed and drained", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),      # "tablespoons"
+            (14, 21, "NAME"),      # "capers,"
+            (22, 40, "PREP")       # "washed and drained"
+        ]}),
+    ("4 ounces thinly sliced hot or sweet capicola, torn", {"entities": [
+        (0, 1, "QTY"),
+        (2, 8, "UNIT"),
+        (9, 22, "PREP"),      # "thinly sliced" (no trailing space)
+        (23, 35, "PREP"),      # "hot or sweet" (correct start index and content)
+        (36, 44, "NAME"),      # "capicola" (excluding comma)
+        (44, 45, "O"),         # ","
+        (46, 50, "PREP")       # "torn"
+    ]}),
+        ("3/4 pound stone crabmeat", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),       # "pound"
+            (10, 15, "PREP"),      # "stone"
+            (16, 24, "NAME")       # "crabmeat"
+        ]}),
+    ("4 each rack of baby lamb, frenched and cleaned", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 24, "NAME"),      # "rack of baby lamb" (correct content)
+        (24, 25, "O"),         # ","
+        (26, 46, "PREP")       # "frenched and cleaned" (fixed start index)
+    ]}),
+        ("2 large onions, roughly chopped", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "large" (from countable items list)
+            (8, 15, "NAME"),      # "onions,"
+            (16, 31, "PREP")       # "roughly chopped"
+        ]}),
+        ("3 tablespoons sweetener (I'm using honey)", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),      # "tablespoons"
+            (14, 23, "NAME"),      # "sweetener"
+            (24, 41, "COMMENT")    # "(I'm using honey)"
+        ]}),
+        ("2 ounces hot fudge, heated to 150 degrees F", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "ounces"
+            (9, 12, "PREP"),      # "hot"
+            (13, 19, "NAME"),      # "fudge,"
+            (20, 43, "PREP")       # "heated to 150 degrees F"
+        ]}),
+    ("1/2 cup (packed) each - dried apricots and pitted prunes", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 16, "PREP"),      # "(packed)"
+        (17, 23, "COMMENT"),   # "each -"
+        (24, 38, "NAME"),      # "dried apricots" (no trailing space)
+        (39, 56, "ALT_NAME")   # "and pitted prunes" (fixed start index for 'and')
+    ]}),
+        ("1 large or 2 small clementines, sliced thin", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "large"
+            (8, 12, "ALT_QTY"),  # "or 2"
+            (13, 18, "ALT_UNIT"), # "small"
+            (19, 31, "NAME"),      # "clementines,"
+            (32, 43, "PREP")       # "sliced thin"
+        ]}),
+        ("2 cups chopped green and red cabbage", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 14, "PREP"),      # "chopped"
+            (15, 28, "PREP"),      # "green"
+            (29, 36, "NAME")       # "cabbage"
+        ]}),
+        ("1 1/4 teaspoons coarse or kosher salt", {"entities": [
+            (0, 5, "QTY"),
+            (6, 15, "UNIT"),      # "teaspoons"
+            (16, 32, "PREP"),     # "coarse"
+            (33, 37, "NAME")       # "salt"
+        ]}),
+        ("2 cubanelle peppers, roughly chopped", {"entities": [
+            (0, 1, "QTY"),
+            (2, 20, "NAME"),      # "cubanelle peppers," (countable item)
+            (21, 36, "PREP")       # "roughly chopped"
+        ]}),
+    ("2 cups chopped or shredded roasted meat (I'm using yesterday's leftover chicken)", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 14, "PREP"),      # "chopped"
+        (15, 26, "PREP"),      # "or shredded" (no trailing space)
+        (27, 34, "PREP"),      # "roasted" (correct span)
+        (35, 39, "NAME"),      # "meat" (correct span)
+        (40, 41, "O"),         # "(" (separate token)
+        (41, 79, "COMMENT"),   # "I'm using yesterday's leftover chicken" (excluding trailing ')')
+        (79, 80, "O")          # ")" (separate token)
+    ]}),
+        ("3 ounces capers, drained", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "ounces"
+            (9, 16, "NAME"),      # "capers,"
+            (17, 24, "PREP")       # "drained"
+        ]}),
+        ("8 ounces onions, roughly chopped", {"entities": [
+            (0, 1, "QTY"),
+            (2, 8, "UNIT"),       # "ounces"
+            (9, 16, "NAME"),      # "onions,"
+            (17, 32, "PREP")       # "roughly chopped"
+        ]}),
+    ("1/2 cup dry, pitted prunes", {"entities": [
+        (0, 3, "QTY"),
+        (4, 7, "UNIT"),
+        (8, 11, "PREP"),      # "dry"
+        (11, 12, "O"),         # ","
+        (13, 19, "PREP"),      # "pitted" (no trailing space)
+        (20, 26, "NAME")       # "prunes" (correct start and end index)
+    ]}),("2 cups frozen grain-and-rice blend, thawed", {"entities": [
+        (0, 1, "QTY"),
+        (2, 6, "UNIT"),
+        (7, 13, "PREP"),      # "frozen"
+        (14, 34, "NAME"),      # "grain-and-rice blend"
+        (34, 35, "O"),         # ","
+        (36, 42, "PREP")       # "thawed" (correct start/end and content)
+    ]}),
+    ("2 tablespoons or more beurre manie, recipe follows", {"entities": [
+        (0, 1, "QTY"),
+        (2, 13, "UNIT"),      # "tablespoons"
+        (14, 21, "COMMENT"),   # "or more" (no trailing space)
+        (22, 34, "NAME"),      # "beurre manie" (correct start index and content)
+        (34, 35, "O"),         # ","
+        (36, 50, "COMMENT")    # "recipe follows" (correct start index and content)
+    ]}),
+        ("4 tablespoons coarse or kosher salt", {"entities": [
+            (0, 1, "QTY"),
+            (2, 13, "UNIT"),      # "tablespoons"
+            (14, 20, "PREP"),     # "coarse"
+            (21, 30, "PREP"),     # "or kosher"
+            (31, 35, "NAME")       # "salt"
+        ]}),
+        ("1 pound onions, roughly chopped", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (8, 15, "NAME"),      # "onions,"
+            (16, 31, "PREP")       # "roughly chopped"
+        ]}),
+        ("1 large glass container with a lid", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "large" (as per countable items list)
+            (8, 13, "PREP"),      # "glass"
+            (14, 23, "NAME"),      # "container"
+            (24, 34, "COMMENT")    # "with a lid"
+        ]}),
+
+        ("Mint sprigs, for garnish", {"entities": [
+            (0, 11, "NAME"),       # "Mint sprigs"
+            (11, 12, "O"),          # ","
+            (13, 24, "COMMENT")     # "for garnish"
+        ]}),
+        ("1/2 cup browning", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 16, "NAME")        # "browning"
+        ]}),
+        ("1/2 small sourdough loaf, cut into six 1/2-inch-thick slices", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "PREP"),       # "small"
+            (10, 24, "NAME"),      # "sourdough loaf"
+            (24, 25, "O"),          # ","
+            (26, 61, "PREP")        # "cut into six 1/2-inch-thick slices"
+        ]}),
+        ("1/4 cup pure Grade A maple syrup", {"entities": [
+            (0, 3, "QTY"),
+            (4, 7, "UNIT"),       # "cup"
+            (8, 20, "PREP"),      # "pure Grade A" (could also be COMMENT, depending on your schema)
+            (21, 32, "NAME")       # "maple syrup"
+        ]}),
+        ("1 chervil leaf for garnish", {"entities": [
+            (0, 1, "QTY"),
+            (2, 14, "NAME"),      # "chervil leaf"
+            (15, 26, "COMMENT")    # "for garnish"
+        ]}),
+        ("1 tablespoon plus 1/2 teaspoon cardamom seeds", {"entities": [
+            (0, 1, "QTY"),
+            (2, 12, "UNIT"),      # "tablespoon"
+            (13, 30, "COMMENT"),   # "plus 1/2 teaspoon"
+            (31, 45, "NAME")       # "cardamom seeds"
+        ]}),
+
+        ("1 pound manila clams, scrubbed", {"entities": [
+            (0, 1, "QTY"),
+            (2, 7, "UNIT"),       # "pound"
+            (8, 20, "NAME"),      # "manila clams"
+            (20, 21, "O"),          # ","
+            (22, 30, "PREP")        # "scrubbed"
+        ]}),
+        ("3 cups peeled, seeded watermelon, diced", {"entities": [
+            (0, 1, "QTY"),
+            (2, 6, "UNIT"),       # "cups"
+            (7, 13, "PREP"),      # "peeled"
+            (13, 14, "O"),          # ","
+            (15, 21, "PREP"),      # "seeded"
+            (22, 32, "NAME"),      # "watermelon"
+            (32, 33, "O"),          # ","
+            (34, 39, "PREP")        # "diced"
+        ]}),
+
+        ("1/4 Falernum*", {"entities": [
+            (0, 3, "QTY"),
+            (4, 12, "NAME"),       # "Falernum" (excluding the asterisk)
+        ]}),
+        ("1/2 ounce seaweed, ognori, rinsed free of salt", {"entities": [
+            (0, 3, "QTY"),
+            (4, 9, "UNIT"),       # "ounce"
+            (10, 17, "NAME"),      # "seaweed"
+            (17, 18, "O"),          # ","
+            (19, 25, "ALT_NAME"),   # "ognori" (assuming it's an alternative name or type of seaweed)
+            (25, 26, "O"),          # ","
+            (27, 46, "PREP")        # "rinsed free of salt"
+        ]})
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ]
 if __name__ == '__main__':

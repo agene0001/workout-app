@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, tick } from 'svelte';
+    import { onMount, tick } from 'svelte'; // onMount and tick are not strictly needed for this logic anymore
     import { browser } from '$app/environment';
 
     export let blocks: any[] = []; // Parsed blocks from EditorJS
@@ -29,9 +29,9 @@
         return tunes?.anchorTune?.anchor || null;
     }
 
-
-    onMount(async () => {
-        await tick(); // Ensure DOM is updated if headers are rendered with IDs
+    // Move the TOC generation logic into a reactive declaration
+    // This block will re-run whenever `blocks` or `browser` changes.
+    $: {
         if (browser) {
             const extractedHeaders: TocItem[] = [];
             blocks.forEach((block, index) => {
@@ -40,11 +40,6 @@
                     const level = parseInt(String(block.data.level), 10);
                     // Use existing ID from anchorTune if available, otherwise generate one
                     let id = getAnchorIdFromTune(block.tunes) || generateSlug(text) + `-${index}`;
-
-                    // Ensure the actual H tag in the DOM has this ID
-                    // This assumes your BlockRenderer.svelte or renderBlock logic assigns these IDs.
-                    // If not, you might need to do it here or ensure renderBlock does.
-                    // For now, we assume renderBlock already handles ID assignment from `tuneId`.
 
                     if (text && level >=1 && level <= 6) { // typically h1-h6, adjust if needed
                         extractedHeaders.push({
@@ -57,8 +52,12 @@
                 }
             });
             tocItems = buildNestedToc(extractedHeaders);
+        } else {
+            // Clear TOC items on SSR to prevent hydration mismatch if `blocks` is different on client
+            // or if you don't want TOC to render on server.
+            tocItems = [];
         }
-    });
+    }
 
     // Basic nested TOC builder (can be enhanced for deeper nesting)
     function buildNestedToc(headers: Omit<TocItem, 'children'>[]): TocItem[] {

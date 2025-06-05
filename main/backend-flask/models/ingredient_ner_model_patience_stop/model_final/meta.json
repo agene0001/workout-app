@@ -131,7 +131,6 @@
       "ALT_UNIT",
       "CARDINAL",
       "COMMENT",
-      "COMMENTS",
       "DATE",
       "EVENT",
       "FAC",
@@ -153,16 +152,11 @@
       "QUANTITY",
       "TIME",
       "UNIT",
-      "UNITS",
       "WORK_OF_ART"
     ]
   },
   "pipeline":[
     "tok2vec",
-    "tagger",
-    "parser",
-    "attribute_ruler",
-    "lemmatizer",
     "ner"
   ],
   "components":[
@@ -175,7 +169,11 @@
     "ner"
   ],
   "disabled":[
-    "senter"
+    "tagger",
+    "parser",
+    "senter",
+    "attribute_ruler",
+    "lemmatizer"
   ],
   "performance":{
     "token_acc":0.9986194413,

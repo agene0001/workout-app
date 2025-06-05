@@ -75,6 +75,16 @@
 
     // --- Functions ---
     // These functions are fine as they are, they don't rely on Svelte 4's specific reactivity model.
+    function generateSlug(text: string): string {
+        if (!text) return `section-${Math.random().toString(36).substring(7)}`;
+        return text
+            .toLowerCase()
+            .replace(/\s+/g, '-') // Replace spaces with -
+            .replace(/[^\w-]+/g, '') // Remove all non-word chars
+            .replace(/--+/g, '-') // Replace multiple - with single -
+            .replace(/^-+/, '') // Trim - from start of text
+            .replace(/-+$/, ''); // Trim - from end of text
+    }
     function formatDate(dateString: string | undefined): string {
         if (!dateString) return 'Date not available';
         const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -111,12 +121,15 @@
     function getTuneId(tunes) {
         return tunes?.anchorTune?.anchor || null;
     }
-    function renderBlock(block) {
+    function getAnchorIdFromTune(tunes: any): string | null {
+        return tunes?.anchorTune?.anchor || null;
+    }
+    function renderBlock(block,index) {
         if (!block) return null;
         const tunes = block.tunes || {};
         const tuneClasses = getTuneClasses(tunes);
         const tuneId = getTuneId(tunes);
-
+        const blockId = getAnchorIdFromTune(tunes) || generateSlug(block.data?.text || block.data?.caption || block.type) + `-${index}`;
         switch (block.type) {
             case 'html':
                 return {
@@ -129,8 +142,8 @@
                     tag: `h${block.data.level}`,
                     content: block.data.text,
                     className: `block-header ${tuneClasses}`,
-                    id: tuneId
-                };
+                    id: blockId // This now correctly assigns the generated ID
+                }
             case 'paragraph':
                 return {tag: 'p', content: block.data.text, className: `block-paragraph ${tuneClasses}`, id: tuneId};
 
@@ -306,7 +319,7 @@
         <div class="post-content post-content-for-progress">
             {#if parsedContent() && parsedContent().blocks && parsedContent().blocks.length > 0}
                 {#each parsedContent().blocks as block, i (block.id || `${block.type}-${i}`)}
-                    {@const currentRenderedBlock = renderBlock(block)}
+                    {@const currentRenderedBlock = renderBlock(block,i)}
                     {#if currentRenderedBlock}
                         <BlockRenderer
                                 renderedBlock={currentRenderedBlock}
@@ -326,7 +339,7 @@
             <div class="post-conclusion-section">
                 <h2 class="conclusion-title">Conclusion</h2>
                 {#each post.conclusion_editorjs_content.blocks as block, i (block.id || `conclusion-${block.type}-${i}`)}
-                    {@const currentRenderedBlock = renderBlock(block)}
+                    {@const currentRenderedBlock = renderBlock(block,i)}
                     {#if currentRenderedBlock}
                         <BlockRenderer
                                 renderedBlock={currentRenderedBlock}

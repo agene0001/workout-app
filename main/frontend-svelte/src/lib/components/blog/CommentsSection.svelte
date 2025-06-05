@@ -244,7 +244,7 @@
             </button>
         </div>
     {:else}
-        <p class="login-prompt text-info">Please <a href="/auth/login" class="text-secondary hover:underline">log in</a> to post a comment.</p>
+        <p class="login-prompt text-info">Please <span class="text-secondary hover:underline">log in</span> to post a comment.</p>
     {/if}
 
     {#if isLoading}
