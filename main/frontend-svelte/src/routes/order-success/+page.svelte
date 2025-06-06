@@ -9,6 +9,18 @@
     <style>
 
 
+        .text-gradient-2 {
+            background: linear-gradient(45deg, #00dd87, #00bb74);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .heroback {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+        }
+
         .success-icon {
             animation: checkmark 0.8s ease-in-out 0.3s both;
         }

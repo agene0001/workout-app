@@ -338,11 +338,11 @@
 					<div
 						class="fade-in-up transform overflow-hidden rounded-lg bg-gray-800 shadow-lg transition-transform hover:scale-105 bg-gradient-to-t from-black/50 via-transparent to-transparent"
 					>
-						{#if post.imageUrl}
+						{#if post.image && !post.image.startsWith("https://placehold.co/")}
 							<a href={`/Blog/${post.slug}`} class="block">
 								<div class="aspect-video w-full overflow-hidden bg-gray-700">
 									<img
-											src={post.imageUrl}
+											src={post.image}
 											alt={`Image for ${post.title}`}
 											class="h-full w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-110"
 											loading="lazy"

@@ -435,9 +435,7 @@ TRAIN_DATA = [
     # Example
     ("Salt and pepper to taste", {"entities": [
         # Original NAME1:(0,4,"NAME") "Salt", NAME2:(5,8,"O") - wait, "and" is not ent, NAME3:(9,15,"NAME") "pepper", COMMENT:(16,24,"COMMENT") "to taste"
-        (0, 4, "NAME"),  # "Salt"
-        (5, 8, "O"),  # "and" - (your original had (5,8,"NAME") which would be "and")
-        (9, 15, "NAME"),  # "pepper"
+        (0, 15, "NAME"),  # "Salt"
         (16, 24, "COMMENT"),  # "to" (from COMMENT 16-24)
     ]}),  # Corrected "and" to "O" as per common sense, unless you explicitly labeled "and" as NAME.
 
