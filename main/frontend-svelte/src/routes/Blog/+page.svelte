@@ -188,7 +188,7 @@
 			</div>
 
 			<div class="fade-in-up mx-auto max-w-4xl overflow-hidden rounded-lg bg-gray-800 shadow-xl ">
-				{#if featuredPost.image}
+				{#if featuredPost.image && !featuredPost.image.startsWith("https://placehold.co/")}
 					<a href={`/Blog/${featuredPost.slug}`} class="block">
 						<div class="relative aspect-video w-full overflow-hidden bg-gray-700 md:h-80 lg:h-96">
 							<img
