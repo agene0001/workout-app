@@ -41,13 +41,20 @@
 	<!-- Robots -->
 	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 	<!-- Google tag (gtag.js) -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=AW-11461277117"></script>
 	<script>
 		window.dataLayer = window.dataLayer || [];
 		function gtag(){dataLayer.push(arguments);}
 		gtag('js', new Date());
-
 		gtag('config', 'AW-11461277117');
+
+		// Load gtag script dynamically
+		(function() {
+			var script = document.createElement('script');
+			script.async = true;
+			script.src = 'https://www.googletagmanager.com/gtag/js?id=AW-11461277117';
+			document.head.appendChild(script);
+			console.log('Gtag script added:', script);
+		})();
 	</script>
 	<!-- Structured Data -->
 	<script type="application/ld+json">
