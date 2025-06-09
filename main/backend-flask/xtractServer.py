@@ -6,8 +6,16 @@ from flask_cors import CORS
 import traceback # For detailed error logging
 
 # Ensure your NER model/parser is correctly imported
-from utils.NERModel.ingredient_parser import extract_ingredients_ner, parse_fraction # Assuming parse_fraction is in here too
-
+# These imports are critical for your app's functionality.
+# The health check will attempt to verify their presence and basic functionality.
+try:
+    from utils.NERModel.ingredient_parser import extract_ingredients_ner, parse_fraction
+    NER_MODEL_IMPORTED = True
+except ImportError as e:
+    NER_MODEL_IMPORTED = False
+    NER_MODEL_IMPORT_ERROR = str(e)
+    print(f"CRITICAL ERROR: Failed to import NER model components: {e}")
+    traceback.print_exc()
 load_dotenv()
 recipe_bp = Blueprint('recipes', __name__, url_prefix='/recipes')
 
@@ -250,9 +258,95 @@ app = Flask(__name__) # Ensure app is defined before registering blueprint
 CORS(app)
 app.register_blueprint(recipe_bp)
 
-@app.route('/health', methods=['GET']) # Define health check at app level if not in blueprint
+# --- Health Check additions ---
+
+def check_instacart_api_connectivity():
+    """Attempts a lightweight GET request to the Instacart API base URL to check connectivity."""
+    api_url_base = "https://connect.instacart.com"
+    if os.getenv("NODE_ENV", "dev") == "dev":
+        api_url_base = "https://connect.dev.instacart.tools" # Use dev endpoint for dev env
+
+    try:
+        # Attempt to reach the base URL. A GET to the root might not be a valid API endpoint,
+        # but it checks DNS resolution and basic network connectivity.
+        # For a more robust check, you might ping a known public, lightweight API endpoint
+        # provided by Instacart for health checks if one exists.
+        response = requests.get(api_url_base, timeout=5) # Reduced timeout for health check
+        response.raise_for_status() # Raises an HTTPError for bad responses (4xx or 5xx)
+        return {"status": "ok", "message": f"Successfully connected to {api_url_base}"}
+    except requests.exceptions.Timeout:
+        return {"status": "timeout", "message": f"Connection to Instacart API timed out ({api_url_base})."}
+    except requests.exceptions.ConnectionError:
+        return {"status": "error", "message": f"Could not connect to Instacart API ({api_url_base}). Verify network or API availability."}
+    except requests.exceptions.HTTPError as e:
+        return {"status": "error", "message": f"Instacart API returned HTTP error: {e.response.status_code} at {api_url_base}. Response: {e.response.text}"}
+    except Exception as e:
+        return {"status": "error", "message": f"Unexpected error checking Instacart API: {str(e)}"}
+
+
+app = Flask(__name__) # Ensure app is defined before registering blueprint
+CORS(app)
+app.register_blueprint(recipe_bp)
+
+@app.route('/health', methods=['GET'])
 def health_check():
-    return jsonify({"status": "healthy"})
+    health_status = {
+        "status": "healthy", # Assume healthy unless a check fails
+        "details": {}
+    }
+    overall_ok = True # Flag to track overall health
+
+    # 1. Check Environment Variables
+    instacart_api_key_present = bool(os.getenv("INSTACART_API_KEY"))
+    health_status["details"]["instacart_api_key"] = {
+        "status": "ok" if instacart_api_key_present else "missing",
+        "message": "Instacart API Key is present." if instacart_api_key_present else "Instacart API Key is MISSING. Core functionality may be impacted."
+    }
+    if not instacart_api_key_present:
+        overall_ok = False
+
+    # 2. Check NER Model availability and basic functionality
+    ner_model_functional = False
+    ner_model_message = "NER model (ingredient_parser) is not imported." # Default if import failed
+    if NER_MODEL_IMPORTED:
+        try:
+            # Attempt a very basic call to ensure it's functional, not just imported.
+            # This assumes extract_ingredients_ner can handle an empty list or simple string without crashing.
+            test_ingredients = ["1 cup flour", "2 eggs"]
+            parsed_test = extract_ingredients_ner(test_ingredients)
+            fraction_test = parse_fraction("3/4")
+            if parsed_test is not None and isinstance(parsed_test, list) and fraction_test is not None:
+                ner_model_functional = True
+                ner_model_message = "NER model (ingredient_parser) imported and passed basic functionality test."
+            else:
+                ner_model_message = "NER model (ingredient_parser) imported but failed basic functionality test."
+                print(f"WARNING: {ner_model_message} - Parsed: {parsed_test}, Fraction: {fraction_test}")
+        except Exception as e:
+            ner_model_message = f"NER model (ingredient_parser) imported but crashed during basic functionality test: {str(e)}"
+            print(f"ERROR: {ner_model_message}")
+            traceback.print_exc() # Print full traceback for server-side debugging
+    else:
+        ner_model_message = f"NER model (ingredient_parser) failed to import at startup: {NER_MODEL_IMPORT_ERROR}"
+
+    health_status["details"]["ner_model"] = {
+        "status": "ok" if ner_model_functional else "error",
+        "message": ner_model_message
+    }
+    if not ner_model_functional:
+        overall_ok = False
+
+    # 3. Check Instacart API Connectivity
+    instacart_connectivity_check = check_instacart_api_connectivity()
+    health_status["details"]["instacart_api_connectivity"] = instacart_connectivity_check
+    if instacart_connectivity_check["status"] != "ok":
+        overall_ok = False
+
+    # Set overall status and HTTP code based on checks
+    if not overall_ok:
+        health_status["status"] = "unhealthy"
+        return jsonify(health_status), 503 # Service Unavailable
+    else:
+        return jsonify(health_status), 200 # OK
 
 if __name__ == "__main__":
     host_env = os.getenv("NODE_ENV", "dev")

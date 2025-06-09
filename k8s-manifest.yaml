@@ -71,13 +71,6 @@ spec:
             # Optional: Quarkus usually defaults to 8080, but docker-compose specifies 8081
             - name: QUARKUS_HTTP_PORT # Standard Quarkus property for port
               value: "8081"
-          volumeMounts: # <--- ADD THIS SECTION
-             - name: backend-quarkus-uploads-storage # Matches volume name below
-               mountPath: "/app/uploads" # The directory inside the container where files will be stored
-      volumes: # <--- ADD THIS SECTION
-        - name: backend-quarkus-uploads-storage # Name of the volume
-          persistentVolumeClaim:
-            claimName: backend-quarkus-uploads-pvc # Refers to the PVC you defined above
 
       restartPolicy: Always
 ---
